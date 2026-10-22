@@ -1,0 +1,29 @@
+# Dependencias y archivos generados
+node_modules/
+android/.gradle/
+android/app/build/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+
+# Configuración local y credenciales
+.env
+.env.*
+!.env.example
+*.local
+local.properties
+
+# Archivos del sistema y del IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Datos personales, exportaciones y documentos de trabajo locales
+*.zip
+*.json.local
+*.csv
+*.log
+.local/
+private/
+secrets/

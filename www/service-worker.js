@@ -1,9 +1,10 @@
-const CACHE_NAME = 'golifiar-v3';
+const CACHE_NAME = 'golifiar-v4';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon.svg'
+  './icons/icon.svg',
+  './vendor/jszip.min.js'
 ];
 
 self.addEventListener('install', event => {

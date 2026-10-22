@@ -9,7 +9,7 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <title>Golifiar | Auditoría y Análisis de Conexiones de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="./vendor/jszip.min.js"></script>
     <style>
         :root {
             --bg-body: #ffffff;
@@ -721,6 +721,25 @@
             color: var(--accent-blue);
         }
 
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+        }
+
+        .user-search-link {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 650;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .user-search-link:hover {
+            color: var(--accent-blue);
+            text-decoration: underline;
+        }
+
         .badge-status {
             background: rgba(225, 29, 72, 0.08);
             color: var(--accent-rose);
@@ -792,6 +811,36 @@
             border-radius: 12px;
             color: var(--text-secondary);
             font-size: 0.9rem;
+        }
+
+        .results-disclaimer {
+            margin-top: 0.25rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .premium-panel,
+        .history-panel {
+            border: 1px solid #ead9a6;
+            border-radius: 14px;
+            background: #fffdf5;
+            padding: 1.25rem;
+        }
+        .premium-panel h3, .history-panel h3 { color: #795f17; margin-bottom: 0.4rem; }
+        .premium-panel p, .history-panel p { color: var(--text-secondary); line-height: 1.55; font-size: 0.86rem; margin-bottom: 0.9rem; }
+        .premium-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin: 0.9rem 0; }
+        .premium-feature { color: #6b5a25; font-size: 0.82rem; }
+        .premium-feature::before { content: "—"; margin-right: 0.4rem; color: var(--accent-gold); }
+        .panel-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+        .history-list { display: grid; gap: 0.5rem; margin-top: 0.8rem; }
+        .history-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 9px; background: #fff; font-size: 0.82rem; }
+        .premium-lock { color: #8a6c18; font-size: 0.76rem; font-weight: 700; }
+        .filter-summary { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.4rem; }
+        @media (max-width: 640px) {
+            .premium-features { grid-template-columns: 1fr; }
+            .history-item { align-items: flex-start; flex-direction: column; }
         }
 
         /* Additional Views */
@@ -1004,6 +1053,8 @@
             .upload-tabs { flex-direction: column; }
             .tab-btn, .btn-minimal, .btn-sub { min-height: 44px; }
             .toast { bottom: 1rem; }
+            .user-card { align-items: flex-start; gap: 0.75rem; }
+            .user-actions { align-items: flex-end; flex-direction: column; gap: 0.3rem; }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -1179,14 +1230,14 @@
                             <option value="">Letra (A-Z)</option>
                             <option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option><option value="h">H</option><option value="i">I</option><option value="j">J</option><option value="k">K</option><option value="l">L</option><option value="m">M</option><option value="n">N</option><option value="o">O</option><option value="p">P</option><option value="q">Q</option><option value="r">R</option><option value="s">S</option><option value="t">T</option><option value="u">U</option><option value="v">V</option><option value="w">W</option><option value="x">X</option><option value="y">Y</option><option value="z">Z</option>
                         </select>
-                        <select id="typeFilter" class="btn-sub" onchange="filtrarResultados()">
+                        <select id="typeFilter" class="btn-sub" onchange="cambiarFiltroPremium(this)">
                             <option value="todos">Tipo de cuenta</option>
                             <option value="sin_numeros">Sin números (Limpios)</option>
                             <option value="con_numeros">Con números (Posibles bots)</option>
-                            <option value="privada_simulada">Privadas (Nombres con sufijos de candado)</option>
-                            <option value="publica_simulada">Públicas (Nombres limpios)</option>
+                            <option value="largos">Nombres largos</option>
+                            <option value="cortos">Nombres cortos</option>
                         </select>
-                        <select id="ageFilter" class="btn-sub" onchange="filtrarResultados()">
+                        <select id="ageFilter" class="btn-sub" onchange="cambiarFiltroPremium(this)">
                             <option value="todas">Antigüedad de conexión</option>
                             <option value="recientes">Recientes (&lt; 6 meses)</option>
                             <option value="antiguas">Antiguas (&gt; 1 año)</option>
@@ -1213,6 +1264,36 @@
                 </div>
 
                 <div id="resultsWrapper"></div>
+                <div id="filterSummary" class="filter-summary"></div>
+                <div class="panel-actions">
+                    <button class="btn-sub" type="button" onclick="limpiarFiltros()">Limpiar filtros</button>
+                    <button class="btn-sub" type="button" onclick="exportarJSON()">JSON</button>
+                    <button class="btn-sub" type="button" onclick="guardarAnalisis()">Guardar análisis</button>
+                    <button class="btn-sub" type="button" onclick="generarInformePremium()">Informe HTML Premium</button>
+                </div>
+                <p class="results-disclaimer">
+                    Los resultados proceden de tu exportación de Instagram. Si un perfil aparece vacío, puede haber sido eliminado, suspendido, renombrado o dejar de estar disponible. Puedes probar la búsqueda alternativa.
+                </p>
+            </section>
+            <section class="premium-panel" aria-labelledby="premiumTitle">
+                <h3 id="premiumTitle">Golifiar Premium</h3>
+                <p>Herramientas avanzadas para creadores que necesitan conservar, comparar y presentar sus análisis. Esta versión incluye una demostración local del bloqueo Premium.</p>
+                <div class="premium-features">
+                    <div class="premium-feature">Historial local de análisis</div>
+                    <div class="premium-feature">Informes profesionales HTML</div>
+                    <div class="premium-feature">Filtros y selección avanzada</div>
+                    <div class="premium-feature">Funcionamiento offline completo</div>
+                </div>
+                <div class="panel-actions">
+                    <button class="btn-sub" type="button" onclick="activarPremiumDemo()">Probar Premium</button>
+                    <span class="premium-lock" id="premiumStatus">Funciones bloqueadas en la versión gratuita</span>
+                </div>
+            </section>
+            <section class="history-panel hidden" id="historyPanel" aria-labelledby="historyTitle">
+                <h3 id="historyTitle">Historial local</h3>
+                <p>Los análisis se guardan únicamente en este dispositivo.</p>
+                <div id="historyList" class="history-list"></div>
+                <button class="btn-sub" type="button" onclick="borrarHistorial()">Borrar historial local</button>
             </section>
         </div>
 
@@ -1768,12 +1849,15 @@
 
                 html += `
                     <div class="user-card">
-                        <a href="https://instagram.com/${user}" target="_blank" rel="noopener noreferrer" class="user-link">
+                    <a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link">
                             @${user}
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </a>
+                    <div class="user-actions">
+                        <a href="https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(user)}" target="_blank" rel="noopener noreferrer" class="user-search-link">Buscar</a>
                         <span class="${badgeClass}">${metaInfo}</span>
                     </div>
+                </div>
                 `;
             });
             html += '</div>';
@@ -1799,8 +1883,8 @@
                 const hasNumbers = /\d/.test(user);
                 if (type === 'sin_numeros') matchType = !hasNumbers;
                 if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'privada_simulada') matchType = user.includes('private') || user.length > 15;
-                if (type === 'publica_simulada') matchType = !user.includes('private') && user.length <= 15;
+                if (type === 'largos') matchType = user.length > 15;
+                if (type === 'cortos') matchType = user.length <= 15;
 
                 let matchAge = true;
                 if (obj.timestamp > 0) {
@@ -1811,6 +1895,8 @@
 
                 return matchQuery && matchLetter && matchType && matchAge;
             });
+            const summary = document.getElementById('filterSummary');
+            if (summary) summary.textContent = `${filtrados.length} resultado(s) visibles en esta categoría.`;
             renderizarResultados(filtrados);
         }
 
@@ -1830,8 +1916,8 @@
                 const hasNumbers = /\d/.test(user);
                 if (type === 'sin_numeros') matchType = !hasNumbers;
                 if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'privada_simulada') matchType = user.includes('private') || user.length > 15;
-                if (type === 'publica_simulada') matchType = !user.includes('private') && user.length <= 15;
+                if (type === 'largos') matchType = user.length > 15;
+                if (type === 'cortos') matchType = user.length <= 15;
 
                 let matchAge = true;
                 if (obj.timestamp > 0) {
@@ -1870,8 +1956,8 @@
                 const hasNumbers = /\d/.test(user);
                 if (type === 'sin_numeros') matchType = !hasNumbers;
                 if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'privada_simulada') matchType = user.includes('private') || user.length > 15;
-                if (type === 'publica_simulada') matchType = !user.includes('private') && user.length <= 15;
+                if (type === 'largos') matchType = user.length > 15;
+                if (type === 'cortos') matchType = user.length <= 15;
 
                 let matchAge = true;
                 if (obj.timestamp > 0) {
@@ -1896,6 +1982,102 @@
             document.body.removeChild(link);
         }
 
+        function limpiarFiltros() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('letterFilter').value = '';
+            document.getElementById('typeFilter').value = 'todos';
+            document.getElementById('ageFilter').value = 'todas';
+            renderizarResultadosActuales();
+        }
+
+        function exportarJSON() {
+            const data = {
+                generatedAt: new Date().toISOString(),
+                category: categoriaActual,
+                followers: usuariosFansGlobal,
+                following: usuariosMutuosGlobal.concat(usuariosSinRetornoGlobal)
+            };
+            descargarArchivo(`golifiar-auditoria-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
+        }
+
+        function descargarArchivo(name, content, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = name;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function premiumActivo() {
+            return localStorage.getItem('golifiar-premium-demo') === 'true';
+        }
+
+        function activarPremiumDemo() {
+            localStorage.setItem('golifiar-premium-demo', 'true');
+            document.getElementById('premiumStatus').textContent = 'Premium de demostración activo en este dispositivo';
+            document.getElementById('historyPanel').classList.remove('hidden');
+            cargarHistorial();
+            mostrarToast('Premium de demostración activado. No es una compra real.');
+        }
+
+        function requerirPremium() {
+            if (premiumActivo()) return true;
+            mostrarToast('Esta función pertenece a Golifiar Premium. Pulsa “Probar Premium” para verla.');
+            return false;
+        }
+
+        function cambiarFiltroPremium(select) {
+            if (!requerirPremium()) {
+                select.value = select.id === 'typeFilter' ? 'todos' : 'todas';
+                return;
+            }
+            filtrarResultados();
+        }
+
+        function guardarAnalisis() {
+            if (!requerirPremium()) return;
+            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
+            history.unshift({
+                id: Date.now(),
+                date: new Date().toISOString(),
+                followers: document.getElementById('valFollowers').textContent,
+                following: document.getElementById('valFollowing').textContent,
+                discrepancy: document.getElementById('valDiscrepancy').textContent,
+                reciprocity: document.getElementById('valReciprocity').textContent
+            });
+            localStorage.setItem('golifiar-history', JSON.stringify(history.slice(0, 10)));
+            document.getElementById('historyPanel').classList.remove('hidden');
+            cargarHistorial();
+            mostrarToast('Análisis guardado únicamente en este dispositivo.');
+        }
+
+        function cargarHistorial() {
+            const list = document.getElementById('historyList');
+            if (!list) return;
+            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
+            list.innerHTML = history.length ? history.map(item => `
+                <div class="history-item">
+                    <span>${new Date(item.date).toLocaleString('es-ES')}</span>
+                    <span>${item.followers} seguidores · ${item.discrepancy} sin retorno</span>
+                </div>
+            `).join('') : '<span class="premium-lock">Todavía no hay análisis guardados.</span>';
+        }
+
+        function borrarHistorial() {
+            if (!requerirPremium()) return;
+            localStorage.removeItem('golifiar-history');
+            cargarHistorial();
+            mostrarToast('Historial local eliminado.');
+        }
+
+        function generarInformePremium() {
+            if (!requerirPremium()) return;
+            const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe Golifiar</title><style>body{font:16px Arial;max-width:760px;margin:40px auto;color:#172033}h1{color:#0b6e99}.metric{display:inline-block;margin:8px;padding:16px;border:1px solid #e5e7eb;border-radius:8px}</style></head><body><h1>Informe de auditoría Golifiar</h1><p>Generado el ${new Date().toLocaleString('es-ES')}</p><div class="metric">Seguidores: ${document.getElementById('valFollowers').textContent}</div><div class="metric">Seguidos: ${document.getElementById('valFollowing').textContent}</div><div class="metric">Sin retorno: ${document.getElementById('valDiscrepancy').textContent}</div><div class="metric">Reciprocidad: ${document.getElementById('valReciprocity').textContent}</div><p>Este informe se ha generado localmente. Los datos proceden de la exportación de Instagram y pueden no reflejar el estado actual de los perfiles.</p></body></html>`;
+            descargarArchivo(`golifiar-informe-${new Date().toISOString().slice(0, 10)}.html`, html, 'text/html');
+        }
+
         function compartirResultados() {
             trigHaptic(40);
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -1912,8 +2094,8 @@
                 const hasNumbers = /\d/.test(user);
                 if (type === 'sin_numeros') matchType = !hasNumbers;
                 if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'privada_simulada') matchType = user.includes('private') || user.length > 15;
-                if (type === 'publica_simulada') matchType = !user.includes('private') && user.length <= 15;
+                if (type === 'largos') matchType = user.length > 15;
+                if (type === 'cortos') matchType = user.length <= 15;
 
                 let matchAge = true;
                 if (obj.timestamp > 0) {
@@ -1941,7 +2123,14 @@
     </script>
     <script>
         if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-            window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js');
+                if (premiumActivo()) {
+                    document.getElementById('premiumStatus').textContent = 'Premium de demostración activo en este dispositivo';
+                    document.getElementById('historyPanel').classList.remove('hidden');
+                    cargarHistorial();
+                }
+            });
         }
     </script>
 </body>
