@@ -3,25 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b6e99">
+    <meta name="description" content="Auditoría local de seguidores y seguidos de Instagram. Tus archivos no salen de tu dispositivo.">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <title>Golifiar | Auditoría y Análisis de Conexiones de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
-            --bg-body: #f8fafc;
+            --bg-body: #ffffff;
             --bg-card: #ffffff;
-            --bg-card-hover: #f1f5f9;
-            --border-color: #e2e8f0;
-            --border-accent: rgba(2, 132, 199, 0.3);
+            --bg-card-hover: #f8fafc;
+            --border-color: #e5e7eb;
+            --border-accent: rgba(37, 99, 235, 0.24);
             --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #64748b;
-            --accent-blue: #0284c7;       /* Atlantic Blue */
-            --accent-blue-light: #e0f2fe;
-            --accent-gold: #d97706;       /* Canarian Sun Gold */
-            --accent-green: #059669;      /* Teide Green */
-            --accent-rose: #e11d48;
+            --text-secondary: #4b5563;
+            --text-muted: #6b7280;
+            --accent-blue: #0b6e99;
+            --accent-blue-light: #edf7fb;
+            --accent-gold: #d19a24;
+            --accent-green: #427a68;
+            --accent-rose: #c2415b;
             --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-body: #ffffff;
+                --bg-card: #ffffff;
+                --bg-card-hover: #f8fafc;
+                --border-color: #e5e7eb;
+                --text-primary: #0f172a;
+                --text-secondary: #4b5563;
+                --text-muted: #6b7280;
+                --accent-blue-light: #edf7fb;
+            }
+            .header-minimal { background: rgba(255, 255, 255, 0.94); }
+            .nav-menu, .upload-tabs { background: #f8fafc; }
+            .nav-tab-btn.active, .tab-btn.active { background: #ffffff; }
+            .dropzone { background: #fcfdff; border-color: #d1d5db; }
+            .dropzone:hover { background: #f8fbff; }
+            select, .search-box input { background-color: #ffffff; color: var(--text-primary); }
         }
 
         * {
@@ -48,7 +71,7 @@
             position: fixed;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(2, 132, 199, 0.05) 0%, rgba(248, 250, 252, 0) 70%);
+            background: radial-gradient(circle, rgba(11, 110, 153, 0.035) 0%, rgba(255, 255, 255, 0) 70%);
             top: -150px;
             right: -150px;
             z-index: 0;
@@ -65,6 +88,17 @@
             z-index: 50;
             padding: 1rem 2rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        .header-minimal::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -1px;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-blue) 0 72%, var(--accent-gold) 72% 100%);
+            opacity: 0.7;
         }
 
         .header-container {
@@ -89,7 +123,7 @@
         .brand-logo-box {
             width: 38px;
             height: 38px;
-            background: linear-gradient(135deg, #0284c7, #0369a1);
+            background: #0b6e99;
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -110,6 +144,11 @@
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.08em;
+        }
+
+        .brand-text span::before {
+            content: "• ";
+            color: var(--accent-gold);
         }
 
         /* Nav Tabs in Header */
@@ -158,17 +197,17 @@
             max-width: 1000px;
             width: 100%;
             margin: 0 auto;
-            padding: 2.5rem 1.5rem;
+            padding: 3.5rem 1.5rem 4.5rem;
             display: flex;
             flex-direction: column;
-            gap: 2.5rem;
+            gap: 3.5rem;
             flex: 1;
             position: relative;
             z-index: 10;
         }
 
         @media (max-width: 640px) {
-            .main-wrapper { padding: 1.25rem 1rem; }
+            .main-wrapper { padding: 2rem 1rem 3.5rem; }
         }
 
         /* Hero Section */
@@ -186,9 +225,20 @@
         }
 
         .hero-section h2 span {
-            background: linear-gradient(135deg, #0284c7, #d97706);
+            background: none;
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-text-fill-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .hero-section h2::after {
+            content: "";
+            display: block;
+            width: 52px;
+            height: 3px;
+            margin: 1rem auto 0;
+            border-radius: 99px;
+            background: var(--accent-gold);
         }
 
         .hero-section p {
@@ -280,7 +330,7 @@
         }
 
         @media (max-width: 640px) {
-            .upload-section-card { padding: 1.25rem; }
+            .upload-section-card { padding: 2rem 1.25rem; }
         }
 
         .upload-tabs {
@@ -335,7 +385,7 @@
             transition: all 0.25s ease;
             position: relative;
             overflow: hidden;
-            min-height: 160px;
+            min-height: 190px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -410,14 +460,14 @@
         .progress-bar-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #0284c7, #059669);
+            background: #0b6e99;
             border-radius: 9999px;
             transition: width 0.3s ease;
         }
 
         /* Action Button */
         .btn-minimal {
-            background: linear-gradient(135deg, #0284c7, #0369a1);
+            background: #0b6e99;
             color: #ffffff;
             border: none;
             border-radius: 12px;
@@ -434,7 +484,7 @@
         }
 
         .btn-minimal:hover {
-            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            background: #095b7e;
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
         }
@@ -825,6 +875,129 @@
         }
 
         .hidden { display: none !important; }
+
+        .guide-card,
+        .metric-card,
+        .user-card,
+        .content-view {
+            overflow-wrap: anywhere;
+        }
+
+        .guide-card {
+            min-height: 172px;
+            justify-content: flex-start;
+        }
+
+        .guide-card h3,
+        .dropzone-title,
+        .metric-label {
+            line-height: 1.35;
+        }
+
+        .guide-card p {
+            margin-top: 0.15rem;
+        }
+
+        .upload-mode-content {
+            min-width: 0;
+        }
+
+        .dropzone-content {
+            line-height: 1.45;
+        }
+
+        @media (max-width: 640px) {
+            .hero-section p {
+                font-size: 0.98rem;
+                line-height: 1.7;
+            }
+
+            .guide-card {
+                min-height: 0;
+                padding: 1.5rem;
+            }
+
+            .upload-section-card {
+                gap: 2rem;
+            }
+        }
+
+        .privacy-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 1px solid rgba(5, 150, 105, 0.25);
+            border-radius: 10px;
+            background: rgba(5, 150, 105, 0.06);
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+        .privacy-note strong { color: var(--text-primary); display: block; margin-bottom: 0.15rem; }
+        .helper-link {
+            border: 0;
+            background: none;
+            color: var(--accent-blue);
+            font: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .status-message {
+            min-height: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            text-align: center;
+        }
+        .status-message.error { color: var(--accent-rose); }
+        .status-message.success { color: var(--accent-green); }
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 1.5rem;
+            z-index: 100;
+            max-width: min(90vw, 420px);
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+            transform: translate(-50%, 1rem);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+        .toast.visible { opacity: 1; transform: translate(-50%, 0); }
+        dialog {
+            width: min(92vw, 560px);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 1.5rem;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
+        }
+        dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
+        dialog h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+        dialog ol { padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem; }
+        dialog strong { color: var(--text-primary); }
+        @media (max-width: 640px) {
+            .header-minimal { padding: 0.75rem 1rem; }
+            .header-container { justify-content: center; }
+            .brand-minimal { margin-right: auto; }
+            .certification-badge { display: none; }
+            .nav-menu { width: 100%; }
+            .nav-tab-btn { min-height: 42px; }
+            .upload-tabs { flex-direction: column; }
+            .tab-btn, .btn-minimal, .btn-sub { min-height: 44px; }
+            .toast { bottom: 1rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
     </style>
 </head>
 <body>
@@ -862,8 +1035,9 @@
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
         <div id="viewAuditoria" class="view-container">
             <section class="hero-section">
-                <h2>Cotillea a tus <span>seguidores</span></h2>
-                <p>Descubre al instante quién no te sigue de vuelta, encuentra a tus fans ocultos y limpia tus conexiones de Instagram con total privacidad y sin riesgos para tu cuenta.</p>
+                <h2>Audita tus <span>conexiones</span></h2>
+                <p>Descubre quién no te sigue de vuelta, identifica a tus fans y revisa tus conexiones de Instagram con total privacidad, directamente desde tu dispositivo.</p>
+                <p><button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">Cómo descargar tus datos de Instagram</button></p>
             </section>
 
             <!-- Guide Cards (3 Steps) -->
@@ -880,7 +1054,7 @@
                         <div class="guide-number">2</div>
                         <h3>Carga del ZIP</h3>
                     </div>
-                    <p>Arrastra tu archivo comprimido o selecciona tus ficheros de manera local y encriptada.</p>
+                    <p>Arrastra tu archivo comprimido o selecciona tus ficheros para procesarlos de forma local.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-step-header">
@@ -948,10 +1122,16 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                     Ejecutar Auditoría Cruzada
                 </button>
+                <div class="privacy-note" role="note">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <div><strong>Privacidad por diseño</strong>Los archivos se procesan localmente en este dispositivo. Golifiar no solicita tu contraseña ni almacena tus datos.</div>
+                </div>
+                <div id="uploadStatus" class="status-message" role="status" aria-live="polite"></div>
             </section>
 
             <!-- Results Dashboard -->
             <section id="resultsSection" class="results-section hidden">
+                <div id="resultsStatus" class="status-message success" role="status" aria-live="polite"></div>
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Seguidores</div>
@@ -1036,7 +1216,7 @@
                 <p>Solicite una nueva descarga eligiendo el formato <strong>JSON</strong> (es crucial que no sea HTML) y establezca el rango de fechas en <strong>Desde el principio</strong>.</p>
 
                 <h3>Paso 2: Cargar el archivo comprimido ZIP</h3>
-                <p>Когда Meta procese su solicitud (habitualmente tarda entre 10 y 30 minutos), recibirá una notificación o correo electrónico con el enlace de descarga del archivo <strong>.zip</strong>.</p>
+                <p>Cuando Meta procese su solicitud (habitualmente tarda entre 10 y 30 minutos), recibirá una notificación o correo electrónico con el enlace de descarga del archivo <strong>.zip</strong>.</p>
                 <p>Abra <strong>Golifiar</strong> en su dispositivo Android, iPhone o navegador, seleccione la opción de Archivo ZIP automático y cargue el documento. Nuestro motor leerá de forma encriptada y autónoma los ficheros de seguidores y seguidos.</p>
 
                 <h3>Paso 3: Analizar y gestionar sus métricas</h3>
@@ -1050,7 +1230,7 @@
                 <h2>Quién soy y Filosofía del Proyecto</h2>
                 <p>Golifiar es un proyecto de desarrollo de software independiente impulsado por <strong>DonseCanarias</strong>, con base y sello técnico en el archipiélago canario.</p>
                 <p>La motivación principal detrás de Golifiar surge ante la saturación de aplicaciones de terceros en las tiendas de aplicaciones que comercializan datos de usuario, introducen publicidad abusiva o exigen credenciales de acceso directo a la cuenta de Instagram, poniendo en grave riesgo la seguridad digital de las personas.</p>
-                <p>Frente a ese modelo opaco, Golifiar предлагает un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (RAM del navegador o app).</p>
+                <p>Frente a ese modelo opaco, Golifiar ofrece un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (RAM del navegador o app).</p>
             </div>
         </div>
 
@@ -1114,6 +1294,18 @@
             </div>
         </div>
     </footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="downloadHelpDialog">
+        <h2>Descargar los datos de Instagram</h2>
+        <ol>
+            <li>Abre Instagram y entra en tu perfil.</li>
+            <li>Abre el menú y selecciona <strong>Centro de cuentas</strong>.</li>
+            <li>Ve a <strong>Tu información y permisos</strong> y selecciona <strong>Descargar tu información</strong>.</li>
+            <li>Elige tu cuenta, selecciona <strong>Parte de tu información</strong> y marca seguidores y seguidos.</li>
+            <li>Selecciona formato <strong>JSON</strong>, solicita la descarga y carga aquí el ZIP recibido.</li>
+        </ol>
+        <button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button>
+    </dialog>
 
     <!-- Logic Script -->
     <script>
@@ -1126,11 +1318,38 @@
         let usarModoZip = true;
         let zipFollowersArray = [];
         let zipFollowingDataParsed = null;
+        const MAX_ZIP_SIZE = 250 * 1024 * 1024;
 
         function trigHaptic(duration = 35) {
             if (navigator.vibrate) {
                 try { navigator.vibrate(duration); } catch(e) {}
             }
+        }
+
+        function mostrarEstado(message, kind = '') {
+            const status = document.getElementById('uploadStatus');
+            if (status) {
+                status.textContent = message;
+                status.className = `status-message ${kind}`.trim();
+            }
+        }
+
+        function mostrarToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('visible');
+            window.clearTimeout(window.toastTimer);
+            window.toastTimer = window.setTimeout(() => toast.classList.remove('visible'), 3200);
+        }
+
+        function mostrarAyudaDescarga() {
+            const dialog = document.getElementById('downloadHelpDialog');
+            if (dialog?.showModal) dialog.showModal();
+        }
+
+        function cerrarAyudaDescarga() {
+            document.getElementById('downloadHelpDialog')?.close();
         }
 
         function cambiarVista(vista) {
@@ -1221,12 +1440,23 @@
             const progressFill = document.getElementById('zipProgressFill');
 
             if (!file) return;
+            if (!file.name.toLowerCase().endsWith('.zip')) {
+                input.value = '';
+                mostrarEstado('Selecciona un archivo ZIP válido.', 'error');
+                return;
+            }
+            if (file.size > MAX_ZIP_SIZE) {
+                input.value = '';
+                mostrarEstado('El archivo supera el límite de 250 MB. Solicita una descarga más pequeña.', 'error');
+                return;
+            }
 
             progressContainer.classList.add('active');
             progressFill.style.width = '15%';
             tag.innerText = `Analizando archivo ZIP (${(file.size / (1024*1024)).toFixed(1)} MB)...`;
             tag.classList.add('active');
             tag.style.color = 'var(--accent-blue)';
+            mostrarEstado('Leyendo el archivo localmente. No cierres esta ventana.', '');
 
             try {
                 const zip = new JSZip();
@@ -1277,12 +1507,14 @@
                 }, 500);
 
                 if (zipFollowersArray.length > 0 || zipFollowingDataParsed) {
-                    tag.innerText = `Procesado con exito: ${zipFollowersArray.length} seguidores detectados`;
+                    tag.innerText = `Procesado correctamente: ${zipFollowersArray.length} seguidores detectados`;
                     tag.style.color = 'var(--accent-green)';
+                    mostrarEstado('Archivo preparado. Puedes ejecutar la auditoría.', 'success');
                     trigHaptic(60);
                 } else {
-                    tag.innerText = 'No se detectaron ficheros followers/following validos en el ZIP';
+                    tag.innerText = 'No se encontraron archivos de seguidores o seguidos válidos';
                     tag.style.color = 'var(--accent-rose)';
+                    mostrarEstado('El ZIP no contiene los archivos esperados. Descarga los datos en formato JSON.', 'error');
                 }
 
             } catch (error) {
@@ -1290,6 +1522,7 @@
                 progressContainer.classList.remove('active');
                 tag.innerText = 'Error al descomprimir o leer el archivo ZIP';
                 tag.style.color = 'var(--accent-rose)';
+                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa.', 'error');
             }
         }
 
@@ -1364,7 +1597,8 @@
         async function ejecutarAnalisis() {
             trigHaptic(50);
             const resultsSection = document.getElementById('resultsSection');
-            resultsSection.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            mostrarEstado('Validando los archivos seleccionados...', '');
 
             const wrapper = document.getElementById('resultsWrapper');
             wrapper.innerHTML = `
@@ -1384,8 +1618,7 @@
 
                 if (usarModoZip) {
                     if (zipFollowersArray.length === 0 && !zipFollowingDataParsed) {
-                        alert('Por favor, cargue un archivo ZIP de Instagram válido antes de ejecutar el análisis.');
-                        resultsSection.classList.add('hidden');
+                        mostrarEstado('Carga un ZIP de Instagram válido antes de ejecutar el análisis.', 'error');
                         return;
                     }
                     followersObjs = zipFollowersArray;
@@ -1395,8 +1628,7 @@
                     const followingInput = document.getElementById('followingFile').files[0];
 
                     if (followersInputs.length === 0 && !followingInput) {
-                        alert('Por favor, seleccione al menos un archivo JSON de seguidores o seguidos.');
-                        resultsSection.classList.add('hidden');
+                        mostrarEstado('Selecciona al menos un archivo JSON de seguidores o seguidos.', 'error');
                         return;
                     }
 
@@ -1435,17 +1667,21 @@
                 document.getElementById('countFans').innerText = usuariosFansGlobal.length;
                 document.getElementById('countMutuos').innerText = usuariosMutuosGlobal.length;
 
+                resultsSection.classList.remove('hidden');
                 animarContador('valFollowers', followersArray.length);
                 animarContador('valFollowing', followingArray.length);
                 animarContador('valDiscrepancy', usuariosSinRetornoGlobal.length);
                 animarContador('valReciprocity', reciprocityRate, true);
 
                 renderizarResultadosActuales();
+                const resultsStatus = document.getElementById('resultsStatus');
+                if (resultsStatus) resultsStatus.textContent = `Análisis completado: ${followersArray.length + followingArray.length} registros procesados.`;
+                mostrarEstado('Auditoría completada correctamente.', 'success');
                 trigHaptic(80);
 
             } catch (error) {
                 console.error(error);
-                alert('Ocurrió un error durante la ejecución del análisis. Verifique la estructura de los ficheros.');
+                mostrarEstado('No se pudo completar el análisis. Verifica que los JSON procedan de Instagram.', 'error');
                 resultsSection.classList.add('hidden');
             }
         }
@@ -1690,6 +1926,11 @@
             } else {
                 copiarUsuarios();
             }
+        }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js'));
         }
     </script>
 </body>

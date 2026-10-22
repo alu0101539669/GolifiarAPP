@@ -1,0 +1,19 @@
+{
+  "name": "Golifiar",
+  "short_name": "Golifiar",
+  "description": "Auditoría local de seguidores y seguidos de Instagram.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b6e99",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
