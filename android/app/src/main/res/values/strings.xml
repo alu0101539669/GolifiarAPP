@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">GolifiarAPP</string>
     <string name="title_activity_main">GolifiarAPP</string>
-    <string name="package_name">com.metapulse.app</string>
-    <string name="custom_url_scheme">com.metapulse.app</string>
+    <string name="package_name">com.donsecanarias.golifiar</string>
+    <string name="custom_url_scheme">com.donsecanarias.golifiar</string>
 </resources>

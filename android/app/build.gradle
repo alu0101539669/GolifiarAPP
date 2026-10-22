@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.metapulse.app"
+    namespace = "com.donsecanarias.golifiar"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.metapulse.app"
+        applicationId "com.donsecanarias.golifiar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
