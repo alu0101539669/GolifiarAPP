@@ -225,10 +225,16 @@
         }
 
         .hero-section h2 span {
-            background: none;
+            background: linear-gradient(
+                105deg,
+                #1682aa 0%,
+                #4b8874 48%,
+                #c4932b 100%
+            );
+            background-clip: text;
             -webkit-background-clip: text;
-            -webkit-text-fill-color: var(--accent-blue);
-            color: var(--accent-blue);
+            -webkit-text-fill-color: transparent;
+            color: transparent;
         }
 
         .hero-section h2::after {
@@ -251,8 +257,13 @@
             line-height: 1.6;
         }
 
+        .hero-section > p:last-child {
+            margin-bottom: 2rem;
+        }
+
         @media (max-width: 640px) {
             .hero-section h2 { font-size: 1.65rem; }
+            .hero-section > p:last-child { margin-bottom: 2.5rem; }
         }
 
         /* Guide Cards (3 Steps) */
@@ -1047,14 +1058,14 @@
                         <div class="guide-number">1</div>
                         <h3>Solicitud en Meta</h3>
                     </div>
-                    <p>Descarga tu copia de seguridad oficial en formato JSON desde la Sede de Privacidad de Instagram.</p>
+                    <p>Descarga una copia oficial de tus datos en formato JSON desde el Centro de cuentas de Instagram.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-step-header">
                         <div class="guide-number">2</div>
                         <h3>Carga del ZIP</h3>
                     </div>
-                    <p>Arrastra tu archivo comprimido o selecciona tus ficheros para procesarlos de forma local.</p>
+                    <p>Arrastra tu archivo comprimido o selecciona tus archivos para procesarlos de forma local.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-step-header">
@@ -1208,19 +1219,19 @@
         <!-- ================= VIEW 2: CÓMO USARLO ================= -->
         <div id="viewComoUsar" class="view-container hidden">
             <div class="content-view">
-                <h2>Guía Detallada: Cómo cotillear tus seguidores</h2>
-                <p>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para ofrecer analíticas de conexiones en Instagram con absoluta seguridad y transparencia, procesando todo localmente en su propio dispositivo.</p>
+                <h2>Guía detallada: cómo analizar tus conexiones</h2>
+                <p>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para analizar tus conexiones de Instagram con seguridad y transparencia. Todo el procesamiento se realiza en tu dispositivo.</p>
 
                 <h3>Paso 1: Solicitar la descarga de datos en Meta</h3>
-                <p>Para analizar sus conexiones, Meta requiere que descargue una copia oficial de su información personal. Abra la aplicación de Instagram, dirijase a <strong>Configuración y privacidad > Centro de cuentas > Tu información y permisos > Descargar tu información</strong>.</p>
-                <p>Solicite una nueva descarga eligiendo el formato <strong>JSON</strong> (es crucial que no sea HTML) y establezca el rango de fechas en <strong>Desde el principio</strong>.</p>
+                <p>Para analizar tus conexiones, Meta requiere que descargues una copia oficial de tu información personal. Abre Instagram y ve a <strong>Configuración y privacidad &gt; Centro de cuentas &gt; Tu información y permisos &gt; Descargar tu información</strong>.</p>
+                <p>Solicita una nueva descarga en formato <strong>JSON</strong>; es importante que no selecciones HTML. Establece el rango de fechas en <strong>Desde el principio</strong>.</p>
 
                 <h3>Paso 2: Cargar el archivo comprimido ZIP</h3>
-                <p>Cuando Meta procese su solicitud (habitualmente tarda entre 10 y 30 minutos), recibirá una notificación o correo electrónico con el enlace de descarga del archivo <strong>.zip</strong>.</p>
-                <p>Abra <strong>Golifiar</strong> en su dispositivo Android, iPhone o navegador, seleccione la opción de Archivo ZIP automático y cargue el documento. Nuestro motor leerá de forma encriptada y autónoma los ficheros de seguidores y seguidos.</p>
+                <p>Cuando Meta procese tu solicitud, normalmente entre 10 y 30 minutos, recibirás una notificación o un correo electrónico con el enlace para descargar el archivo <strong>.zip</strong>.</p>
+                <p>Abre <strong>Golifiar</strong> en tu dispositivo Android, iPhone o navegador. Selecciona la opción de archivo ZIP automático y carga el documento. El análisis se realiza de forma local y automática.</p>
 
                 <h3>Paso 3: Analizar y gestionar sus métricas</h3>
-                <p>Una vez procesado, el panel mostrará de forma desglosada las cuentas que no le siguen de vuelta, sus fans ocultos y sus amigos mutuos. Podrá filtrar por nombre, ordenar alfabéticamente, copiar la lista al portapapeles o exportarla en formato CSV.</p>
+                <p>Una vez procesado, el panel mostrará las cuentas que no te siguen de vuelta, tus seguidores y las conexiones mutuas. Podrás filtrar por nombre, ordenar alfabéticamente, copiar la lista al portapapeles o exportarla en formato CSV.</p>
             </div>
         </div>
 
@@ -1229,7 +1240,7 @@
             <div class="content-view">
                 <h2>Quién soy y Filosofía del Proyecto</h2>
                 <p>Golifiar es un proyecto de desarrollo de software independiente impulsado por <strong>DonseCanarias</strong>, con base y sello técnico en el archipiélago canario.</p>
-                <p>La motivación principal detrás de Golifiar surge ante la saturación de aplicaciones de terceros en las tiendas de aplicaciones que comercializan datos de usuario, introducen publicidad abusiva o exigen credenciales de acceso directo a la cuenta de Instagram, poniendo en grave riesgo la seguridad digital de las personas.</p>
+                <p>Golifiar nace como alternativa a las aplicaciones de terceros que comercializan datos de usuario, muestran publicidad abusiva o solicitan las credenciales de Instagram, poniendo en riesgo la seguridad digital de las personas.</p>
                 <p>Frente a ese modelo opaco, Golifiar ofrece un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (RAM del navegador o app).</p>
             </div>
         </div>
@@ -1264,12 +1275,12 @@
         <div id="viewDocumentacion" class="view-container hidden">
             <div class="content-view">
                 <h2>Documentación Técnica y Arquitectura</h2>
-                <p>Golifiar está construida utilizando tecnologías web robustas y optimizadas para entornos móviles de alto rendimiento (Android e iOS).</p>
+                <p>Golifiar está construida con tecnologías web robustas y optimizadas para dispositivos móviles Android e iOS.</p>
 
                 <h3>Especificación de Ficheros Analizados en el ZIP</h3>
-                <p>Cuando el motor detecta el archivo ZIP de exportación de Meta, realiza un recorrido asíncrono buscando los siguientes objetos de datos oficiales:</p>
+                <p>Cuando el motor detecta el archivo ZIP exportado desde Meta, busca de forma asíncrona los siguientes archivos oficiales:</p>
                 <ul>
-                    <li><code>connections/followers_and_following/followers_1.json</code> (y sucesivos ficheros paginados).</li>
+                    <li><code>connections/followers_and_following/followers_1.json</code> (y sucesivos archivos paginados).</li>
                     <li><code>connections/followers_and_following/following.json</code>.</li>
                 </ul>
                 <p>Cada nodo JSON es recorrido mediante algoritmos recursivos de alta eficiencia para extraer los campos <code>string_list_data.value</code> o enlaces de perfil, normalizando los nombres a minúsculas para evitar duplicidades por mayúsculas.</p>
