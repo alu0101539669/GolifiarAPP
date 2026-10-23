@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v5';
+const CACHE_NAME = 'golifiar-v6';
 const APP_SHELL = [
   './',
   './index.html',

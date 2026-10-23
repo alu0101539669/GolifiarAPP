@@ -4,48 +4,77 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0b6e99">
-    <meta name="description" content="Auditoría local de seguidores y seguidos de Instagram. Tus archivos no salen de tu dispositivo.">
+    <meta name="description" content="Analiza tu perfil de Instagram a partir de tu descarga de datos: seguidores, interacciones, actividad y mensajes. Tus archivos no salen de tu dispositivo.">
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
-    <title>Golifiar | Auditoría y Análisis de Conexiones de Instagram</title>
+    <title>Golifiar | Análisis de tu perfil de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
     <script src="./vendor/jszip.min.js"></script>
     <script src="./perfil.js" defer></script>
     <style>
         :root {
-            --bg-body: #ffffff;
+            color-scheme: light dark;
+            --bg-body: #f4f7f9;
             --bg-card: #ffffff;
             --bg-card-hover: #f8fafc;
-            --border-color: #e5e7eb;
-            --border-accent: rgba(37, 99, 235, 0.24);
-            --text-primary: #0f172a;
-            --text-secondary: #4b5563;
-            --text-muted: #6b7280;
+            --border-color: #e2e8ee;
+            --border-accent: rgba(11, 110, 153, 0.24);
+            --text-primary: #0c2230;
+            --text-secondary: #455a68;
+            --text-muted: #62767f;
             --accent-blue: #0b6e99;
-            --accent-blue-light: #edf7fb;
-            --accent-gold: #d19a24;
-            --accent-green: #427a68;
+            --accent-blue-light: #e6f3f9;
+            --accent-gold: #b57f0c;
+            --accent-green: #2f7a5f;
             --accent-rose: #c2415b;
+            --surface-1: #f8fafc;
+            --surface-2: #f1f5f9;
+            --surface-3: #e2e8f0;
+            --line-strong: #cbd5e1;
+            --header-bg: rgba(255, 255, 255, 0.88);
+            --on-accent: #ffffff;
+            --gold-bg: #fffdf5;
+            --gold-border: #ead9a6;
+            --gold-ink: #795f17;
+            --gold-ink-2: #6b5a25;
+            --gold-ink-3: #8a6c18;
+            --shadow-ink: 15, 23, 42;
             --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --header-h: 72px;
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #ffffff;
-                --bg-card: #ffffff;
-                --bg-card-hover: #f8fafc;
-                --border-color: #e5e7eb;
-                --text-primary: #0f172a;
-                --text-secondary: #4b5563;
-                --text-muted: #6b7280;
-                --accent-blue-light: #edf7fb;
+                --bg-body: #0a1a24;
+                --bg-card: #112533;
+                --bg-card-hover: #16303f;
+                --border-color: #234052;
+                --border-accent: rgba(76, 180, 222, 0.35);
+                --text-primary: #e8f1f6;
+                --text-secondary: #b4c6d2;
+                --text-muted: #8aa0ae;
+                --accent-blue: #4cb4de;
+                --accent-blue-light: #12344a;
+                --accent-gold: #e6b448;
+                --accent-green: #5fb89a;
+                --accent-rose: #f0728b;
+                --surface-1: #0f2230;
+                --surface-2: #16303f;
+                --surface-3: #1f3d4f;
+                --line-strong: #35566b;
+                --header-bg: rgba(10, 26, 36, 0.88);
+                --gold-bg: #231f10;
+                --gold-border: #5c4a1b;
+                --gold-ink: #e6c875;
+                --gold-ink-2: #d8c28a;
+                --gold-ink-3: #e0bf6a;
+                --shadow-ink: 0, 0, 0;
             }
-            .header-minimal { background: rgba(255, 255, 255, 0.94); }
-            .nav-menu, .upload-tabs { background: #f8fafc; }
-            .nav-tab-btn.active, .tab-btn.active { background: #ffffff; }
-            .dropzone { background: #fcfdff; border-color: #d1d5db; }
-            .dropzone:hover { background: #f8fbff; }
-            select, .search-box input { background-color: #ffffff; color: var(--text-primary); }
+            select.btn-sub { background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b4c6d2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); }
+            .privacy-note { background: rgba(95, 184, 154, 0.1); border-color: rgba(95, 184, 154, 0.3); }
+            .badge-status { background: rgba(240, 114, 139, 0.12); border-color: rgba(240, 114, 139, 0.3); }
+            .badge-fan { background: rgba(230, 180, 72, 0.12); border-color: rgba(230, 180, 72, 0.3); }
+            .badge-mutual { background: rgba(95, 184, 154, 0.12); border-color: rgba(95, 184, 154, 0.3); }
         }
 
         * {
@@ -72,7 +101,7 @@
             position: fixed;
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, rgba(11, 110, 153, 0.035) 0%, rgba(255, 255, 255, 0) 70%);
+            background: radial-gradient(circle, rgba(11, 110, 153, 0.06) 0%, rgba(11, 110, 153, 0) 70%);
             top: -150px;
             right: -150px;
             z-index: 0;
@@ -82,7 +111,7 @@
         /* Header & Navigation */
         .header-minimal {
             border-bottom: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--header-bg);
             backdrop-filter: blur(16px);
             position: sticky;
             top: 0;
@@ -156,7 +185,7 @@
         .nav-menu {
             display: flex;
             gap: 0.25rem;
-            background: #f1f5f9;
+            background: var(--surface-2);
             padding: 0.25rem;
             border-radius: 9999px;
             border: 1px solid var(--border-color);
@@ -175,7 +204,7 @@
         }
 
         .nav-tab-btn.active {
-            background: #ffffff;
+            background: var(--bg-card);
             color: var(--accent-blue);
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
         }
@@ -348,7 +377,7 @@
         .upload-tabs {
             display: flex;
             gap: 0.5rem;
-            background: #f1f5f9;
+            background: var(--surface-2);
             padding: 0.35rem;
             border-radius: 10px;
             border: 1px solid var(--border-color);
@@ -372,7 +401,7 @@
         }
 
         .tab-btn.active {
-            background: #ffffff;
+            background: var(--bg-card);
             color: var(--accent-blue);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
@@ -388,8 +417,8 @@
         }
 
         .dropzone {
-            background: #f8fafc;
-            border: 2px dashed #cbd5e1;
+            background: var(--surface-1);
+            border: 2px dashed var(--line-strong);
             border-radius: 12px;
             padding: 2rem 1rem;
             text-align: center;
@@ -405,7 +434,7 @@
 
         .dropzone:hover {
             border-color: var(--accent-blue);
-            background: #f0f9ff;
+            background: var(--accent-blue-light);
         }
 
         .dropzone input[type="file"] {
@@ -460,7 +489,7 @@
             width: 100%;
             max-width: 280px;
             height: 6px;
-            background: #e2e8f0;
+            background: var(--surface-3);
             border-radius: 9999px;
             overflow: hidden;
             margin-top: 0.75rem;
@@ -534,10 +563,8 @@
         }
 
         .metric-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 0.82rem;
+            font-weight: 600;
             color: var(--text-muted);
         }
 
@@ -561,7 +588,7 @@
         .category-tabs {
             display: flex;
             gap: 0.5rem;
-            background: #e2e8f0;
+            background: var(--surface-3);
             padding: 0.35rem;
             border-radius: 12px;
             flex-wrap: wrap;
@@ -583,7 +610,7 @@
         }
 
         .cat-tab.active {
-            background: #ffffff;
+            background: var(--bg-card);
             color: var(--accent-blue);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
@@ -657,7 +684,7 @@
         }
 
         .btn-sub:hover {
-            background: #f8fafc;
+            background: var(--surface-1);
             border-color: var(--accent-blue);
             color: var(--text-primary);
         }
@@ -675,9 +702,12 @@
             display: flex;
             flex-direction: column;
             gap: 0.6rem;
-            max-height: 500px;
+            max-height: 520px;
             overflow-y: auto;
-            padding-right: 0.3rem;
+            padding: 0 0.3rem 1.25rem 0;
+            scroll-padding-bottom: 1.25rem;
+            -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
+            mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
         }
 
         .results-list::-webkit-scrollbar {
@@ -685,7 +715,7 @@
         }
 
         .results-list::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--line-strong);
             border-radius: 9999px;
         }
 
@@ -702,7 +732,7 @@
         }
 
         .user-card:hover {
-            background: #f8fafc;
+            background: var(--surface-1);
             border-color: var(--accent-blue);
             transform: translateX(4px);
             box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
@@ -788,13 +818,13 @@
         }
         .skeleton-line {
             height: 14px;
-            background: #e2e8f0;
+            background: var(--surface-3);
             border-radius: 4px;
             width: 140px;
         }
         .skeleton-badge {
             height: 22px;
-            background: #e2e8f0;
+            background: var(--surface-3);
             border-radius: 6px;
             width: 80px;
         }
@@ -824,20 +854,20 @@
 
         .premium-panel,
         .history-panel {
-            border: 1px solid #ead9a6;
+            border: 1px solid var(--gold-border);
             border-radius: 14px;
-            background: #fffdf5;
+            background: var(--gold-bg);
             padding: 1.25rem;
         }
-        .premium-panel h3, .history-panel h3 { color: #795f17; margin-bottom: 0.4rem; }
+        .premium-panel h3, .history-panel h3 { color: var(--gold-ink); margin-bottom: 0.4rem; }
         .premium-panel p, .history-panel p { color: var(--text-secondary); line-height: 1.55; font-size: 0.86rem; margin-bottom: 0.9rem; }
         .premium-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin: 0.9rem 0; }
-        .premium-feature { color: #6b5a25; font-size: 0.82rem; }
+        .premium-feature { color: var(--gold-ink-2); font-size: 0.82rem; }
         .premium-feature::before { content: "—"; margin-right: 0.4rem; color: var(--accent-gold); }
         .panel-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
         .history-list { display: grid; gap: 0.5rem; margin-top: 0.8rem; }
-        .history-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 9px; background: #fff; font-size: 0.82rem; }
-        .premium-lock { color: #8a6c18; font-size: 0.76rem; font-weight: 700; }
+        .history-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 9px; background: var(--bg-card); font-size: 0.82rem; }
+        .premium-lock { color: var(--gold-ink-3); font-size: 0.76rem; font-weight: 700; }
         .filter-summary { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.4rem; }
         @media (max-width: 640px) {
             .premium-features { grid-template-columns: 1fr; }
@@ -884,7 +914,7 @@
         /* Footer */
         .footer-minimal {
             border-top: 1px solid var(--border-color);
-            background: #ffffff;
+            background: var(--bg-card);
             padding: 2rem 1.5rem;
             margin-top: 3rem;
             font-size: 0.8rem;
@@ -1072,13 +1102,13 @@
         .pf-note { color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; margin-top: 0.75rem; }
         .pf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
         @media (max-width: 768px) { .pf-two { grid-template-columns: minmax(0, 1fr); } }
-        .pf-badge { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); background: #f1f5f9; border-radius: 999px; padding: 0.15rem 0.55rem; white-space: nowrap; }
+        .pf-badge { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); background: var(--surface-2); border-radius: 999px; padding: 0.15rem 0.55rem; white-space: nowrap; }
         .pf-hbars { display: flex; flex-direction: column; gap: 0.55rem; }
         .pf-hrow { display: grid; grid-template-columns: minmax(90px, 170px) 1fr auto; gap: 0.2rem 0.75rem; align-items: center; font-size: 0.82rem; }
         .pf-hlabel { color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .pf-hlabel a { color: inherit; text-decoration: none; }
         .pf-hlabel a:hover { color: var(--accent-blue); }
-        .pf-htrack { height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden; }
+        .pf-htrack { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
         .pf-hbar { display: block; height: 100%; background: var(--accent-blue); border-radius: 0 4px 4px 0; }
         .pf-hval { color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: right; }
         .pf-hdet { grid-column: 2 / 4; color: var(--text-muted); font-size: 0.74rem; margin-top: -0.1rem; }
@@ -1099,7 +1129,7 @@
         .pf-heat { display: grid; grid-template-columns: 2.6rem repeat(24, minmax(0, 1fr)); gap: 2px; align-items: center; overflow-x: auto; }
         .pf-heath, .pf-heatd { font-size: 0.64rem; color: var(--text-muted); text-align: center; }
         .pf-heatd { text-align: left; }
-        .pf-hc { height: 18px; border-radius: 3px; background: #f1f5f9; }
+        .pf-hc { height: 18px; border-radius: 3px; background: var(--surface-2); }
         .pf-heatkey { display: flex; gap: 4px; align-items: center; margin-top: 0.6rem; font-size: 0.7rem; color: var(--text-muted); }
         .pf-heatkey i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
         .pf-det { border: 1px solid var(--border-color); border-radius: 10px; margin-top: 0.5rem; }
@@ -1112,6 +1142,59 @@
         .pf-tabla th, .pf-tabla td { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border-color); }
         .pf-tabla { max-height: 260px; overflow: auto; }
         .pf-resumen-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+    
+        /* ===== Diseño: ajustes generales ===== */
+        :focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+        #resultsSection { scroll-margin-top: calc(var(--header-h) + 8px); }
+        .profile-tabs { top: calc(var(--header-h) + 6px); box-shadow: 0 6px 16px rgba(var(--shadow-ink), 0.06); }
+        .cat-tab.sin-datos { opacity: 0.55; }
+        .cat-tab.sin-datos::after { content: " ·"; opacity: 0.6; }
+        .chk { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 650; color: var(--text-secondary); cursor: pointer; min-height: 40px; }
+        .chk input { width: 16px; height: 16px; accent-color: var(--accent-blue); }
+        .user-flag { font-size: 0.72rem; font-weight: 700; color: var(--accent-rose); }
+        .user-mark { background: none; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); font: inherit; font-size: 0.72rem; font-weight: 650; padding: 0.25rem 0.5rem; cursor: pointer; white-space: nowrap; }
+        .user-mark:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
+        .user-card.no-disponible { opacity: 0.6; }
+        .danger-link { background: none; border: 0; color: var(--text-muted); font: inherit; font-size: 0.8rem; font-weight: 650; text-decoration: underline; cursor: pointer; padding: 0.5rem 0; }
+        .danger-link:hover { color: var(--accent-rose); }
+        .hero-section h2 span { background: none; -webkit-text-fill-color: currentColor; color: inherit; }
+
+        @media (max-width: 640px) {
+            .profile-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+            .profile-tabs::-webkit-scrollbar { display: none; }
+            .profile-tabs .cat-tab { flex: 0 0 auto; min-width: 0; padding: 0.65rem 0.9rem; white-space: nowrap; }
+            .filter-dropdowns { display: flex; flex-wrap: nowrap; gap: 0.5rem; overflow-x: auto; width: 100%; padding-bottom: 0.25rem; scrollbar-width: none; }
+            .filter-dropdowns > * { flex: 0 0 auto; }
+            .filter-dropdowns .btn-sub { min-height: 40px; padding: 0.5rem 2rem 0.5rem 0.8rem; }
+            .results-actions { width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+            .results-actions .btn-sub { flex: 0 0 auto; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+            .metric-card { padding: 1rem; }
+            .metric-number { font-size: 1.75rem; }
+            .user-card { padding: 0.8rem 0.9rem; }
+            .pf-heat { min-width: 560px; }
+            .pf-heatwrap { overflow-x: auto; }
+        }
+
+        /* ===== Resumen y comparación ===== */
+        .pf-hero { display: grid; grid-template-columns: auto 1fr; gap: 1.75rem; align-items: center; padding: 1.75rem; border: 1px solid var(--border-accent); border-radius: 16px; background: var(--bg-card); }
+        .pf-hero h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+        .pf-hero p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55; max-width: 62ch; margin-bottom: 1rem; }
+        .pf-ring { width: 150px; height: 150px; display: block; }
+        .pf-ring-num { font-size: 40px; font-weight: 800; fill: var(--text-primary); letter-spacing: -0.03em; }
+        @media (max-width: 640px) { .pf-hero { grid-template-columns: 1fr; justify-items: center; text-align: left; padding: 1.25rem; } .pf-hero-body { width: 100%; } }
+        .pf-finds { list-style: none; display: flex; flex-direction: column; }
+        .pf-finds li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
+        .pf-finds li:last-child { border-bottom: 0; padding-bottom: 0; }
+        .pf-link { background: none; border: 0; color: var(--accent-blue); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; padding: 0.35rem 0; }
+        .pf-link:hover { text-decoration: underline; }
+        .pf-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+        .pf-chip { font-size: 0.8rem; font-weight: 650; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px dashed var(--line-strong); color: var(--text-muted); }
+        .pf-chip.on { border-style: solid; border-color: var(--accent-green); color: var(--accent-green); }
+        .pf-upload { display: inline-flex; width: fit-content; cursor: pointer; }
+        .pf-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .pf-upload:focus-within { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+        .pf-snaps { margin-top: 0.9rem; max-height: 260px; }
     </style>
 </head>
 <body>
@@ -1132,7 +1215,7 @@
                 </div>
             </a>
             <nav class="nav-menu">
-                <button class="nav-tab-btn active" id="navAuditoria" onclick="cambiarVista('auditoria')">Auditoría</button>
+                <button class="nav-tab-btn active" id="navAuditoria" onclick="cambiarVista('auditoria')">Analizar</button>
                 <button class="nav-tab-btn" id="navComoUsar" onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button class="nav-tab-btn" id="navQuienSoy" onclick="cambiarVista('quiensoy')">Quién soy</button>
             </nav>
@@ -1149,8 +1232,8 @@
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
         <div id="viewAuditoria" class="view-container">
             <section class="hero-section">
-                <h2>Audita tus <span>conexiones</span></h2>
-                <p>Descubre quién no te sigue de vuelta, identifica a tus fans y revisa tus conexiones de Instagram con total privacidad, directamente desde tu dispositivo.</p>
+                <h2>Analiza tu perfil de Instagram</h2>
+                <p>Sube el ZIP que te descarga Instagram y descubre quién no te sigue de vuelta, con quién interactúas y cuándo estás más activo. Todo se procesa en tu dispositivo.</p>
                 <p><button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">Cómo descargar tus datos de Instagram</button></p>
             </section>
 
@@ -1159,23 +1242,23 @@
                 <div class="guide-card">
                     <div class="guide-step-header">
                         <div class="guide-number">1</div>
-                        <h3>Solicitud en Meta</h3>
+                        <h3>Pide tus datos</h3>
                     </div>
-                    <p>Descarga una copia oficial de tus datos en formato JSON desde el Centro de cuentas de Instagram.</p>
+                    <p>En el Centro de cuentas de Instagram, descarga tu información en formato JSON.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-step-header">
                         <div class="guide-number">2</div>
-                        <h3>Carga del ZIP</h3>
+                        <h3>Sube el ZIP</h3>
                     </div>
-                    <p>Arrastra tu archivo comprimido o selecciona tus archivos para procesarlos de forma local.</p>
+                    <p>Arrastra el archivo o elígelo desde tu dispositivo. No se envía a ningún servidor.</p>
                 </div>
                 <div class="guide-card">
                     <div class="guide-step-header">
                         <div class="guide-number">3</div>
-                        <h3>Análisis de Reciprocidad</h3>
+                        <h3>Explora tu perfil</h3>
                     </div>
-                    <p>El motor calcula al instante las discrepancias, fans y conexiones mutuas.</p>
+                    <p>Seguidores, interacciones, actividad, mensajes y contenido, en pestañas.</p>
                 </div>
             </section>
 
@@ -1184,11 +1267,11 @@
                 <div class="upload-tabs">
                     <button class="tab-btn active" onclick="cambiarModoUpload('zip')">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Archivo ZIP (Automático)
+                        Archivo ZIP
                     </button>
                     <button class="tab-btn" onclick="cambiarModoUpload('manual')">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        Archivos JSON Manuales
+                        JSON sueltos
                     </button>
                 </div>
 
@@ -1198,8 +1281,8 @@
                         <input type="file" id="zipFileInput" accept=".zip" onchange="procesarZipAutomatico(this)">
                         <div class="dropzone-content">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span class="dropzone-title">Seleccione o arrastre su archivo .ZIP</span>
-                            <span class="dropzone-desc">Extracción y análisis inteligente en memoria RAM</span>
+                            <span class="dropzone-title">Elige o arrastra tu archivo .ZIP</span>
+                            <span class="dropzone-desc">Se lee en tu dispositivo, sin subirlo a ningún sitio</span>
                             <span id="tagZip" class="file-status-tag">Ningún archivo ZIP seleccionado</span>
                             <div id="zipProgressBar" class="progress-bar-container">
                                 <div id="zipProgressFill" class="progress-bar-fill"></div>
@@ -1234,11 +1317,11 @@
 
                 <button class="btn-minimal" onclick="ejecutarAnalisis()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                    Ejecutar Auditoría Cruzada
+                    Analizar mi perfil
                 </button>
                 <div class="privacy-note" role="note">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <div><strong>Privacidad por diseño</strong>Los archivos se procesan localmente en este dispositivo. Golifiar no solicita tu contraseña ni almacena tus datos.</div>
+                    <div><strong>Privacidad por diseño</strong>Todo se procesa en este dispositivo y Golifiar nunca pide tu contraseña. De tus mensajes y comentarios solo se cuentan fechas y cantidades; su texto no se guarda ni se muestra.</div>
                 </div>
                 <div id="uploadStatus" class="status-message" role="status" aria-live="polite"></div>
             </section>
@@ -1247,13 +1330,16 @@
             <section id="resultsSection" class="results-section hidden">
                 <div id="resultsStatus" class="status-message success" role="status" aria-live="polite"></div>
                 <div id="profileTabs" class="category-tabs profile-tabs hidden" role="tablist" aria-label="Secciones del análisis de perfil">
-                    <button class="cat-tab active" id="ptab-seguidores" role="tab" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
-                    <button class="cat-tab" id="ptab-interacciones" role="tab" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
-                    <button class="cat-tab" id="ptab-actividad" role="tab" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
-                    <button class="cat-tab" id="ptab-mensajes" role="tab" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
-                    <button class="cat-tab" id="ptab-contenido" role="tab" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
+                    <button class="cat-tab active" id="ptab-resumen" role="tab" aria-selected="true" onclick="Perfil.cambiarPanel('resumen')">Resumen</button>
+                    <button class="cat-tab" id="ptab-seguidores" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
+                    <button class="cat-tab" id="ptab-interacciones" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
+                    <button class="cat-tab" id="ptab-actividad" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
+                    <button class="cat-tab" id="ptab-mensajes" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
+                    <button class="cat-tab" id="ptab-contenido" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
+                    <button class="cat-tab" id="ptab-comparar" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('comparar')">Comparar</button>
                 </div>
-                <div id="panel-seguidores" class="pf-panel">
+                <div id="panel-resumen" class="pf-panel"></div>
+                <div id="panel-seguidores" class="pf-panel hidden">
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Seguidores</div>
@@ -1303,6 +1389,7 @@
                             <option value="antiguas">Antiguas (&gt; 1 año)</option>
                         </select>
                     </div>
+                    <label class="chk" title="Oculta nombres no válidos y los que marques con «No existe»"><input type="checkbox" id="hideUnavail" checked onchange="filtrarResultados()"><span>Ocultar no disponibles (<span id="countUnavail">0</span>)</span></label>
                     <div class="results-actions">
                         <button class="btn-sub" onclick="alternarOrden()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg>
@@ -1331,15 +1418,17 @@
                     <button class="btn-sub" type="button" onclick="guardarAnalisis()">Guardar análisis</button>
                     <button class="btn-sub" type="button" onclick="generarInformePremium()">Informe HTML Premium</button>
                     <button class="btn-sub" type="button" onclick="Perfil.exportarResumen()">Resumen del perfil (JSON)</button>
+                    <button class="danger-link" type="button" onclick="borrarTodo()">Borrar todos los datos de este dispositivo</button>
                 </div>
                 <p class="results-disclaimer">
-                    Los resultados proceden de tu exportación de Instagram. Si un perfil aparece vacío, puede haber sido eliminado, suspendido, renombrado o dejar de estar disponible. Puedes probar la búsqueda alternativa.
+                    Los resultados proceden de tu exportación de Instagram, que conserva cuentas eliminadas, desactivadas o con otro nombre. Si al abrir un perfil da error, pulsa «No existe» y se ocultará. Las marcas se guardan solo en este dispositivo.
                 </p>
                 </div>
                 <div id="panel-interacciones" class="pf-panel hidden"></div>
                 <div id="panel-actividad" class="pf-panel hidden"></div>
                 <div id="panel-mensajes" class="pf-panel hidden"></div>
                 <div id="panel-contenido" class="pf-panel hidden"></div>
+                <div id="panel-comparar" class="pf-panel hidden"></div>
             </section>
             <section class="premium-panel" aria-labelledby="premiumTitle">
                 <h3 id="premiumTitle">Golifiar Premium</h3>
@@ -1478,6 +1567,29 @@
         let zipFollowingDataParsed = null;
         let zipPerfil = null;
         const MAX_ZIP_SIZE = 250 * 1024 * 1024;
+
+        function ajustarAltoCabecera() {
+            const h = document.querySelector('.header-minimal');
+            if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+        }
+        window.addEventListener('resize', ajustarAltoCabecera);
+        window.addEventListener('load', ajustarAltoCabecera);
+
+        function borrarTodo() {
+            if (!confirm('Se borrarán los análisis cargados, el historial, las instantáneas y las marcas de este dispositivo. ¿Continuar?')) return;
+            ['golifiar-history', 'golifiar-snapshots', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
+            noDisponibles = new Set();
+            usuariosSinRetornoGlobal = []; usuariosFansGlobal = []; usuariosMutuosGlobal = [];
+            zipFollowersArray = []; zipFollowingDataParsed = null; zipPerfil = null;
+            ['zipFileInput', 'followersFile', 'followingFile'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            if (window.Perfil) window.Perfil.render(null, [], []);
+            document.getElementById('resultsSection').classList.add('hidden');
+            const hp = document.getElementById('historyPanel'); if (hp) hp.classList.add('hidden');
+            const tag = document.getElementById('tagZip'); if (tag) { tag.classList.remove('active'); tag.innerText = 'Ningún archivo ZIP seleccionado'; }
+            mostrarEstado('', '');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            mostrarToast('Datos borrados de este dispositivo.');
+        }
 
         function trigHaptic(duration = 35) {
             if (navigator.vibrate) {
@@ -1841,8 +1953,9 @@
                 renderizarResultadosActuales();
                 const resultsStatus = document.getElementById('resultsStatus');
                 if (resultsStatus) resultsStatus.textContent = `Análisis completado: ${followersArray.length + followingArray.length} registros procesados.`;
-                if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : null, followersObjs, followingObjs);
-                mostrarEstado('Auditoría completada correctamente.', 'success');
+                if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : window.Perfil.nuevo(), followersObjs, followingObjs);
+                requestAnimationFrame(() => resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                mostrarEstado('Análisis completado.', 'success');
                 trigHaptic(80);
 
             } catch (error) {
@@ -1895,6 +2008,10 @@
             filtrarResultados();
         }
 
+        function escHtml(t) {
+            return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
         function renderizarResultados(lista) {
             const wrapper = document.getElementById('resultsWrapper');
 
@@ -1921,14 +2038,22 @@
                     metaInfo = `${badgeText} (${fecha})`;
                 }
 
-                html += `
-                    <div class="user-card">
-                    <a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link">
-                            @${user}
+                const invalido = nombreInvalido(user);
+                const marcado = noDisponibles.has(user);
+                const dudosa = invalido || marcado;
+                const enlace = invalido
+                    ? `<span class="user-link">@${escHtml(user)}</span>`
+                    : `<a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link" title="Abrir el perfil en Instagram">
+                            @${escHtml(user)}
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>
+                        </a>`;
+
+                html += `
+                    <div class="user-card${dudosa ? ' no-disponible' : ''}">
+                    ${enlace}
                     <div class="user-actions">
-                        <a href="https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(user)}" target="_blank" rel="noopener noreferrer" class="user-search-link">Buscar</a>
+                        ${invalido ? '<span class="user-flag">Nombre no válido</span>' : (marcado ? '<span class="user-flag">No disponible</span>' : '')}
+                        ${invalido ? '' : `<button class="user-mark" type="button" data-user="${escHtml(user)}" onclick="marcarNoDisponible(this.dataset.user)" title="Si el perfil da error al abrirlo, márcalo para ocultarlo">${marcado ? 'Mostrar' : 'No existe'}</button>`}
                         <span class="${badgeClass}">${metaInfo}</span>
                     </div>
                 </div>
@@ -1939,17 +2064,41 @@
             wrapper.innerHTML = html;
         }
 
-        function filtrarResultados() {
+        /* ---- Cuentas no disponibles (eliminadas, desactivadas o con nombre cambiado) ---- */
+        const CLAVE_NO_DISP = 'golifiar-no-disponibles';
+        function leerNoDisponibles() {
+            try { return new Set(JSON.parse(localStorage.getItem(CLAVE_NO_DISP) || '[]')); } catch (e) { return new Set(); }
+        }
+        let noDisponibles = leerNoDisponibles();
+        function guardarNoDisponibles() {
+            try { localStorage.setItem(CLAVE_NO_DISP, JSON.stringify([...noDisponibles])); } catch (e) { /* sin almacenamiento */ }
+        }
+        // Instagram admite letras, números, puntos y guiones bajos (máx. 30). Lo demás no puede ser una cuenta real.
+        function nombreInvalido(u) {
+            return !u || /^__deleted__/i.test(u) || u.length > 30 || !/^[a-z0-9._]+$/i.test(u);
+        }
+        function esNoDisponible(u) { return nombreInvalido(u) || noDisponibles.has(u); }
+        function marcarNoDisponible(u) {
+            trigHaptic(25);
+            if (noDisponibles.has(u)) noDisponibles.delete(u); else noDisponibles.add(u);
+            guardarNoDisponibles();
+            filtrarResultados();
+            mostrarToast(noDisponibles.has(u) ? `@${u} marcada como no disponible.` : `@${u} vuelve a mostrarse.`);
+        }
+
+        function listaFiltrada(conOcultas) {
             const query = document.getElementById('searchInput').value.toLowerCase().trim();
             const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
             const type = document.getElementById('typeFilter').value;
             const age = document.getElementById('ageFilter').value;
-
-            const listaBase = obtenerListaActual();
+            const ocultar = document.getElementById('hideUnavail').checked && !conOcultas;
             const ahora = Date.now() / 1000;
+            const base = obtenerListaActual();
+            const nOcultas = base.filter(o => esNoDisponible(o.username)).length;
 
-            const filtrados = listaBase.filter(obj => {
+            const lista = base.filter(obj => {
                 const user = obj.username;
+                if (ocultar && esNoDisponible(user)) return false;
                 const matchQuery = user.includes(query);
                 const matchLetter = letter === "" || user.startsWith(letter);
 
@@ -1966,41 +2115,23 @@
                     if (age === 'recientes') matchAge = diffMonths <= 6;
                     if (age === 'antiguas') matchAge = diffMonths > 12;
                 }
-
                 return matchQuery && matchLetter && matchType && matchAge;
             });
+            return { lista, nOcultas };
+        }
+
+        function filtrarResultados() {
+            const { lista, nOcultas } = listaFiltrada();
+            const cnt = document.getElementById('countUnavail');
+            if (cnt) cnt.textContent = nOcultas;
             const summary = document.getElementById('filterSummary');
-            if (summary) summary.textContent = `${filtrados.length} resultado(s) visibles en esta categoría.`;
-            renderizarResultados(filtrados);
+            if (summary) summary.textContent = `${lista.length} resultado(s) visibles en esta categoría.`;
+            renderizarResultados(lista);
         }
 
         function copiarUsuarios() {
             trigHaptic(40);
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
-            const type = document.getElementById('typeFilter').value;
-            const age = document.getElementById('ageFilter').value;
-            const ahora = Date.now() / 1000;
-
-            const lista = obtenerListaActual().filter(obj => {
-                const user = obj.username;
-                const matchQuery = user.includes(query);
-                const matchLetter = letter === "" || user.startsWith(letter);
-                let matchType = true;
-                const hasNumbers = /\d/.test(user);
-                if (type === 'sin_numeros') matchType = !hasNumbers;
-                if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'largos') matchType = user.length > 15;
-                if (type === 'cortos') matchType = user.length <= 15;
-
-                let matchAge = true;
-                if (obj.timestamp > 0) {
-                    const diffMonths = (ahora - obj.timestamp) / (60 * 60 * 24 * 30);
-                    if (age === 'recientes') matchAge = diffMonths <= 6;
-                    if (age === 'antiguas') matchAge = diffMonths > 12;
-                }
-                return matchQuery && matchLetter && matchType && matchAge;
-            });
+            const lista = listaFiltrada().lista;
 
             if (lista.length === 0) {
                 alert('No hay registros disponibles para copiar.');
@@ -2016,31 +2147,7 @@
 
         function exportarCSV() {
             trigHaptic(40);
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
-            const type = document.getElementById('typeFilter').value;
-            const age = document.getElementById('ageFilter').value;
-            const ahora = Date.now() / 1000;
-
-            const lista = obtenerListaActual().filter(obj => {
-                const user = obj.username;
-                const matchQuery = user.includes(query);
-                const matchLetter = letter === "" || user.startsWith(letter);
-                let matchType = true;
-                const hasNumbers = /\d/.test(user);
-                if (type === 'sin_numeros') matchType = !hasNumbers;
-                if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'largos') matchType = user.length > 15;
-                if (type === 'cortos') matchType = user.length <= 15;
-
-                let matchAge = true;
-                if (obj.timestamp > 0) {
-                    const diffMonths = (ahora - obj.timestamp) / (60 * 60 * 24 * 30);
-                    if (age === 'recientes') matchAge = diffMonths <= 6;
-                    if (age === 'antiguas') matchAge = diffMonths > 12;
-                }
-                return matchQuery && matchLetter && matchType && matchAge;
-            });
+            const lista = listaFiltrada().lista;
 
             if (lista.length === 0) {
                 alert('No hay registros disponibles para exportar.');
@@ -2057,6 +2164,7 @@
         }
 
         function limpiarFiltros() {
+            const hu = document.getElementById('hideUnavail'); if (hu) hu.checked = true;
             document.getElementById('searchInput').value = '';
             document.getElementById('letterFilter').value = '';
             document.getElementById('typeFilter').value = 'todos';
@@ -2186,8 +2294,8 @@
             }
             if (navigator.share) {
                 navigator.share({
-                    title: 'Golifiar Auditoría',
-                    text: `Auditoría completada con Golifiar: ${lista.length} perfiles en esta categoría.`,
+                    title: 'Golifiar',
+                    text: `Análisis completado con Golifiar: ${lista.length} perfiles en esta categoría.`,
                     url: window.location.href
                 }).catch(console.error);
             } else {

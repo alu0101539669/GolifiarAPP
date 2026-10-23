@@ -291,7 +291,7 @@
   const nota = t => `<p class="pf-note">${t}</p>`;
 
   const faltan = (titulo, pista) => tarjeta(titulo, '',
-    `<div class="empty-state">Tu ZIP no incluye estos datos.<br><small>Al pedir la descarga en Instagram marca «${esc(pista)}», elige formato JSON y vuelve a subir el ZIP.</small></div>`);
+    `<div class="empty-state pf-faltan">Tu ZIP no incluye estos datos.<br><small>Al pedir la descarga en Instagram marca «${esc(pista)}», elige formato JSON y vuelve a subir el ZIP.</small></div>`);
 
   const tabla = (cab, filas) => `<details class="pf-tabla"><summary>Ver como tabla</summary><table><thead><tr>${
     cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
@@ -300,16 +300,16 @@
   const badge = (t, cls) => `<span class="${cls || 'pf-badge'}">${esc(t)}</span>`;
 
   // Barras horizontales: filas = [{label, valor, detalle, badge:[texto, clase], href}]
-  function barrasH(filas, unidad) {
+  function barrasH(filas, unidad, tope) {
     if (!filas.length) return '<div class="empty-state">Sin datos para mostrar.</div>';
-    const max = Math.max(1, ...filas.map(f => f.valor));
+    const max = tope || Math.max(1, ...filas.map(f => f.valor));
     return '<div class="pf-hbars">' + filas.map(f => {
       const w = Math.max(1, Math.round(f.valor / max * 100));
       const lab = f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener noreferrer">${esc(f.label)}</a>` : esc(f.label);
       return `<div class="pf-hrow" title="${esc(f.label)}: ${num(f.valor)} ${esc(unidad || '')}">
         <span class="pf-hlabel">${lab}</span>
         <span class="pf-htrack"><span class="pf-hbar" style="width:${w}%"></span></span>
-        <span class="pf-hval">${num(f.valor)}</span>
+        <span class="pf-hval">${num(f.valor)}${unidad === '%' ? ' %' : ''}</span>
         ${(f.detalle || f.badge) ? `<span class="pf-hdet">${f.badge ? badge(f.badge[0], f.badge[1]) + ' ' : ''}${esc(f.detalle || '')}</span>` : ''}
       </div>`;
     }).join('') + '</div>';
@@ -376,19 +376,21 @@
   function histDias(ts) { const h = new Array(7).fill(0); for (const t of ts) h[diaIdx(new Date(t * 1000))]++; return h; }
   function heatDe(ts, heat) { for (const t of ts) { const dt = new Date(t * 1000); heat[diaIdx(dt) * 24 + dt.getHours()]++; } }
 
+  const calor = pct => `color-mix(in srgb, var(--accent-blue) ${Math.round(pct)}%, transparent)`;
   function mapaCalor(heat) {
     const max = maxDe(heat);
-    let h = '<div class="pf-heat" role="img" aria-label="Mapa de actividad por día de la semana y hora"><span></span>';
+    let h = '<div class="pf-heatwrap"><div class="pf-heat" role="img" aria-label="Mapa de actividad por día de la semana y hora"><span></span>';
     for (let i = 0; i < 24; i++) h += `<span class="pf-heath">${i % 3 === 0 ? i : ''}</span>`;
     for (let d = 0; d < 7; d++) {
       h += `<span class="pf-heatd">${DIAS[d]}</span>`;
       for (let i = 0; i < 24; i++) {
         const v = heat[d * 24 + i];
-        const st = v ? `style="background:rgba(11,110,153,${(0.12 + 0.88 * v / max).toFixed(2)})"` : '';
+        const st = v ? `style="background:${calor(12 + 88 * v / max)}"` : '';
         h += `<span class="pf-hc" ${st} title="${DIAS[d]} ${i}:00 · ${num(v)}"></span>`;
       }
     }
-    return h + '</div><div class="pf-heatkey"><span>menos</span><i style="background:rgba(11,110,153,.12)"></i><i style="background:rgba(11,110,153,.45)"></i><i style="background:rgba(11,110,153,.75)"></i><i style="background:rgba(11,110,153,1)"></i><span>más</span></div>';
+    return h + '</div></div><div class="pf-heatkey"><span>menos</span>' +
+      [12, 45, 75, 100].map(p => `<i style="background:${calor(p)}"></i>`).join('') + '<span>más</span></div>';
   }
 
   function filaUsuario(u, texto, cls) {
@@ -578,7 +580,7 @@
     const enviados = yo ? sum(hilos.map(h => h.emisores.get(yo) || 0)) : 0;
     const grupos = hilos.filter(h => h.grupo).length;
 
-    c.res.mensajes = { conversaciones: hilos.length, grupos, mensajes: total, enviados: yo ? enviados : null, recibidos: yo ? total - enviados : null };
+    c.res.mensajes = { uno: hilos.length - grupos, conversaciones: hilos.length, grupos, mensajes: total, enviados: yo ? enviados : null, recibidos: yo ? total - enviados : null };
     let html = metricas(yo
       ? [['Conversaciones', num(hilos.length)], ['Mensajes totales', num(total)], ['Enviados por ti', num(enviados)], ['Recibidos', num(total - enviados)]]
       : [['Conversaciones', num(hilos.length)], ['Mensajes totales', num(total)], ['Grupos', num(grupos)], ['1 a 1', num(hilos.length - grupos)]]);
@@ -715,9 +717,151 @@
     return html;
   }
 
+  /* ================================ resumen ================================ */
+  function anillo(p) {
+    const C = 2 * Math.PI * 52, on = C * p / 100;
+    return `<svg class="pf-ring" viewBox="0 0 120 120" role="img" aria-label="Puntuación ${p} de 100">
+      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--surface-3)" stroke-width="10"/>
+      <circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent-blue)" stroke-width="10" stroke-linecap="round"
+        stroke-dasharray="${on.toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 60 60)"/>
+      <text x="60" y="60" text-anchor="middle" dominant-baseline="central" class="pf-ring-num">${p}</text></svg>`;
+  }
+  const irA = (tab, txt) => `<button class="pf-link" type="button" onclick="Perfil.cambiarPanel('${tab}')">${esc(txt)}</button>`;
+
+  function panelResumen(d, c) {
+    const comp = [];
+    const nSeg = c.seguidos.size;
+    let mutuos = 0, sinRet = 0, fans = 0;
+    c.seguidos.forEach(u => { if (c.seguidores.has(u)) mutuos++; else sinRet++; });
+    c.seguidores.forEach(u => { if (!c.seguidos.has(u)) fans++; });
+    if (nSeg) comp.push({ label: 'Reciprocidad', valor: Math.round(mutuos / nSeg * 100), detalle: `${num(mutuos)} de las ${num(nSeg)} cuentas que sigues te siguen.` });
+    const ri = c.res.interacciones;
+    if (ri && nSeg && ri.seguidosSinInteraccion != null) comp.push({ label: 'Interacción real', valor: Math.round((1 - ri.seguidosSinInteraccion / nSeg) * 100), detalle: `Interactúas con ${num(nSeg - ri.seguidosSinInteraccion)} de las ${num(nSeg)} cuentas que sigues.` });
+    const rm = c.res.mensajes;
+    if (rm && rm.uno > 0 && rm.esperandoRespuesta != null) comp.push({ label: 'Mensajes al día', valor: Math.round((1 - rm.esperandoRespuesta / rm.uno) * 100), detalle: `${num(rm.esperandoRespuesta)} de ${num(rm.uno)} chats 1 a 1 esperan tu respuesta.` });
+
+    let html = '';
+    if (comp.length) {
+      const score = Math.round(sum(comp.map(x => x.valor)) / comp.length);
+      c.res.resumen = { puntuacion: score, componentes: comp.map(x => ({ nombre: x.label, valor: x.valor })) };
+      html += `<section class="pf-hero"><div class="pf-hero-ring">${anillo(score)}</div><div class="pf-hero-body">
+        <h3>Salud de tu perfil</h3>
+        <p>Media de ${comp.length === 1 ? 'un indicador' : comp.length + ' indicadores'} calculados con tu ZIP. Es una referencia propia de Golifiar, no una métrica de Instagram.</p>
+        ${barrasH(comp.map(x => ({ label: x.label, valor: x.valor, detalle: x.detalle })), '%', 100)}</div></section>`;
+    }
+
+    const h = [];
+    if (nSeg && sinRet) h.push([`Sigues a ${num(sinRet)} cuentas que no te siguen.`, 'seguidores', 'Ver lista']);
+    if (fans) h.push([`${num(fans)} cuentas te siguen y tú no las sigues.`, 'seguidores', 'Ver fans']);
+    if (ri && ri.seguidosSinInteraccion) h.push([`Sigues a ${num(ri.seguidosSinInteraccion)} cuentas sin ninguna interacción registrada.`, 'interacciones', 'Revisar']);
+    if (ri && ri.interactuasSinRetorno) h.push([`Interactúas con ${num(ri.interactuasSinRetorno)} cuentas que no te siguen.`, 'interacciones', 'Ver cuáles']);
+    if (rm && rm.esperandoRespuesta) h.push([`${num(rm.esperandoRespuesta)} chats esperan tu respuesta.`, 'mensajes', 'Ver chats']);
+    if (rm && rm.chatsFrios) h.push([`${num(rm.chatsFrios)} chats con historia llevan más de un año parados.`, 'mensajes', 'Ver chats']);
+    const ra = c.res.actividad;
+    if (ra && ra.horaMasActiva != null) h.push([`Tu hora más activa es a las ${ra.horaMasActiva}:00 y tu día más activo, el ${ra.diaMasActivo}.`, 'actividad', 'Ver actividad']);
+    const rc = c.res.contenido;
+    if (rc && rc.diasMediosEntrePublicaciones) h.push([`Publicas, de media, cada ${num(rc.diasMediosEntrePublicaciones)} días.`, 'contenido', 'Ver ritmo']);
+    const rcu = c.res.cuenta;
+    if (rcu && rcu.anunciantesConTusDatos) h.push([`${num(rcu.anunciantesConTusDatos)} anunciantes usan tu actividad o información.`, 'contenido', 'Ver anunciantes']);
+
+    if (h.length) {
+      html += tarjeta('Lo que destaca', '', `<ul class="pf-finds">${h.map(([t, tab, b]) => `<li><span>${esc(t)}</span>${irA(tab, b)}</li>`).join('')}</ul>`);
+    }
+
+    const tiene = secciones(d);
+    const todas = ['me gusta', 'comentarios', 'mensajes', 'accesos', 'publicaciones', 'datos de cuenta'];
+    const faltan_ = todas.filter(x => !tiene.includes(x));
+    html += tarjeta(comp.length || h.length ? 'Datos que se han leído' : 'Aún hay poco que analizar',
+      comp.length || h.length ? '' : 'Para que aparezcan la puntuación y las conclusiones hacen falta, como mínimo, los seguidores y los seguidos.',
+      `<div class="pf-chips">${tiene.map(x => `<span class="pf-chip on">${esc(x)}</span>`).join('') || ''}${faltan_.map(x => `<span class="pf-chip">${esc(x)}</span>`).join('')}</div>` +
+      (faltan_.length ? nota('Las etiquetas atenuadas no venían en tu ZIP. Para añadirlas, vuelve a pedir la descarga a Instagram marcando esa información en formato JSON.') : ''));
+    return html;
+  }
+
+  /* ============================== comparar descargas ============================== */
+  const CLAVE_SNAP = 'golifiar-snapshots';
+  const leerSnaps = () => { try { return JSON.parse(localStorage.getItem(CLAVE_SNAP) || '[]'); } catch (e) { return []; } };
+  const escribirSnaps = a => { try { localStorage.setItem(CLAVE_SNAP, JSON.stringify(a)); return true; } catch (e) { return false; } };
+  const aviso = t => { if (typeof global.mostrarToast === 'function') global.mostrarToast(t); };
+
+  function comparar(prev, etiqueta) {
+    const cs = new Set(ESTADO.seg.map(o => o.username)), cg = new Set(ESTADO.sig.map(o => o.username));
+    const ps = new Set(prev.seg), pg = new Set(prev.sig);
+    const dif = (a, b) => [...a].filter(x => !b.has(x)).sort();
+    const r = { perdidos: dif(ps, cs), nuevos: dif(cs, ps), dejaste: dif(pg, cg), empezaste: dif(cg, pg) };
+    ESTADO.cmp = { etiqueta, r };
+    ESTADO.cmpHtml = renderResultadoCmp();
+    renderComparar();
+    aviso('Comparación lista.');
+  }
+
+  function renderResultadoCmp() {
+    if (!ESTADO.cmp) return '';
+    const { etiqueta, r } = ESTADO.cmp;
+    const lst = (t, arr, txt) => desplegable(`${t} (${num(arr.length)})`, arr.slice(0, 500).map(u => filaUsuario(u, txt)), 'Ninguno.');
+    return tarjeta(`Cambios desde «${etiqueta}»`, 'Comparado con el análisis que tienes abierto.',
+      metricas([['Dejaron de seguirte', num(r.perdidos.length), r.perdidos.length ? 'highlight' : ''], ['Nuevos seguidores', num(r.nuevos.length), 'green'],
+        ['Dejaste de seguir', num(r.dejaste.length)], ['Empezaste a seguir', num(r.empezaste.length)]]) +
+      lst('Dejaron de seguirte', r.perdidos, 'ya no te sigue') + lst('Nuevos seguidores', r.nuevos, 'te sigue') +
+      lst('Dejaste de seguir', r.dejaste) + lst('Empezaste a seguir', r.empezaste) +
+      nota('Quien «deja de seguirte» puede haber borrado o desactivado su cuenta, no solo haberte dejado de seguir.'));
+  }
+
+  function renderComparar() {
+    const el = document.getElementById('panel-comparar');
+    if (!el) return;
+    const snaps = leerSnaps();
+    const lista = snaps.length ? `<div class="results-list pf-snaps">${snaps.map(x =>
+      `<div class="user-card"><span class="user-link">${esc(new Date(x.date).toLocaleDateString('es-ES'))}</span><div class="user-actions"><span class="pf-badge">${num(x.seg.length)} seguidores · ${num(x.sig.length)} seguidos</span>
+        <button class="user-mark" type="button" onclick="Perfil.compararSnap(${x.id})">Comparar</button><button class="user-mark" type="button" onclick="Perfil.borrarSnap(${x.id})">Borrar</button></div></div>`).join('')}</div>`
+      : '<div class="empty-state">Todavía no has guardado ninguna descarga.</div>';
+    el.innerHTML =
+      tarjeta('Comparar con una descarga anterior', 'Sube un ZIP antiguo de Instagram y verás quién dejó de seguirte, quién te sigue desde entonces y a quién has dejado de seguir. El ZIP se lee en tu dispositivo y no se guarda.',
+        `<label class="btn-sub pf-upload"><input type="file" accept=".zip" onchange="Perfil.compararZip(this)"> Elegir ZIP anterior</label>`) +
+      tarjeta('Descargas guardadas', 'Guarda esta descarga para compararla en el futuro sin conservar el ZIP. Solo se guardan los nombres de usuario de tus seguidores y seguidos, en este dispositivo.',
+        `<div class="panel-actions"><button class="btn-sub" type="button" onclick="Perfil.guardarSnap()">Guardar esta descarga</button></div>${lista}`) +
+      (ESTADO.cmpHtml || '');
+  }
+
+  function guardarSnap() {
+    if (!ESTADO.seg.length && !ESTADO.sig.length) { aviso('No hay seguidores ni seguidos que guardar.'); return; }
+    const snaps = leerSnaps();
+    snaps.unshift({ id: Date.now(), date: new Date().toISOString(), seg: ESTADO.seg.map(o => o.username), sig: ESTADO.sig.map(o => o.username) });
+    if (!escribirSnaps(snaps.slice(0, 6))) { aviso('No se pudo guardar: el almacenamiento de este dispositivo está lleno o bloqueado.'); return; }
+    renderComparar();
+    aviso('Descarga guardada solo en este dispositivo.');
+  }
+  function borrarSnap(id) { escribirSnaps(leerSnaps().filter(x => x.id !== id)); renderComparar(); }
+  function compararSnap(id) {
+    const x = leerSnaps().find(y => y.id === id);
+    if (x) comparar(x, new Date(x.date).toLocaleDateString('es-ES'));
+  }
+
+  async function compararZip(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    try {
+      if (typeof global.JSZip === 'undefined' || typeof global.extraerUsuarios !== 'function') throw new Error('Falta JSZip');
+      const zip = await global.JSZip.loadAsync(file);
+      let seg = [], sig = [];
+      const nombres = [];
+      zip.forEach((ruta, ent) => { if (!ent.dir) nombres.push([ruta, ent]); });
+      for (const [ruta, ent] of nombres) {
+        const base = ruta.toLowerCase().split('/').pop();
+        if (/^followers(_\d+)?\.json$/.test(base)) seg = seg.concat(global.extraerUsuarios(JSON.parse(await ent.async('string'))));
+        else if (base === 'following.json') sig = global.extraerUsuarios(JSON.parse(await ent.async('string')));
+      }
+      if (!seg.length && !sig.length) { aviso('Ese ZIP no contiene seguidores ni seguidos en formato JSON.'); return; }
+      comparar({ seg: seg.map(o => o.username), sig: sig.map(o => o.username) }, file.name.replace(/\.zip$/i, ''));
+    } catch (e) {
+      console.error('Perfil: comparar ZIP', e);
+      aviso('No se pudo leer ese ZIP. Comprueba que sea una descarga completa de Instagram.');
+    } finally { input.value = ''; }
+  }
+
   /* ================================ interfaz ================================ */
-  const PANELES = ['seguidores', 'interacciones', 'actividad', 'mensajes', 'contenido'];
-  const ESTADO = { resumen: null };
+  const PANELES = ['resumen', 'seguidores', 'interacciones', 'actividad', 'mensajes', 'contenido', 'comparar'];
+  const ESTADO = { resumen: null, seg: [], sig: [], cmp: null, cmpHtml: '' };
 
   function cambiarPanel(nombre) {
     if (typeof global.trigHaptic === 'function') global.trigHaptic(20);
@@ -725,14 +869,16 @@
       const panel = document.getElementById('panel-' + p);
       const tab = document.getElementById('ptab-' + p);
       if (panel) panel.classList.toggle('hidden', p !== nombre);
-      if (tab) tab.classList.toggle('active', p === nombre);
+      if (tab) { tab.classList.toggle('active', p === nombre); tab.setAttribute('aria-selected', p === nombre ? 'true' : 'false'); }
     });
+    const act = document.getElementById('ptab-' + nombre);
+    if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
 
   function seguro(fn, d, c, titulo) {
     try { return fn(d, c); } catch (e) {
       console.error('Perfil:', titulo, e);
-      return tarjeta(titulo, '', '<div class="empty-state">No se pudo analizar esta sección con los datos del ZIP.</div>');
+      return tarjeta(titulo, '', '<div class="empty-state pf-faltan">No se pudo analizar esta sección con los datos del ZIP.</div>');
     }
   }
 
@@ -741,12 +887,13 @@
     if (!tabs) return;
     if (!d) {
       tabs.classList.add('hidden');
-      ESTADO.resumen = null;
-      PANELES.slice(1).forEach(p => { const el = document.getElementById('panel-' + p); if (el) el.innerHTML = ''; });
-      cambiarPanelSilencioso('seguidores');
+      ESTADO.resumen = null; ESTADO.seg = []; ESTADO.sig = []; ESTADO.cmp = null; ESTADO.cmpHtml = '';
+      PANELES.forEach(p => { if (p !== 'seguidores') { const el = document.getElementById('panel-' + p); if (el) el.innerHTML = ''; } });
+      cambiarPanelSilencioso('resumen');
       return;
     }
     tabs.classList.remove('hidden');
+    ESTADO.seg = seg || []; ESTADO.sig = sig || []; ESTADO.cmp = null; ESTADO.cmpHtml = '';
     const c = contexto(d, seg, sig);
     const mapa = {
       interacciones: [panelInteracciones, 'Interacciones'], actividad: [panelActividad, 'Actividad y hábitos'],
@@ -754,10 +901,16 @@
     };
     Object.keys(mapa).forEach(k => {
       const el = document.getElementById('panel-' + k);
-      if (el) el.innerHTML = seguro(mapa[k][0], d, c, mapa[k][1]);
+      const html = seguro(mapa[k][0], d, c, mapa[k][1]);
+      if (el) el.innerHTML = html;
+      const tab = document.getElementById('ptab-' + k);
+      if (tab) tab.classList.toggle('sin-datos', html.includes('pf-faltan'));
     });
+    const res = document.getElementById('panel-resumen');
+    if (res) res.innerHTML = seguro(panelResumen, d, c, 'Resumen');
+    renderComparar();
     ESTADO.resumen = Object.assign({ generado: new Date().toISOString(), secciones: secciones(d) }, c.res);
-    cambiarPanelSilencioso('seguidores');
+    cambiarPanelSilencioso('resumen');
   }
   function cambiarPanelSilencioso(n) {
     const h = global.trigHaptic; global.trigHaptic = null; cambiarPanel(n); global.trigHaptic = h;
@@ -769,7 +922,7 @@
     if (typeof global.descargarArchivo === 'function') global.descargarArchivo('golifiar-resumen-perfil.json', txt, 'application/json');
   }
 
-  global.Perfil = { nuevo, procesarEntrada, secciones, render, cambiarPanel, exportarResumen,
+  global.Perfil = { nuevo, procesarEntrada, secciones, render, cambiarPanel, exportarResumen, guardarSnap, borrarSnap, compararSnap, compararZip,
     // expuesto para pruebas
     _int: { panelInteracciones, panelActividad, panelMensajes, panelContenido, contexto, fixText, dispositivo, serieDesdeMapa } };
 })(typeof window !== 'undefined' ? window : globalThis);
