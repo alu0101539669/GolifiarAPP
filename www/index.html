@@ -10,6 +10,7 @@
     <title>Golifiar | Auditoría y Análisis de Conexiones de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
     <script src="./vendor/jszip.min.js"></script>
+    <script src="./perfil.js" defer></script>
     <style>
         :root {
             --bg-body: #ffffff;
@@ -1060,6 +1061,57 @@
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
         }
+    
+        /* ===== Análisis de perfil (perfil.js) ===== */
+        .profile-tabs { position: sticky; top: 64px; z-index: 20; }
+        .pf-panel { display: flex; flex-direction: column; gap: 1.25rem; }
+        .pf-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem; min-width: 0; }
+        .pf-card h3 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 0.25rem; }
+        .pf-sub { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.9rem; }
+        .pf-card > :last-child { margin-bottom: 0; }
+        .pf-note { color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; margin-top: 0.75rem; }
+        .pf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+        @media (max-width: 768px) { .pf-two { grid-template-columns: minmax(0, 1fr); } }
+        .pf-badge { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); background: #f1f5f9; border-radius: 999px; padding: 0.15rem 0.55rem; white-space: nowrap; }
+        .pf-hbars { display: flex; flex-direction: column; gap: 0.55rem; }
+        .pf-hrow { display: grid; grid-template-columns: minmax(90px, 170px) 1fr auto; gap: 0.2rem 0.75rem; align-items: center; font-size: 0.82rem; }
+        .pf-hlabel { color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pf-hlabel a { color: inherit; text-decoration: none; }
+        .pf-hlabel a:hover { color: var(--accent-blue); }
+        .pf-htrack { height: 10px; background: #f1f5f9; border-radius: 5px; overflow: hidden; }
+        .pf-hbar { display: block; height: 100%; background: var(--accent-blue); border-radius: 0 4px 4px 0; }
+        .pf-hval { color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: right; }
+        .pf-hdet { grid-column: 2 / 4; color: var(--text-muted); font-size: 0.74rem; margin-top: -0.1rem; }
+        .pf-stack { display: flex; gap: 2px; height: 10px; }
+        .pf-seg { display: block; height: 100%; min-width: 0; }
+        .pf-seg.a, .pf-key.a { background: var(--accent-blue); }
+        .pf-seg.b, .pf-key.b { background: var(--accent-gold); }
+        .pf-seg.a { border-radius: 4px 0 0 4px; } .pf-seg.b { border-radius: 0 4px 4px 0; }
+        .pf-legend { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.7rem; }
+        .pf-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 0.4rem; }
+        .pf-cols { display: flex; align-items: flex-end; gap: 2px; height: 146px; padding-top: 16px; box-sizing: border-box; border-bottom: 1px solid var(--border-color); }
+        .pf-col { position: relative; flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+        .pf-col:hover { background: var(--bg-card-hover); }
+        .pf-colbar { display: block; width: 100%; max-width: 24px; background: var(--accent-blue); border-radius: 4px 4px 0 0; }
+        .pf-colval { position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
+        .pf-labs { display: flex; gap: 2px; margin-top: 0.35rem; }
+        .pf-lab { flex: 1 1 0; min-width: 0; text-align: center; font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; overflow: visible; }
+        .pf-heat { display: grid; grid-template-columns: 2.6rem repeat(24, minmax(0, 1fr)); gap: 2px; align-items: center; overflow-x: auto; }
+        .pf-heath, .pf-heatd { font-size: 0.64rem; color: var(--text-muted); text-align: center; }
+        .pf-heatd { text-align: left; }
+        .pf-hc { height: 18px; border-radius: 3px; background: #f1f5f9; }
+        .pf-heatkey { display: flex; gap: 4px; align-items: center; margin-top: 0.6rem; font-size: 0.7rem; color: var(--text-muted); }
+        .pf-heatkey i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
+        .pf-det { border: 1px solid var(--border-color); border-radius: 10px; margin-top: 0.5rem; }
+        .pf-det summary, .pf-tabla summary { cursor: pointer; padding: 0.6rem 0.8rem; font-size: 0.82rem; font-weight: 700; color: var(--accent-blue); }
+        .pf-det .results-list { padding: 0 0.6rem 0.6rem; max-height: 340px; }
+        .pf-det .empty-state { padding: 0.8rem; }
+        .pf-tabla { margin-top: 0.6rem; }
+        .pf-tabla summary { padding: 0.3rem 0; font-size: 0.74rem; color: var(--text-muted); }
+        .pf-tabla table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 0.4rem; }
+        .pf-tabla th, .pf-tabla td { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border-color); }
+        .pf-tabla { max-height: 260px; overflow: auto; }
+        .pf-resumen-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
     </style>
 </head>
 <body>
@@ -1194,6 +1246,14 @@
             <!-- Results Dashboard -->
             <section id="resultsSection" class="results-section hidden">
                 <div id="resultsStatus" class="status-message success" role="status" aria-live="polite"></div>
+                <div id="profileTabs" class="category-tabs profile-tabs hidden" role="tablist" aria-label="Secciones del análisis de perfil">
+                    <button class="cat-tab active" id="ptab-seguidores" role="tab" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
+                    <button class="cat-tab" id="ptab-interacciones" role="tab" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
+                    <button class="cat-tab" id="ptab-actividad" role="tab" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
+                    <button class="cat-tab" id="ptab-mensajes" role="tab" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
+                    <button class="cat-tab" id="ptab-contenido" role="tab" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
+                </div>
+                <div id="panel-seguidores" class="pf-panel">
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Seguidores</div>
@@ -1270,10 +1330,16 @@
                     <button class="btn-sub" type="button" onclick="exportarJSON()">JSON</button>
                     <button class="btn-sub" type="button" onclick="guardarAnalisis()">Guardar análisis</button>
                     <button class="btn-sub" type="button" onclick="generarInformePremium()">Informe HTML Premium</button>
+                    <button class="btn-sub" type="button" onclick="Perfil.exportarResumen()">Resumen del perfil (JSON)</button>
                 </div>
                 <p class="results-disclaimer">
                     Los resultados proceden de tu exportación de Instagram. Si un perfil aparece vacío, puede haber sido eliminado, suspendido, renombrado o dejar de estar disponible. Puedes probar la búsqueda alternativa.
                 </p>
+                </div>
+                <div id="panel-interacciones" class="pf-panel hidden"></div>
+                <div id="panel-actividad" class="pf-panel hidden"></div>
+                <div id="panel-mensajes" class="pf-panel hidden"></div>
+                <div id="panel-contenido" class="pf-panel hidden"></div>
             </section>
             <section class="premium-panel" aria-labelledby="premiumTitle">
                 <h3 id="premiumTitle">Golifiar Premium</h3>
@@ -1393,7 +1459,7 @@
             <li>Abre Instagram y entra en tu perfil.</li>
             <li>Abre el menú y selecciona <strong>Centro de cuentas</strong>.</li>
             <li>Ve a <strong>Tu información y permisos</strong> y selecciona <strong>Descargar tu información</strong>.</li>
-            <li>Elige tu cuenta, selecciona <strong>Parte de tu información</strong> y marca seguidores y seguidos.</li>
+            <li>Elige tu cuenta, selecciona <strong>Parte de tu información</strong> y marca <strong>todo lo que quieras analizar</strong>: seguidores y seguidos, actividad (me gusta, comentarios, guardados), mensajes, contenido, información personal e inicios de sesión. Cuanto más marques, más análisis tendrás.</li>
             <li>Selecciona formato <strong>JSON</strong>, solicita la descarga y carga aquí el ZIP recibido.</li>
         </ol>
         <button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button>
@@ -1410,6 +1476,7 @@
         let usarModoZip = true;
         let zipFollowersArray = [];
         let zipFollowingDataParsed = null;
+        let zipPerfil = null;
         const MAX_ZIP_SIZE = 250 * 1024 * 1024;
 
         function trigHaptic(duration = 35) {
@@ -1559,6 +1626,7 @@
 
                 zipFollowersArray = [];
                 zipFollowingDataParsed = null;
+                zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;
 
                 const entries = [];
                 zipContent.forEach((relativePath, zipEntry) => {
@@ -1576,11 +1644,13 @@
                         const json = JSON.parse(content);
                         const fileName = relativePath.toLowerCase().split('/').pop();
 
-                        if (fileName.includes('follower')) {
+                        if (/^followers(_\d+)?\.json$/.test(fileName)) {
                             const extracted = extraerUsuarios(json);
                             zipFollowersArray = zipFollowersArray.concat(extracted);
-                        } else if (fileName.includes('following')) {
+                        } else if (fileName === 'following.json') {
                             zipFollowingDataParsed = json;
+                        } else if (zipPerfil) {
+                            window.Perfil.procesarEntrada(relativePath, json, zipPerfil);
                         }
                     } catch (e) {
                         console.error('Error procesando fichero:', relativePath, e);
@@ -1598,8 +1668,10 @@
                     progressContainer.classList.remove('active');
                 }, 500);
 
-                if (zipFollowersArray.length > 0 || zipFollowingDataParsed) {
-                    tag.innerText = `Procesado correctamente: ${zipFollowersArray.length} seguidores detectados`;
+                const extras = zipPerfil ? window.Perfil.secciones(zipPerfil) : [];
+                if (zipFollowersArray.length > 0 || zipFollowingDataParsed || extras.length) {
+                    tag.innerText = `Procesado correctamente: ${zipFollowersArray.length} seguidores detectados` +
+                        (extras.length ? ` · también: ${extras.join(', ')}` : '');
                     tag.style.color = 'var(--accent-green)';
                     mostrarEstado('Archivo preparado. Puedes ejecutar la auditoría.', 'success');
                     trigHaptic(60);
@@ -1709,7 +1781,8 @@
                 let followingObjs = [];
 
                 if (usarModoZip) {
-                    if (zipFollowersArray.length === 0 && !zipFollowingDataParsed) {
+                    const hayExtras = zipPerfil && window.Perfil.secciones(zipPerfil).length > 0;
+                    if (zipFollowersArray.length === 0 && !zipFollowingDataParsed && !hayExtras) {
                         mostrarEstado('Carga un ZIP de Instagram válido antes de ejecutar el análisis.', 'error');
                         return;
                     }
@@ -1768,6 +1841,7 @@
                 renderizarResultadosActuales();
                 const resultsStatus = document.getElementById('resultsStatus');
                 if (resultsStatus) resultsStatus.textContent = `Análisis completado: ${followersArray.length + followingArray.length} registros procesados.`;
+                if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : null, followersObjs, followingObjs);
                 mostrarEstado('Auditoría completada correctamente.', 'success');
                 trigHaptic(80);
 

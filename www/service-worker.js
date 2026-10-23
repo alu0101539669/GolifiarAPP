@@ -1,7 +1,8 @@
-const CACHE_NAME = 'golifiar-v4';
+const CACHE_NAME = 'golifiar-v5';
 const APP_SHELL = [
   './',
   './index.html',
+  './perfil.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './vendor/jszip.min.js'
