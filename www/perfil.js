@@ -76,7 +76,7 @@
   /* ============================ estado de datos ============================ */
   function nuevo() {
     return {
-      archivos: new Set(),
+      archivos: new Set(), htmlOmitidos: 0,
       likes: new Map(), likesN: { p: 0, c: 0, h: 0 }, likesTs: [],
       com: { total: 0, reels: 0, largo: 0, porOwner: new Map(), ts: [] },
       busquedas: new Map(), busqTs: [],
@@ -101,6 +101,23 @@
     'restricted_profiles.json': 'restringidos',
     'following_hashtags.json': 'hashtags'
   };
+
+  // HTML: solo las listas de cuentas se pueden leer igual que en JSON. El resto de análisis exige JSON.
+  const HTML_LISTAS = Object.keys(REL).map(k => k.replace(/\.json$/, '.html'));
+  const HTML_SOLO_JSON = /(^|\/)(liked_posts|liked_comments|story_likes|post_comments(_\d+)?|reels_comments(_\d+)?|account_searches|saved_posts|login_activity|logout_activity|posts_\d+|reels|stories|personal_information|profile_changes|message_\d+)\.html?$/;
+  function tipoHtml(ruta) {
+    const p = String(ruta).toLowerCase().replace(/\\/g, '/');
+    const base = p.split('/').pop().replace(/\.htm$/, '.html');
+    if (HTML_LISTAS.includes(base)) return 'lista';
+    return HTML_SOLO_JSON.test(p.replace(/\.htm$/, '.html')) ? 'solojson' : null;
+  }
+  function procesarHtml(ruta, html, d) {
+    const p = String(ruta).toLowerCase().replace(/\\/g, '/');
+    const base = p.split('/').pop().replace(/\.html?$/, '.json');
+    if (!REL[base] || typeof global.extraerUsuariosHtml !== 'function') return;
+    d.archivos.add('cuenta');
+    d.rel[REL[base]] = d.rel[REL[base]].concat(global.extraerUsuariosHtml(html));
+  }
 
   function procesarEntrada(ruta, json, d) {
     if (!d || json == null) return;
@@ -290,8 +307,9 @@
 
   const nota = t => `<p class="pf-note">${t}</p>`;
 
+  let HTML_EN_ZIP = false;
   const faltan = (titulo, pista) => tarjeta(titulo, '',
-    `<div class="empty-state pf-faltan">Tu ZIP no incluye estos datos.<br><small>Al pedir la descarga en Instagram marca «${esc(pista)}», elige formato JSON y vuelve a subir el ZIP.</small></div>`);
+    `<div class="empty-state pf-faltan">${HTML_EN_ZIP ? 'Tu descarga está en formato HTML y este análisis necesita JSON.' : 'Tu ZIP no incluye estos datos.'}<br><small>Vuelve a pedir la descarga en Instagram marcando «${esc(pista)}» y eligiendo formato <strong>JSON</strong>.</small><br><button class="pf-link" type="button" onclick="mostrarAyudaDescarga()">Ver cómo descargarla</button></div>`);
 
   const tabla = (cab, filas) => `<details class="pf-tabla"><summary>Ver como tabla</summary><table><thead><tr>${
     cab.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${
@@ -741,12 +759,16 @@
     if (rm && rm.uno > 0 && rm.esperandoRespuesta != null) comp.push({ label: 'Mensajes al día', valor: Math.round((1 - rm.esperandoRespuesta / rm.uno) * 100), detalle: `${num(rm.esperandoRespuesta)} de ${num(rm.uno)} chats 1 a 1 esperan tu respuesta.` });
 
     let html = '';
+    if (d.htmlOmitidos > 0) {
+      html += tarjeta('Tu descarga está en HTML', 'Se han leído seguidores, seguidos y listas de cuentas. Las interacciones, la actividad, los mensajes y el contenido solo se pueden analizar con la descarga en formato JSON.',
+        `<button class="btn-sub" type="button" onclick="mostrarAyudaDescarga()">Ver cómo pedirla en JSON</button>`);
+    }
     if (comp.length) {
       const score = Math.round(sum(comp.map(x => x.valor)) / comp.length);
       c.res.resumen = { puntuacion: score, componentes: comp.map(x => ({ nombre: x.label, valor: x.valor })) };
       html += `<section class="pf-hero"><div class="pf-hero-ring">${anillo(score)}</div><div class="pf-hero-body">
         <h3>Salud de tu perfil</h3>
-        <p>Media de ${comp.length === 1 ? 'un indicador' : comp.length + ' indicadores'} calculados con tu ZIP. Es una referencia propia de Golifiar, no una métrica de Instagram.</p>
+        <p>${comp.length === 1 ? 'Se calcula con un indicador' : 'Media de ' + comp.length + ' indicadores calculados'} a partir de tu ZIP. Es una referencia propia de Golifiar, no una métrica de Instagram.</p>
         ${barrasH(comp.map(x => ({ label: x.label, valor: x.valor, detalle: x.detalle })), '%', 100)}</div></section>`;
     }
 
@@ -841,7 +863,7 @@
     const file = input.files && input.files[0];
     if (!file) return;
     try {
-      if (typeof global.JSZip === 'undefined' || typeof global.extraerUsuarios !== 'function') throw new Error('Falta JSZip');
+      if (typeof global.JSZip === 'undefined' || typeof global.extraerUsuarios !== 'function' || typeof global.extraerUsuariosHtml !== 'function') throw new Error('Falta JSZip');
       const zip = await global.JSZip.loadAsync(file);
       let seg = [], sig = [];
       const nombres = [];
@@ -850,8 +872,10 @@
         const base = ruta.toLowerCase().split('/').pop();
         if (/^followers(_\d+)?\.json$/.test(base)) seg = seg.concat(global.extraerUsuarios(JSON.parse(await ent.async('string'))));
         else if (base === 'following.json') sig = global.extraerUsuarios(JSON.parse(await ent.async('string')));
+        else if (/^followers(_\d+)?\.html?$/.test(base)) seg = seg.concat(global.extraerUsuariosHtml(await ent.async('string')));
+        else if (/^following\.html?$/.test(base)) sig = global.extraerUsuariosHtml(await ent.async('string'));
       }
-      if (!seg.length && !sig.length) { aviso('Ese ZIP no contiene seguidores ni seguidos en formato JSON.'); return; }
+      if (!seg.length && !sig.length) { aviso('Ese ZIP no contiene seguidores ni seguidos (JSON o HTML).'); return; }
       comparar({ seg: seg.map(o => o.username), sig: sig.map(o => o.username) }, file.name.replace(/\.zip$/i, ''));
     } catch (e) {
       console.error('Perfil: comparar ZIP', e);
@@ -893,6 +917,7 @@
       return;
     }
     tabs.classList.remove('hidden');
+    HTML_EN_ZIP = d.htmlOmitidos > 0;
     ESTADO.seg = seg || []; ESTADO.sig = sig || []; ESTADO.cmp = null; ESTADO.cmpHtml = '';
     const c = contexto(d, seg, sig);
     const mapa = {
@@ -922,7 +947,7 @@
     if (typeof global.descargarArchivo === 'function') global.descargarArchivo('golifiar-resumen-perfil.json', txt, 'application/json');
   }
 
-  global.Perfil = { nuevo, procesarEntrada, secciones, render, cambiarPanel, exportarResumen, guardarSnap, borrarSnap, compararSnap, compararZip,
+  global.Perfil = { nuevo, procesarEntrada, procesarHtml, tipoHtml, secciones, render, cambiarPanel, exportarResumen, guardarSnap, borrarSnap, compararSnap, compararZip,
     // expuesto para pruebas
     _int: { panelInteracciones, panelActividad, panelMensajes, panelContenido, contexto, fixText, dispositivo, serieDesdeMapa } };
 })(typeof window !== 'undefined' ? window : globalThis);

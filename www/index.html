@@ -1195,6 +1195,15 @@
         .pf-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
         .pf-upload:focus-within { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
         .pf-snaps { margin-top: 0.9rem; max-height: 260px; }
+    
+        dialog { max-height: 88vh; overflow-y: auto; }
+        dialog h3 { font-size: 1rem; margin: 1.4rem 0 0.5rem; }
+        dialog ul { padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.9rem; }
+        dialog p { color: var(--text-secondary); line-height: 1.65; font-size: 0.92rem; margin-bottom: 0.8rem; max-width: 70ch; }
+        dialog li { margin-bottom: 0.25rem; }
+        dialog .guide-intro { font-size: 0.95rem; }
+        dialog { margin: auto; }
+        dialog .dialog-actions { position: sticky; bottom: -1.5rem; margin: 1rem -1.5rem -1.5rem; padding: 0.85rem 1.5rem; background: var(--bg-card); border-top: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
@@ -1278,11 +1287,11 @@
                 <!-- ZIP Dropzone -->
                 <div id="uploadModeZip" class="upload-mode-content">
                     <div class="dropzone">
-                        <input type="file" id="zipFileInput" accept=".zip" onchange="procesarZipAutomatico(this)">
+                        <input type="file" id="zipFileInput" accept=".zip" multiple onchange="procesarZipAutomatico(this)">
                         <div class="dropzone-content">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span class="dropzone-title">Elige o arrastra tu archivo .ZIP</span>
-                            <span class="dropzone-desc">Se lee en tu dispositivo, sin subirlo a ningún sitio</span>
+                            <span class="dropzone-title">Elige o arrastra tu archivo .ZIP (sin descomprimir)</span>
+                            <span class="dropzone-desc">Se lee en tu dispositivo, sin subirlo a ningún sitio. Acepta descargas en JSON y en HTML, y varios ZIP a la vez.</span>
                             <span id="tagZip" class="file-status-tag">Ningún archivo ZIP seleccionado</span>
                             <div id="zipProgressBar" class="progress-bar-container">
                                 <div id="zipProgressFill" class="progress-bar-fill"></div>
@@ -1295,20 +1304,20 @@
                 <div id="uploadModeManual" class="upload-mode-content hidden">
                     <div class="upload-grid">
                         <div class="dropzone">
-                            <input type="file" id="followersFile" accept=".json" multiple onchange="actualizarEstadoDropzone('followers')">
+                            <input type="file" id="followersFile" accept=".json,.html,.htm" multiple onchange="actualizarEstadoDropzone('followers')">
                             <div class="dropzone-content">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                 <span class="dropzone-title">Seguidores</span>
-                                <span class="dropzone-desc">followers_1.json (o varios)</span>
+                                <span class="dropzone-desc">followers_1.json o followers_1.html (o varios)</span>
                                 <span id="tagFollowers" class="file-status-tag">0 seleccionados</span>
                             </div>
                         </div>
                         <div class="dropzone">
-                            <input type="file" id="followingFile" accept=".json" onchange="actualizarEstadoDropzone('following')">
+                            <input type="file" id="followingFile" accept=".json,.html,.htm" onchange="actualizarEstadoDropzone('following')">
                             <div class="dropzone-content">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
                                 <span class="dropzone-title">Seguidos</span>
-                                <span class="dropzone-desc">following.json</span>
+                                <span class="dropzone-desc">following.json o following.html</span>
                                 <span id="tagFollowing" class="file-status-tag">No seleccionado</span>
                             </div>
                         </div>
@@ -1458,16 +1467,16 @@
                 <h2>Guía detallada: cómo analizar tus conexiones</h2>
                 <p>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para analizar tus conexiones de Instagram con seguridad y transparencia. Todo el procesamiento se realiza en tu dispositivo.</p>
 
-                <h3>Paso 1: Solicitar la descarga de datos en Meta</h3>
-                <p>Para analizar tus conexiones, Meta requiere que descargues una copia oficial de tu información personal. Abre Instagram y ve a <strong>Configuración y privacidad &gt; Centro de cuentas &gt; Tu información y permisos &gt; Descargar tu información</strong>.</p>
-                <p>Solicita una nueva descarga en formato <strong>JSON</strong>; es importante que no selecciones HTML. Establece el rango de fechas en <strong>Desde el principio</strong>.</p>
+                <h3>Paso 1: Pide tu descarga a Instagram</h3>
+                <p>Instagram te envía un ZIP con tus datos por correo. Elige el formato <strong>JSON</strong> y el intervalo <strong>Desde el principio</strong>, y marca seguidores y seguidos junto con lo que quieras analizar (me gusta, comentarios, mensajes, publicaciones, inicios de sesión).</p>
+                <p><button class="btn-sub" type="button" onclick="mostrarAyudaDescarga()">Abrir la guía de descarga paso a paso</button></p>
+                <p>Si ya la tienes en <strong>HTML</strong>, también sirve: Golifiar leerá seguidores, seguidos y listas de cuentas. Para el resto de análisis hace falta JSON.</p>
 
-                <h3>Paso 2: Cargar el archivo comprimido ZIP</h3>
-                <p>Cuando Meta procese tu solicitud, normalmente entre 10 y 30 minutos, recibirás una notificación o un correo electrónico con el enlace para descargar el archivo <strong>.zip</strong>.</p>
-                <p>Abre <strong>Golifiar</strong> en tu dispositivo Android, iPhone o navegador. Selecciona la opción de archivo ZIP automático y carga el documento. El análisis se realiza de forma local y automática.</p>
+                <h3>Paso 2: Descarga el ZIP y súbelo</h3>
+                <p>Cuando llegue el correo, descarga el archivo <strong>.zip</strong> sin descomprimirlo. Abre Golifiar en tu móvil, tablet u ordenador, elige el ZIP (o varios, si Instagram te dio más de uno) y pulsa <strong>Analizar mi perfil</strong>. Todo se procesa en tu dispositivo.</p>
 
-                <h3>Paso 3: Analizar y gestionar sus métricas</h3>
-                <p>Una vez procesado, el panel mostrará las cuentas que no te siguen de vuelta, tus seguidores y las conexiones mutuas. Podrás filtrar por nombre, ordenar alfabéticamente, copiar la lista al portapapeles o exportarla en formato CSV.</p>
+                <h3>Paso 3: Explora los resultados</h3>
+                <p>El análisis se organiza en pestañas: <strong>Resumen</strong>, <strong>Seguidores</strong>, <strong>Interacciones</strong>, <strong>Actividad</strong>, <strong>Mensajes</strong>, <strong>Contenido y cuenta</strong> y <strong>Comparar</strong>. En Seguidores puedes filtrar, ordenar, copiar la lista y exportarla en CSV. En Comparar puedes ver los cambios frente a una descarga anterior.</p>
             </div>
         </div>
 
@@ -1542,16 +1551,61 @@
         </div>
     </footer>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
-    <dialog id="downloadHelpDialog">
-        <h2>Descargar los datos de Instagram</h2>
+    <dialog id="downloadHelpDialog" aria-labelledby="ayudaTitulo">
+        <h2 id="ayudaTitulo">Cómo descargar tus datos de Instagram</h2>
+        <p class="guide-intro">Instagram te envía un archivo ZIP por correo. Necesitas tu usuario y contraseña y acceso al correo de la cuenta. Los nombres de los menús pueden variar un poco según tu versión de la app y tu idioma.</p>
+
+        <h3>1. Pídelo desde la app del móvil</h3>
         <ol>
-            <li>Abre Instagram y entra en tu perfil.</li>
-            <li>Abre el menú y selecciona <strong>Centro de cuentas</strong>.</li>
-            <li>Ve a <strong>Tu información y permisos</strong> y selecciona <strong>Descargar tu información</strong>.</li>
-            <li>Elige tu cuenta, selecciona <strong>Parte de tu información</strong> y marca <strong>todo lo que quieras analizar</strong>: seguidores y seguidos, actividad (me gusta, comentarios, guardados), mensajes, contenido, información personal e inicios de sesión. Cuanto más marques, más análisis tendrás.</li>
-            <li>Selecciona formato <strong>JSON</strong>, solicita la descarga y carga aquí el ZIP recibido.</li>
+            <li>Abre Instagram y entra en tu perfil (tu foto, abajo a la derecha).</li>
+            <li>Pulsa el menú (las tres rayas, arriba a la derecha) y entra en <strong>Configuración y actividad</strong>.</li>
+            <li>Abre <strong>Centro de cuentas</strong>, luego <strong>Tu información y permisos</strong> y después <strong>Descargar tu información</strong>.</li>
+            <li>Pulsa <strong>Descargar o transferir información</strong> y elige tu cuenta de Instagram.</li>
+            <li>Elige <strong>Parte de tu información</strong> (más rápido y ligero) o <strong>Toda tu información disponible</strong> (más completo) y pulsa Siguiente.</li>
+            <li>Marca las categorías de la lista «Qué marcar» (más abajo).</li>
+            <li>Elige <strong>Descargar en el dispositivo</strong>.</li>
+            <li>Ajusta las opciones: <strong>Intervalo de fechas: Desde el principio</strong>, <strong>Formato: JSON</strong> y <strong>Calidad multimedia: Baja</strong>.</li>
+            <li>Pulsa <strong>Crear archivos</strong> (o <strong>Enviar solicitud</strong>). Si te pide la contraseña, introdúcela.</li>
         </ol>
-        <button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button>
+
+        <h3>2. O pídelo desde el ordenador</h3>
+        <ol>
+            <li>Entra en <strong>instagram.com</strong> e inicia sesión.</li>
+            <li>Abre <strong>Más</strong> (abajo a la izquierda), luego <strong>Tu actividad</strong> y <strong>Descargar tu información</strong>. Si no aparece ahí, usa <strong>Centro de cuentas</strong> → <strong>Tu información y permisos</strong> → <strong>Descargar tu información</strong>.</li>
+            <li>Comprueba que el correo que se muestra es el tuyo.</li>
+            <li>Elige las categorías, el intervalo <strong>Desde el principio</strong> y el formato <strong>JSON</strong>.</li>
+            <li>Pulsa Siguiente, escribe tu contraseña y confirma con <strong>Solicitar descarga</strong>.</li>
+        </ol>
+
+        <h3>Qué marcar</h3>
+        <ul>
+            <li><strong>Seguidores y seguidos</strong>: imprescindible para ver quién no te sigue de vuelta.</li>
+            <li><strong>Me gusta, comentarios y guardados</strong>: para el análisis de interacciones.</li>
+            <li><strong>Mensajes</strong>: para las estadísticas de tus conversaciones.</li>
+            <li><strong>Publicaciones, reels e historias</strong>: para el ritmo de publicación.</li>
+            <li><strong>Información personal, inicios de sesión y anuncios</strong>: para el apartado de cuenta y actividad.</li>
+        </ul>
+        <p>No hace falta marcar fotos ni vídeos. Si Instagram los incluye, elige calidad multimedia baja para que el ZIP pese menos.</p>
+
+        <h3>JSON o HTML</h3>
+        <p><strong>JSON (recomendado):</strong> permite todos los análisis de Golifiar. <strong>HTML:</strong> Golifiar lee seguidores, seguidos y listas de cuentas, pero las interacciones, la actividad, los mensajes y el contenido necesitan JSON. Si ya la descargaste en HTML, súbela igualmente y verás la parte básica.</p>
+
+        <h3>Cuando llegue el correo</h3>
+        <ol>
+            <li>Puede tardar desde unos minutos hasta varias horas. Si no lo ves, mira en spam, promociones y notificaciones.</li>
+            <li>Abre el enlace del correo desde el dispositivo donde vas a usar Golifiar, pulsa <strong>Descargar</strong> e inicia sesión si te lo pide.</li>
+            <li>El enlace caduca a los pocos días (Instagram indica 4), así que descárgalo pronto.</li>
+            <li>Guarda el ZIP tal cual: <strong>no lo descomprimas ni lo renombres</strong>. En iPhone suele quedar en Archivos → Descargas y en Android, en la carpeta Descargas.</li>
+            <li>Si Instagram te da varios ZIP, súbelos todos a la vez en Golifiar. Cada uno puede pesar hasta 250 MB.</li>
+        </ol>
+
+        <h3>Si algo falla</h3>
+        <ul>
+            <li><strong>No llega el correo:</strong> comprueba el correo de tu cuenta en Centro de cuentas y repite la solicitud.</li>
+            <li><strong>«No se encontraron seguidores»:</strong> vuelve a pedirla marcando «Seguidores y seguidos» y el intervalo «Desde el principio».</li>
+            <li><strong>El ZIP pesa demasiado:</strong> pide menos categorías y calidad multimedia baja.</li>
+        </ul>
+        <div class="dialog-actions"><button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button></div>
     </dialog>
 
     <!-- Logic Script -->
@@ -1564,7 +1618,7 @@
 
         let usarModoZip = true;
         let zipFollowersArray = [];
-        let zipFollowingDataParsed = null;
+        let zipFollowingArray = [];
         let zipPerfil = null;
         const MAX_ZIP_SIZE = 250 * 1024 * 1024;
 
@@ -1580,7 +1634,7 @@
             ['golifiar-history', 'golifiar-snapshots', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
             noDisponibles = new Set();
             usuariosSinRetornoGlobal = []; usuariosFansGlobal = []; usuariosMutuosGlobal = [];
-            zipFollowersArray = []; zipFollowingDataParsed = null; zipPerfil = null;
+            zipFollowersArray = []; zipFollowingArray = []; zipPerfil = null;
             ['zipFileInput', 'followersFile', 'followingFile'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
             if (window.Perfil) window.Perfil.render(null, [], []);
             document.getElementById('resultsSection').classList.add('hidden');
@@ -1705,92 +1759,108 @@
 
         async function procesarZipAutomatico(input) {
             trigHaptic(30);
-            const file = input.files[0];
+            const files = Array.from(input.files || []);
             const tag = document.getElementById('tagZip');
             const progressContainer = document.getElementById('zipProgressBar');
             const progressFill = document.getElementById('zipProgressFill');
 
-            if (!file) return;
-            if (!file.name.toLowerCase().endsWith('.zip')) {
+            if (!files.length) return;
+            if (files.some(f => !f.name.toLowerCase().endsWith('.zip'))) {
                 input.value = '';
-                mostrarEstado('Selecciona un archivo ZIP válido.', 'error');
+                mostrarEstado('Selecciona archivos con extensión .zip. No descomprimas la descarga de Instagram.', 'error');
                 return;
             }
-            if (file.size > MAX_ZIP_SIZE) {
+            if (files.some(f => f.size > MAX_ZIP_SIZE)) {
                 input.value = '';
-                mostrarEstado('El archivo supera el límite de 250 MB. Solicita una descarga más pequeña.', 'error');
+                mostrarEstado('Un archivo supera el límite de 250 MB. Vuelve a pedir la descarga con menos categorías y calidad multimedia baja.', 'error');
                 return;
             }
 
+            const totalMb = files.reduce((n, f) => n + f.size, 0) / (1024 * 1024);
             progressContainer.classList.add('active');
-            progressFill.style.width = '15%';
-            tag.innerText = `Analizando archivo ZIP (${(file.size / (1024*1024)).toFixed(1)} MB)...`;
+            progressFill.style.width = '10%';
+            tag.innerText = `Analizando ${files.length > 1 ? files.length + ' archivos ZIP' : 'archivo ZIP'} (${totalMb.toFixed(1)} MB)...`;
             tag.classList.add('active');
             tag.style.color = 'var(--accent-blue)';
             mostrarEstado('Leyendo el archivo localmente. No cierres esta ventana.', '');
 
             try {
-                const zip = new JSZip();
-                progressFill.style.width = '30%';
-
-                const zipContent = await zip.loadAsync(file);
-                progressFill.style.width = '50%';
-
                 zipFollowersArray = [];
-                zipFollowingDataParsed = null;
+                zipFollowingArray = [];
                 zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;
+                let nJson = 0, nHtml = 0;
 
-                const entries = [];
-                zipContent.forEach((relativePath, zipEntry) => {
-                    if (!zipEntry.dir && relativePath.toLowerCase().endsWith('.json')) {
-                        entries.push({ relativePath, zipEntry });
-                    }
-                });
+                for (let i = 0; i < files.length; i++) {
+                    const zipContent = await new JSZip().loadAsync(files[i]);
+                    const entries = [];
+                    zipContent.forEach((relativePath, zipEntry) => {
+                        const low = relativePath.toLowerCase();
+                        if (!zipEntry.dir && (low.endsWith('.json') || low.endsWith('.html') || low.endsWith('.htm'))) entries.push({ relativePath, zipEntry });
+                    });
 
-                let processedCount = 0;
-                const totalEntries = entries.length || 1;
-
-                for (const { relativePath, zipEntry } of entries) {
-                    try {
-                        const content = await zipEntry.async('string');
-                        const json = JSON.parse(content);
-                        const fileName = relativePath.toLowerCase().split('/').pop();
-
-                        if (/^followers(_\d+)?\.json$/.test(fileName)) {
-                            const extracted = extraerUsuarios(json);
-                            zipFollowersArray = zipFollowersArray.concat(extracted);
-                        } else if (fileName === 'following.json') {
-                            zipFollowingDataParsed = json;
-                        } else if (zipPerfil) {
-                            window.Perfil.procesarEntrada(relativePath, json, zipPerfil);
+                    let hechos = 0;
+                    for (const { relativePath, zipEntry } of entries) {
+                        const low = relativePath.toLowerCase();
+                        const fileName = low.split('/').pop();
+                        const esHtml = !low.endsWith('.json');
+                        try {
+                            if (esHtml) {
+                                if (/^followers(_\d+)?\.html?$/.test(fileName)) {
+                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuariosHtml(await zipEntry.async('string')));
+                                    nHtml++;
+                                } else if (/^following\.html?$/.test(fileName)) {
+                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuariosHtml(await zipEntry.async('string')));
+                                    nHtml++;
+                                } else if (zipPerfil) {
+                                    const tipo = window.Perfil.tipoHtml(relativePath);
+                                    if (tipo === 'lista') window.Perfil.procesarHtml(relativePath, await zipEntry.async('string'), zipPerfil);
+                                    else if (tipo === 'solojson') zipPerfil.htmlOmitidos++;
+                                }
+                            } else {
+                                const json = JSON.parse(await zipEntry.async('string'));
+                                if (/^followers(_\d+)?\.json$/.test(fileName)) {
+                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuarios(json));
+                                    nJson++;
+                                } else if (fileName === 'following.json') {
+                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuarios(json));
+                                    nJson++;
+                                } else if (zipPerfil) {
+                                    window.Perfil.procesarEntrada(relativePath, json, zipPerfil);
+                                }
+                            }
+                        } catch (e) {
+                            console.error('Error procesando fichero:', relativePath, e);
                         }
-                    } catch (e) {
-                        console.error('Error procesando fichero:', relativePath, e);
+                        hechos++;
+                        progressFill.style.width = `${10 + Math.floor(((i + hechos / (entries.length || 1)) / files.length) * 85)}%`;
                     }
-                    processedCount++;
-                    progressFill.style.width = `${50 + Math.floor((processedCount / totalEntries) * 45)}%`;
                 }
 
                 progressFill.style.width = '100%';
-                zipFollowersArray = [...new Set(zipFollowersArray.map(u => u.username))].map(username => {
-                    return zipFollowersArray.find(u => u.username === username);
-                });
+                zipFollowersArray = unirUsuarios(zipFollowersArray);
+                zipFollowingArray = unirUsuarios(zipFollowingArray);
 
                 setTimeout(() => {
                     progressContainer.classList.remove('active');
                 }, 500);
 
                 const extras = zipPerfil ? window.Perfil.secciones(zipPerfil) : [];
-                if (zipFollowersArray.length > 0 || zipFollowingDataParsed || extras.length) {
-                    tag.innerText = `Procesado correctamente: ${zipFollowersArray.length} seguidores detectados` +
+                const omitidos = zipPerfil ? zipPerfil.htmlOmitidos : 0;
+                if (zipFollowersArray.length > 0 || zipFollowingArray.length > 0 || extras.length) {
+                    tag.innerText = `Procesado: ${zipFollowersArray.length} seguidores y ${zipFollowingArray.length} seguidos` +
+                        (nHtml && !nJson ? ' (formato HTML)' : '') +
                         (extras.length ? ` · también: ${extras.join(', ')}` : '');
                     tag.style.color = 'var(--accent-green)';
-                    mostrarEstado('Archivo preparado. Puedes ejecutar la auditoría.', 'success');
+                    if (omitidos > 0) {
+                        mostrarEstado('Descarga en HTML: se han leído seguidores y seguidos. Para analizar interacciones, actividad y mensajes, vuelve a pedir la descarga en JSON.', 'success');
+                    } else {
+                        mostrarEstado('Archivo preparado. Pulsa «Analizar mi perfil».', 'success');
+                    }
                     trigHaptic(60);
                 } else {
-                    tag.innerText = 'No se encontraron archivos de seguidores o seguidos válidos';
+                    tag.innerText = 'No se encontraron seguidores ni seguidos en este ZIP';
                     tag.style.color = 'var(--accent-rose)';
-                    mostrarEstado('El ZIP no contiene los archivos esperados. Descarga los datos en formato JSON.', 'error');
+                    mostrarEstado('El ZIP no contiene seguidores ni seguidos. Al pedir la descarga, marca «Seguidores y seguidos» y elige el intervalo «Desde el principio». Si necesitas ayuda, abre la guía de descarga.', 'error');
                 }
 
             } catch (error) {
@@ -1798,8 +1868,83 @@
                 progressContainer.classList.remove('active');
                 tag.innerText = 'Error al descomprimir o leer el archivo ZIP';
                 tag.style.color = 'var(--accent-rose)';
-                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa.', 'error');
+                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido.', 'error');
             }
+        }
+
+        // Une listas de usuarios (varios ZIP o varios ficheros) conservando la fecha más reciente
+        function unirUsuarios(arr) {
+            const m = new Map();
+            arr.forEach(o => { if (!m.has(o.username) || o.timestamp > m.get(o.username)) m.set(o.username, o.timestamp); });
+            return Array.from(m.entries()).map(([username, timestamp]) => ({ username, timestamp }));
+        }
+
+        /* ---- Lectura de la descarga en formato HTML ---- */
+        const MESES = { ene: 0, jan: 0, feb: 1, mar: 2, abr: 3, apr: 3, may: 4, jun: 5, jul: 6, ago: 7, aug: 7, sep: 8, set: 8, oct: 9, nov: 10, dic: 11, dec: 11 };
+        const RESERVADOS_IG = new Set(['p', 'reel', 'reels', 'explore', 'accounts', 'direct', 'stories', 'tv', 'about', 'legal', 'privacy', 'help', 'web', 'download', 'developer', 'directory', 'press', 'api', 'challenge', 'static']);
+
+        // Instagram escribe la fecha en el idioma de la cuenta: «oct 01, 2024 3:45 pm», «1 de octubre de 2024», «2024-10-01»...
+        function parseFechaHtml(txt) {
+            if (!txt) return 0;
+            let m, y, mo, d, h = 0, mi = 0, pm = '';
+            if ((m = txt.match(/([A-Za-zÀ-ÿ]{3,10})\.?\s+(\d{1,2}),?\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*([ap])\.?\s?m\.?)?/i)) && MESES[m[1].slice(0, 3).toLowerCase()] !== undefined) {
+                mo = MESES[m[1].slice(0, 3).toLowerCase()]; d = +m[2]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0); pm = (m[6] || '').toLowerCase();
+            } else if ((m = txt.match(/(\d{1,2})\s+de\s+([A-Za-zÀ-ÿ]{3,10})\.?\s+de\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/i)) && MESES[m[2].slice(0, 3).toLowerCase()] !== undefined) {
+                mo = MESES[m[2].slice(0, 3).toLowerCase()]; d = +m[1]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
+            } else if ((m = txt.match(/(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}):(\d{2}))?/))) {
+                y = +m[1]; mo = +m[2] - 1; d = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
+            } else return 0;
+            if (pm === 'p' && h < 12) h += 12;
+            if (pm === 'a' && h === 12) h = 0;
+            const t = new Date(y, mo, d, h, mi).getTime();
+            return isNaN(t) ? 0 : Math.floor(t / 1000);
+        }
+
+        function usuarioDeEnlace(href) {
+            try {
+                const u = new URL(href, 'https://www.instagram.com');
+                if (!/^(www\.|m\.)?instagram\.com$/i.test(u.hostname)) return '';
+                const parts = u.pathname.split('/').filter(Boolean);
+                if (parts[0] === '_u') parts.shift();
+                const name = (parts[0] || '').toLowerCase();
+                return name && name.length <= 60 && !RESERVADOS_IG.has(name) ? name : '';
+            } catch (e) { return ''; }
+        }
+
+        function extraerUsuariosHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const sel = 'a[href*="instagram.com"]';
+            const mapa = new Map();
+            const anotar = (u, ts) => { if (u && (!mapa.has(u) || ts > mapa.get(u))) mapa.set(u, ts || 0); };
+
+            doc.querySelectorAll(sel).forEach(a => {
+                const u = usuarioDeEnlace(a.getAttribute('href'));
+                if (!u) return;
+                let ts = 0, nodo = a;
+                for (let i = 0; i < 4 && !ts; i++) {
+                    nodo = nodo.parentElement;
+                    if (!nodo || nodo.querySelectorAll(sel).length > 1) break;
+                    ts = parseFechaHtml(nodo.textContent);
+                }
+                anotar(u, ts);
+            });
+
+            if (mapa.size === 0) {
+                // Variante antigua: el nombre aparece solo como título de cada fila
+                doc.querySelectorAll('h2').forEach(h => {
+                    const t = h.textContent.trim().toLowerCase();
+                    if (/^[a-z0-9._]{1,30}$/.test(t) && !['followers', 'following', 'seguidores', 'seguidos', 'siguiendo'].includes(t)) {
+                        anotar(t, parseFechaHtml(h.parentElement ? h.parentElement.textContent : ''));
+                    }
+                });
+            }
+            return Array.from(mapa.entries()).map(([username, timestamp]) => ({ username, timestamp }));
+        }
+
+        // Lee un fichero suelto (JSON o HTML) y devuelve la lista de usuarios
+        async function leerUsuariosArchivo(file) {
+            if (/\.html?$/i.test(file.name)) return extraerUsuariosHtml(await file.text());
+            return extraerUsuarios(JSON.parse(await file.text()));
         }
 
         function extraerUsuarios(data) {
@@ -1837,15 +1982,6 @@
                 }
             });
             return Array.from(map.entries()).map(([username, timestamp]) => ({ username, timestamp }));
-        }
-
-        function leerArchivo(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(JSON.parse(e.target.result));
-                reader.onerror = e => reject(e);
-                reader.readAsText(file);
-            });
         }
 
         function animarContador(id, finalValue, isPercentage = false) {
@@ -1894,29 +2030,28 @@
 
                 if (usarModoZip) {
                     const hayExtras = zipPerfil && window.Perfil.secciones(zipPerfil).length > 0;
-                    if (zipFollowersArray.length === 0 && !zipFollowingDataParsed && !hayExtras) {
+                    if (zipFollowersArray.length === 0 && zipFollowingArray.length === 0 && !hayExtras) {
                         mostrarEstado('Carga un ZIP de Instagram válido antes de ejecutar el análisis.', 'error');
                         return;
                     }
                     followersObjs = zipFollowersArray;
-                    followingObjs = zipFollowingDataParsed ? extraerUsuarios(zipFollowingDataParsed) : [];
+                    followingObjs = zipFollowingArray;
                 } else {
                     const followersInputs = document.getElementById('followersFile').files;
                     const followingInput = document.getElementById('followingFile').files[0];
 
                     if (followersInputs.length === 0 && !followingInput) {
-                        mostrarEstado('Selecciona al menos un archivo JSON de seguidores o seguidos.', 'error');
+                        mostrarEstado('Selecciona al menos un archivo de seguidores o seguidos (JSON o HTML).', 'error');
                         return;
                     }
 
                     for (let file of followersInputs) {
-                        const data = await leerArchivo(file);
-                        followersObjs = followersObjs.concat(extraerUsuarios(data));
+                        followersObjs = followersObjs.concat(await leerUsuariosArchivo(file));
                     }
                     if (followingInput) {
-                        const followingData = await leerArchivo(followingInput);
-                        followingObjs = extraerUsuarios(followingData);
+                        followingObjs = await leerUsuariosArchivo(followingInput);
                     }
+                    followersObjs = unirUsuarios(followersObjs);
                 }
                 
                 const followersMap = new Map(followersObjs.map(o => [o.username, o.timestamp]));
@@ -1960,7 +2095,7 @@
 
             } catch (error) {
                 console.error(error);
-                mostrarEstado('No se pudo completar el análisis. Verifica que los JSON procedan de Instagram.', 'error');
+                mostrarEstado('No se pudo completar el análisis. Comprueba que los archivos procedan de la descarga de Instagram.', 'error');
                 resultsSection.classList.add('hidden');
             }
         }
