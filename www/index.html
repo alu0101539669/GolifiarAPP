@@ -1204,6 +1204,24 @@
         dialog .guide-intro { font-size: 0.95rem; }
         dialog { margin: auto; }
         dialog .dialog-actions { position: sticky; bottom: -1.5rem; margin: 1rem -1.5rem -1.5rem; padding: 0.85rem 1.5rem; background: var(--bg-card); border-top: 1px solid var(--border-color); }
+    
+        /* ===== Limpieza guiada ===== */
+        .profile-tabs .cat-tab { min-width: 84px; padding-left: 0.4rem; padding-right: 0.4rem; }
+        .pf-chipbtn { background: none; font: inherit; font-size: 0.8rem; font-weight: 650; cursor: pointer; }
+        .pf-chipbtn.on { background: var(--accent-blue-light); }
+        .pf-prog { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin: 1rem 0 0.4rem; }
+        .pf-prog span { display: block; height: 100%; background: var(--accent-green); border-radius: 999px; transition: width 0.25s ease; }
+        .pf-limpcard { display: flex; flex-direction: column; gap: 0.9rem; align-items: flex-start; }
+        .pf-limpname { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); text-decoration: none; overflow-wrap: anywhere; }
+        a.pf-limpname:hover { color: var(--accent-blue); text-decoration: underline; }
+        .pf-reasons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+        .pf-reason { font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px; background: var(--surface-2); color: var(--text-secondary); }
+        .pf-reason.nosigue { background: rgba(194, 65, 91, 0.1); color: var(--accent-rose); }
+        .pf-reason.rotas { background: rgba(194, 65, 91, 0.16); color: var(--accent-rose); }
+        .pf-reason.sinint { background: rgba(181, 127, 12, 0.12); color: var(--accent-gold); }
+        .pf-limpbtns { display: flex; flex-wrap: wrap; gap: 0.6rem; width: 100%; }
+        .pf-limpbtns .btn-sub, .pf-limpbtns .btn-minimal { flex: 1 1 130px; justify-content: center; min-height: 48px; width: auto; }
+        .pf-dejar { margin: 0; }
     </style>
 </head>
 <body>
@@ -1342,6 +1360,7 @@
                     <button class="cat-tab active" id="ptab-resumen" role="tab" aria-selected="true" onclick="Perfil.cambiarPanel('resumen')">Resumen</button>
                     <button class="cat-tab" id="ptab-seguidores" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
                     <button class="cat-tab" id="ptab-interacciones" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
+                    <button class="cat-tab" id="ptab-limpieza" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('limpieza')">Limpieza</button>
                     <button class="cat-tab" id="ptab-actividad" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
                     <button class="cat-tab" id="ptab-mensajes" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
                     <button class="cat-tab" id="ptab-contenido" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
@@ -1434,6 +1453,7 @@
                 </p>
                 </div>
                 <div id="panel-interacciones" class="pf-panel hidden"></div>
+                <div id="panel-limpieza" class="pf-panel hidden"></div>
                 <div id="panel-actividad" class="pf-panel hidden"></div>
                 <div id="panel-mensajes" class="pf-panel hidden"></div>
                 <div id="panel-contenido" class="pf-panel hidden"></div>
@@ -1597,6 +1617,7 @@
             <li>El enlace caduca a los pocos días (Instagram indica 4), así que descárgalo pronto.</li>
             <li>Guarda el ZIP tal cual: <strong>no lo descomprimas ni lo renombres</strong>. En iPhone suele quedar en Archivos → Descargas y en Android, en la carpeta Descargas.</li>
             <li>Si Instagram te da varios ZIP, súbelos todos a la vez en Golifiar. Cada uno puede pesar hasta 250 MB.</li>
+            <li><strong>Atajo:</strong> si tienes Golifiar instalado en el móvil, puedes compartir el ZIP desde Archivos o Descargas y elegir Golifiar: se abre y lo analiza solo.</li>
         </ol>
 
         <h3>Si algo falla</h3>
@@ -1630,8 +1651,8 @@
         window.addEventListener('load', ajustarAltoCabecera);
 
         function borrarTodo() {
-            if (!confirm('Se borrarán los análisis cargados, el historial, las instantáneas y las marcas de este dispositivo. ¿Continuar?')) return;
-            ['golifiar-history', 'golifiar-snapshots', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
+            if (!confirm('Se borrarán los análisis cargados, el historial, las descargas guardadas, la limpieza guiada y las marcas de este dispositivo. ¿Continuar?')) return;
+            ['golifiar-history', 'golifiar-snapshots', 'golifiar-limpieza', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
             noDisponibles = new Set();
             usuariosSinRetornoGlobal = []; usuariosFansGlobal = []; usuariosMutuosGlobal = [];
             zipFollowersArray = []; zipFollowingArray = []; zipPerfil = null;
@@ -1757,23 +1778,28 @@
             }
         }
 
-        async function procesarZipAutomatico(input) {
+        function procesarZipAutomatico(input) {
+            return procesarArchivosZip(Array.from(input.files || []), input);
+        }
+
+        // Devuelve true si el ZIP contiene algo que analizar
+        async function procesarArchivosZip(files, input) {
             trigHaptic(30);
-            const files = Array.from(input.files || []);
+            const limpiarInput = () => { if (input) input.value = ''; };
             const tag = document.getElementById('tagZip');
             const progressContainer = document.getElementById('zipProgressBar');
             const progressFill = document.getElementById('zipProgressFill');
 
-            if (!files.length) return;
+            if (!files.length) return false;
             if (files.some(f => !f.name.toLowerCase().endsWith('.zip'))) {
-                input.value = '';
+                limpiarInput();
                 mostrarEstado('Selecciona archivos con extensión .zip. No descomprimas la descarga de Instagram.', 'error');
-                return;
+                return false;
             }
             if (files.some(f => f.size > MAX_ZIP_SIZE)) {
-                input.value = '';
+                limpiarInput();
                 mostrarEstado('Un archivo supera el límite de 250 MB. Vuelve a pedir la descarga con menos categorías y calidad multimedia baja.', 'error');
-                return;
+                return false;
             }
 
             const totalMb = files.reduce((n, f) => n + f.size, 0) / (1024 * 1024);
@@ -1857,6 +1883,7 @@
                         mostrarEstado('Archivo preparado. Pulsa «Analizar mi perfil».', 'success');
                     }
                     trigHaptic(60);
+                    return true;
                 } else {
                     tag.innerText = 'No se encontraron seguidores ni seguidos en este ZIP';
                     tag.style.color = 'var(--accent-rose)';
@@ -1870,7 +1897,63 @@
                 tag.style.color = 'var(--accent-rose)';
                 mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido.', 'error');
             }
+            return false;
         }
+
+        /* ---- Entradas directas: compartir con Golifiar, «Abrir con» y Android ---- */
+        async function analizarArchivosRecibidos(files) {
+            if (!files.length) return;
+            cambiarVista('auditoria');
+            cambiarModoUpload('zip');
+            mostrarToast('ZIP recibido. Analizando…');
+            if (await procesarArchivosZip(files, null)) await ejecutarAnalisis();
+        }
+
+        async function leerCompartidos() {
+            try {
+                const cache = await caches.open('golifiar-compartido');
+                const claves = await cache.keys();
+                const files = [];
+                for (const req of claves) {
+                    const resp = await cache.match(req);
+                    if (!resp) continue;
+                    const nombre = decodeURIComponent(new URL(req.url).pathname.split('/').pop() || 'descarga.zip');
+                    files.push(new File([await resp.blob()], nombre, { type: 'application/zip' }));
+                    await cache.delete(req);
+                }
+                return files;
+            } catch (e) { console.error('Compartidos:', e); return []; }
+        }
+
+        // Android nativo: MainActivity llama a esta función con la ruta del ZIP recibido
+        window.golifiarArchivoCompartido = async function (url, nombre) {
+            try {
+                const blob = await (await fetch(url)).blob();
+                await analizarArchivosRecibidos([new File([blob], nombre || 'descarga.zip', { type: 'application/zip' })]);
+                return true;
+            } catch (e) {
+                console.error('Archivo compartido:', e);
+                mostrarEstado('No se pudo abrir el archivo recibido. Elige el ZIP desde aquí.', 'error');
+                return false;
+            }
+        };
+
+        function iniciarEntradasDirectas() {
+            const q = new URLSearchParams(location.search).get('compartido');
+            if (q !== null) {
+                history.replaceState(null, '', location.pathname);
+                if (q === 'error' || q === '0') mostrarEstado('No se recibió ningún archivo. Elige el ZIP desde aquí.', 'error');
+                else leerCompartidos().then(analizarArchivosRecibidos);
+            }
+            if ('launchQueue' in window) {
+                window.launchQueue.setConsumer(async params => {
+                    const files = [];
+                    for (const h of params.files || []) files.push(await h.getFile());
+                    analizarArchivosRecibidos(files);
+                });
+            }
+        }
+        window.addEventListener('load', iniciarEntradasDirectas);
 
         // Une listas de usuarios (varios ZIP o varios ficheros) conservando la fecha más reciente
         function unirUsuarios(arr) {

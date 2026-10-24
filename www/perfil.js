@@ -159,7 +159,7 @@
       h = {
         id: dir, bandeja: m ? m[1] : '', titulo: fixText(j.title || ''),
         participantes: (j.participants || []).map(x => fixText(x && x.name)),
-        total: 0, emisores: new Map(), primero: Infinity, ultimo: 0, primerEmisor: '', ultimoEmisor: '', porMes: new Map()
+        total: 0, emisores: new Map(), nombres: [], idx: new Map(), seqT: [], seqS: [], primero: Infinity, ultimo: 0, primerEmisor: '', ultimoEmisor: '', porMes: new Map()
       };
       d.hilos.set(dir, h);
     }
@@ -169,6 +169,9 @@
       const s = fixText(msg.sender_name || '');
       h.total++;
       h.emisores.set(s, (h.emisores.get(s) || 0) + 1);
+      let k = h.idx.get(s);
+      if (k === undefined) { k = h.nombres.length; h.nombres.push(s); h.idx.set(s, k); }
+      h.seqT.push(t); h.seqS.push(k);
       if (t < h.primero) { h.primero = t; h.primerEmisor = s; }
       if (t > h.ultimo) { h.ultimo = t; h.ultimoEmisor = s; }
       const dt = new Date(t * 1000);
@@ -324,10 +327,10 @@
     return '<div class="pf-hbars">' + filas.map(f => {
       const w = Math.max(1, Math.round(f.valor / max * 100));
       const lab = f.href ? `<a href="${esc(f.href)}" target="_blank" rel="noopener noreferrer">${esc(f.label)}</a>` : esc(f.label);
-      return `<div class="pf-hrow" title="${esc(f.label)}: ${num(f.valor)} ${esc(unidad || '')}">
+      return `<div class="pf-hrow" title="${esc(f.label)}: ${f.texto != null ? esc(f.texto) : num(f.valor) + ' ' + esc(unidad || '')}">
         <span class="pf-hlabel">${lab}</span>
         <span class="pf-htrack"><span class="pf-hbar" style="width:${w}%"></span></span>
-        <span class="pf-hval">${num(f.valor)}${unidad === '%' ? ' %' : ''}</span>
+        <span class="pf-hval">${f.texto != null ? esc(f.texto) : num(f.valor)}${f.texto == null && unidad === '%' ? ' %' : ''}</span>
         ${(f.detalle || f.badge) ? `<span class="pf-hdet">${f.badge ? badge(f.badge[0], f.badge[1]) + ' ' : ''}${esc(f.detalle || '')}</span>` : ''}
       </div>`;
     }).join('') + '</div>';
@@ -465,6 +468,7 @@
     d.com.porOwner.forEach((r, u) => { if (u !== c.yoUser) get(u).com += r.n; });
     d.guardados.forEach((n, u) => { if (u !== c.yoUser) get(u).guard += n; });
     d.busquedas.forEach((n, u) => { if (u !== c.yoUser) get(u).busq += n; });
+    c.interactuados = new Set(P.keys()); c.hayInteracciones = true;
     const score = r => r.likes + 2 * r.com + r.guard;
     const ranking = [...P.values()].filter(r => score(r) > 0).sort((a, b) => score(b) - score(a));
     const detalle = r => [r.likes && `${num(r.likes)} me gusta`, r.com && `${num(r.com)} comentarios`, r.guard && `${num(r.guard)} guardados`].filter(Boolean).join(' · ');
@@ -642,11 +646,57 @@
           `<div class="user-card"><span class="user-link">${esc(nombre(h))}</span><div class="user-actions"><span class="pf-badge">${num(h.total)} msgs · último ${fmtFecha(h.ultimo)}</span></div></div>`)));
     }
 
+    if (yo) html += bloqueRespuesta(hilos, yo, nombre, c);
+
     const porMes = new Map();
     hilos.forEach(h => h.porMes.forEach((v, k) => porMes.set(k, (porMes.get(k) || 0) + v)));
     html += `<div class="pf-two">${tarjeta('Mensajes por periodo', 'Todos los chats.', colSerie(serieDesdeMapa(porMes), 'mensajes', 'Mensajes por periodo'))}${
       yo && d.actMsg.has(yo) ? tarjeta('A qué hora escribes', 'Mensajes enviados por ti, hora local.', colHoras(d.actMsg.get(yo).horas, 'mensajes', 'Mensajes enviados por hora')) : ''}</div>`;
     html += nota('Solo se cuentan mensajes y fechas. El contenido de tus chats no se guarda ni se muestra.');
+    return html;
+  }
+
+  /* ---------------------------- tiempo de respuesta ---------------------------- */
+  const mediana = a => { if (!a.length) return 0; const b = a.slice().sort((x, y) => x - y), m = b.length >> 1; return b.length % 2 ? b[m] : (b[m - 1] + b[m]) / 2; };
+  function fmtDur(sec) {
+    if (sec < 60) return 'menos de 1 min';
+    if (sec < 3600) return Math.round(sec / 60) + ' min';
+    if (sec < 86400) return (Math.round(sec / 360) / 10).toString().replace('.', ',') + ' h';
+    return (Math.round(sec / 8640) / 10).toString().replace('.', ',') + ' d';
+  }
+  // Tiempo entre el último mensaje de uno y la primera respuesta del otro. Se ignoran pausas de más de 3 días.
+  function tiemposRespuesta(h, yo) {
+    const n = h.seqT.length;
+    if (n < 2) return { mios: [], suyos: [] };
+    const ord = Array.from({ length: n }, (_, i) => i).sort((a, b) => h.seqT[a] - h.seqT[b]);
+    const mios = [], suyos = [];
+    let p = ord[0];
+    for (let k = 1; k < n; k++) {
+      const q = ord[k];
+      if (h.seqS[q] !== h.seqS[p]) {
+        const gap = h.seqT[q] - h.seqT[p];
+        if (gap >= 0 && gap <= 259200) (h.nombres[h.seqS[q]] === yo ? mios : suyos).push(gap);
+      }
+      p = q;
+    }
+    return { mios, suyos };
+  }
+  function bloqueRespuesta(hilos, yo, nombre, c) {
+    const filas = hilos.filter(h => !h.grupo).map(h => Object.assign({ h }, tiemposRespuesta(h, yo)));
+    const todosMios = [].concat(...filas.map(f => f.mios)), todosSuyos = [].concat(...filas.map(f => f.suyos));
+    if (todosMios.length < 5 || todosSuyos.length < 5) return '';
+    const rapidas = todosMios.filter(x => x <= 3600).length;
+    c.res.mensajes.respuesta = { tuMediana: Math.round(mediana(todosMios)), losDemasMediana: Math.round(mediana(todosSuyos)), tusRespuestasEnMenosDeUnaHora: Math.round(rapidas / todosMios.length * 100) };
+    const top = (clave, min) => filas.filter(f => f[clave].length >= min).map(f => ({ label: nombre(f.h), valor: mediana(f[clave]), n: f[clave].length }))
+      .sort((a, b) => b.valor - a.valor).slice(0, 8).map(x => ({ label: x.label, valor: x.valor, texto: fmtDur(x.valor), detalle: `${num(x.n)} respuestas medidas` }));
+    let html = metricas([
+      ['Tú respondes en', fmtDur(mediana(todosMios))], ['Los demás responden en', fmtDur(mediana(todosSuyos))],
+      ['Tus respuestas en menos de 1 h', Math.round(rapidas / todosMios.length * 100) + ' %'], ['Respuestas medidas', num(todosMios.length + todosSuyos.length)]
+    ]);
+    html += `<div class="pf-two">${
+      tarjeta('Con quién tardas más en responder', 'Mediana de tu tiempo de respuesta, con al menos 5 respuestas.', barrasH(top('mios', 5), ''))}${
+      tarjeta('Quién tarda más en responderte', 'Mediana de su tiempo de respuesta, con al menos 5 respuestas.', barrasH(top('suyos', 5), ''))}</div>`;
+    html += nota('Se mide desde el último mensaje de una persona hasta la primera respuesta de la otra. Se ignoran pausas de más de 3 días y los grupos. Solo se usan fechas, nunca el texto.');
     return html;
   }
 
@@ -775,10 +825,12 @@
     const h = [];
     if (nSeg && sinRet) h.push([`Sigues a ${num(sinRet)} cuentas que no te siguen.`, 'seguidores', 'Ver lista']);
     if (fans) h.push([`${num(fans)} cuentas te siguen y tú no las sigues.`, 'seguidores', 'Ver fans']);
+    if (c.res.limpieza && c.res.limpieza.candidatas) h.push([`Hay ${num(c.res.limpieza.candidatas)} cuentas candidatas para revisar en la limpieza guiada.`, 'limpieza', 'Empezar']);
     if (ri && ri.seguidosSinInteraccion) h.push([`Sigues a ${num(ri.seguidosSinInteraccion)} cuentas sin ninguna interacción registrada.`, 'interacciones', 'Revisar']);
     if (ri && ri.interactuasSinRetorno) h.push([`Interactúas con ${num(ri.interactuasSinRetorno)} cuentas que no te siguen.`, 'interacciones', 'Ver cuáles']);
     if (rm && rm.esperandoRespuesta) h.push([`${num(rm.esperandoRespuesta)} chats esperan tu respuesta.`, 'mensajes', 'Ver chats']);
     if (rm && rm.chatsFrios) h.push([`${num(rm.chatsFrios)} chats con historia llevan más de un año parados.`, 'mensajes', 'Ver chats']);
+    if (rm && rm.respuesta) h.push([`Respondes en una mediana de ${fmtDur(rm.respuesta.tuMediana)}; los demás tardan ${fmtDur(rm.respuesta.losDemasMediana)}.`, 'mensajes', 'Ver tiempos']);
     const ra = c.res.actividad;
     if (ra && ra.horaMasActiva != null) h.push([`Tu hora más activa es a las ${ra.horaMasActiva}:00 y tu día más activo, el ${ra.diaMasActivo}.`, 'actividad', 'Ver actividad']);
     const rc = c.res.contenido;
@@ -883,9 +935,115 @@
     } finally { input.value = ''; }
   }
 
+  /* ============================== limpieza guiada ============================== */
+  const CLAVE_LIMP = 'golifiar-limpieza';
+  const leerLimp = () => { try { const j = JSON.parse(localStorage.getItem(CLAVE_LIMP) || '{}'); return { m: j.m || [], d: j.d || [] }; } catch (e) { return { m: [], d: [] }; } };
+  const guardarLimp = x => { try { localStorage.setItem(CLAVE_LIMP, JSON.stringify(x)); } catch (e) { aviso('No se pudo guardar tu decisión en este dispositivo.'); } };
+  const invalido = u => typeof global.nombreInvalido === 'function' && global.nombreInvalido(u);
+  const noDisp = u => typeof global.esNoDisponible === 'function' && global.esNoDisponible(u);
+
+  const FILTROS_LIMP = [['todas', 'Todas'], ['nosigue', 'No me siguen'], ['sinint', 'Sin interacción'], ['rotas', 'No disponibles']];
+
+  function candidatasLimpieza(c) {
+    const out = [];
+    c.seguidosObjs.forEach(o => {
+      const u = o.username, r = [];
+      let score = 0;
+      if (noDisp(u)) { r.push(['rotas', 'Cuenta no disponible']); score += 4; }
+      if (c.seguidores.size && !c.seguidores.has(u)) { r.push(['nosigue', 'No te sigue']); score += 3; }
+      if (c.hayInteracciones && !c.interactuados.has(u)) { r.push(['sinint', 'Sin interacción tuya']); score += 2; }
+      if (!r.length) return;
+      if (o.timestamp && diasDesde(o.timestamp) > 730) { r.push(['antigua', 'La sigues desde ' + new Date(o.timestamp * 1000).getFullYear()]); score += 1; }
+      out.push({ u, razones: r, score, ts: o.timestamp || 0 });
+    });
+    return out.sort((a, b) => b.score - a.score || (a.ts || Infinity) - (b.ts || Infinity));
+  }
+
+  function panelLimpieza(d, c) {
+    if (!c.seguidosObjs.length) return faltan('Limpieza guiada', 'Seguidores y seguidos');
+    const todas = candidatasLimpieza(c);
+    c.res.limpieza = { candidatas: todas.length };
+    ESTADO.limp = { todas, filtro: ESTADO.limp ? ESTADO.limp.filtro : 'todas', saltadas: [], hist: [] };
+    return '<div id="pf-limp"></div>';
+  }
+
+  function renderLimpieza() {
+    const el = document.getElementById('pf-limp');
+    const L = ESTADO.limp;
+    if (!el || !L) return;
+    const dec = leerLimp();
+    const hechas = new Set(dec.m.concat(dec.d));
+    const pendientes = L.todas.filter(x => !hechas.has(x.u));
+    const cola = pendientes.filter(x => L.filtro === 'todas' || x.razones.some(r => r[0] === L.filtro));
+    const orden = cola.filter(x => !L.saltadas.includes(x.u)).concat(cola.filter(x => L.saltadas.includes(x.u)));
+    const total = L.todas.length, revisadas = total - pendientes.length;
+    const pct = total ? Math.round(revisadas / total * 100) : 100;
+
+    let h = `<section class="pf-card"><h3>Revisa tus cuentas una a una</h3>
+      <p class="pf-sub">Golifiar te propone cuentas que sigues y que quizá ya no te aportan nada. Tú decides. Para dejar de seguir se abre su perfil y lo haces tú en Instagram: ninguna app puede hacerlo por ti sin poner en riesgo tu cuenta.</p>
+      <div class="pf-chips" role="group" aria-label="Qué cuentas revisar">${FILTROS_LIMP.map(([k, t]) =>
+        `<button type="button" class="pf-chip pf-chipbtn${L.filtro === k ? ' on' : ''}" aria-pressed="${L.filtro === k}" onclick="Perfil.limpiezaFiltro('${k}')">${esc(t)}</button>`).join('')}</div>
+      <div class="pf-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></div>
+      <p class="pf-note">Revisadas ${num(revisadas)} de ${num(total)} candidatas · mantenidas ${num(dec.m.length)} · para dejar ${num(dec.d.length)}</p></section>`;
+
+    const x = orden[0];
+    if (x) {
+      const roto = invalido(x.u);
+      const chips = x.razones.map(r => `<span class="pf-reason ${r[0]}">${esc(r[1])}</span>`).join('');
+      h += `<section class="pf-card pf-limpcard" aria-live="polite">
+        <div class="pf-limpuser">${roto ? `<span class="pf-limpname">@${esc(x.u)}</span>` : `<a class="pf-limpname" href="${esc(ig(x.u))}" target="_blank" rel="noopener noreferrer">@${esc(x.u)}</a>`}</div>
+        <div class="pf-reasons">${chips}</div>
+        <p class="pf-note">${num(orden.length)} por revisar con este filtro.${x.ts ? ' La sigues desde el ' + fmtFecha(x.ts) + '.' : ''}</p>
+        <div class="pf-limpbtns">
+          <button class="btn-sub" type="button" onclick="Perfil.limpiezaAccion('mantener')">Mantener</button>
+          <button class="btn-minimal pf-dejar" type="button" onclick="Perfil.limpiezaAccion('dejar')">${roto ? 'Quitar de la lista' : 'Dejar de seguir'}</button>
+          <button class="btn-sub" type="button" onclick="Perfil.limpiezaAccion('saltar')">Saltar</button>
+        </div>
+        <p class="pf-note">${roto ? 'Este nombre no puede ser una cuenta real, así que solo se quita de tu lista de revisión.' : 'Al pulsar «Dejar de seguir» se abre su perfil. Allí pulsa «Siguiendo» y luego «Dejar de seguir».'}</p>
+        ${L.hist.length ? '<button class="pf-link" type="button" onclick="Perfil.limpiezaAccion(\'deshacer\')">Deshacer la última decisión</button>' : ''}
+      </section>`;
+    } else {
+      h += `<section class="pf-card"><div class="empty-state">${total ? (L.filtro === 'todas' ? 'No quedan cuentas por revisar. Buen trabajo.' : 'No quedan cuentas con este filtro.') : 'No hay cuentas candidatas: las que sigues te siguen o interactúas con ellas.'}</div>
+        ${dec.m.length || dec.d.length ? '<button class="pf-link" type="button" onclick="Perfil.limpiezaReiniciar()">Reiniciar mis decisiones</button>' : ''}</section>`;
+    }
+
+    if (dec.d.length) {
+      h += `<section class="pf-card"><h3>Marcadas para dejar de seguir (${num(dec.d.length)})</h3><p class="pf-sub">Comprueba que las has dejado de seguir en Instagram.</p>${
+        desplegable('Ver lista', dec.d.map(u => invalido(u) ? filaUsuario(u, 'quitada') : filaUsuario(u, '')), 'Ninguna.')}</section>`;
+    }
+    el.innerHTML = h;
+  }
+
+  function limpiezaFiltro(f) { if (ESTADO.limp) { ESTADO.limp.filtro = f; renderLimpieza(); } }
+  function limpiezaReiniciar() { guardarLimp({ m: [], d: [] }); if (ESTADO.limp) ESTADO.limp.hist = []; renderLimpieza(); }
+  function limpiezaAccion(acc) {
+    const L = ESTADO.limp;
+    if (!L) return;
+    if (typeof global.trigHaptic === 'function') global.trigHaptic(20);
+    const dec = leerLimp();
+    if (acc === 'deshacer') {
+      const ult = L.hist.pop();
+      if (ult) { dec.m = dec.m.filter(u => u !== ult.u); dec.d = dec.d.filter(u => u !== ult.u); guardarLimp(dec); }
+      renderLimpieza();
+      return;
+    }
+    const hechas = new Set(dec.m.concat(dec.d));
+    const cola = L.todas.filter(x => !hechas.has(x.u) && (L.filtro === 'todas' || x.razones.some(r => r[0] === L.filtro)));
+    const x = cola.filter(y => !L.saltadas.includes(y.u)).concat(cola.filter(y => L.saltadas.includes(y.u)))[0];
+    if (!x) return;
+    if (acc === 'saltar') { L.saltadas = L.saltadas.filter(u => u !== x.u).concat(x.u); renderLimpieza(); return; }
+    if (acc === 'mantener') { dec.m.push(x.u); L.hist.push({ u: x.u }); }
+    if (acc === 'dejar') {
+      dec.d.push(x.u); L.hist.push({ u: x.u });
+      if (!invalido(x.u)) global.open(ig(x.u), '_blank', 'noopener');
+    }
+    guardarLimp(dec);
+    renderLimpieza();
+  }
+
   /* ================================ interfaz ================================ */
-  const PANELES = ['resumen', 'seguidores', 'interacciones', 'actividad', 'mensajes', 'contenido', 'comparar'];
-  const ESTADO = { resumen: null, seg: [], sig: [], cmp: null, cmpHtml: '' };
+  const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'actividad', 'mensajes', 'contenido', 'comparar'];
+  const ESTADO = { resumen: null, seg: [], sig: [], cmp: null, cmpHtml: '', limp: null };
 
   function cambiarPanel(nombre) {
     if (typeof global.trigHaptic === 'function') global.trigHaptic(20);
@@ -911,17 +1069,17 @@
     if (!tabs) return;
     if (!d) {
       tabs.classList.add('hidden');
-      ESTADO.resumen = null; ESTADO.seg = []; ESTADO.sig = []; ESTADO.cmp = null; ESTADO.cmpHtml = '';
+      ESTADO.resumen = null; ESTADO.seg = []; ESTADO.sig = []; ESTADO.cmp = null; ESTADO.cmpHtml = ''; ESTADO.limp = null;
       PANELES.forEach(p => { if (p !== 'seguidores') { const el = document.getElementById('panel-' + p); if (el) el.innerHTML = ''; } });
       cambiarPanelSilencioso('resumen');
       return;
     }
     tabs.classList.remove('hidden');
     HTML_EN_ZIP = d.htmlOmitidos > 0;
-    ESTADO.seg = seg || []; ESTADO.sig = sig || []; ESTADO.cmp = null; ESTADO.cmpHtml = '';
+    ESTADO.seg = seg || []; ESTADO.sig = sig || []; ESTADO.cmp = null; ESTADO.cmpHtml = ''; ESTADO.limp = null;
     const c = contexto(d, seg, sig);
     const mapa = {
-      interacciones: [panelInteracciones, 'Interacciones'], actividad: [panelActividad, 'Actividad y hábitos'],
+      interacciones: [panelInteracciones, 'Interacciones'], limpieza: [panelLimpieza, 'Limpieza guiada'], actividad: [panelActividad, 'Actividad y hábitos'],
       mensajes: [panelMensajes, 'Mensajes'], contenido: [panelContenido, 'Contenido y cuenta']
     };
     Object.keys(mapa).forEach(k => {
@@ -931,6 +1089,7 @@
       const tab = document.getElementById('ptab-' + k);
       if (tab) tab.classList.toggle('sin-datos', html.includes('pf-faltan'));
     });
+    renderLimpieza();
     const res = document.getElementById('panel-resumen');
     if (res) res.innerHTML = seguro(panelResumen, d, c, 'Resumen');
     renderComparar();
@@ -947,7 +1106,7 @@
     if (typeof global.descargarArchivo === 'function') global.descargarArchivo('golifiar-resumen-perfil.json', txt, 'application/json');
   }
 
-  global.Perfil = { nuevo, procesarEntrada, procesarHtml, tipoHtml, secciones, render, cambiarPanel, exportarResumen, guardarSnap, borrarSnap, compararSnap, compararZip,
+  global.Perfil = { nuevo, procesarEntrada, procesarHtml, tipoHtml, limpiezaAccion, limpiezaFiltro, limpiezaReiniciar, secciones, render, cambiarPanel, exportarResumen, guardarSnap, borrarSnap, compararSnap, compararZip,
     // expuesto para pruebas
     _int: { panelInteracciones, panelActividad, panelMensajes, panelContenido, contexto, fixText, dispositivo, serieDesdeMapa } };
 })(typeof window !== 'undefined' ? window : globalThis);

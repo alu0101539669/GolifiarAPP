@@ -1,7 +1,7 @@
 {
   "name": "Golifiar",
   "short_name": "Golifiar",
-  "description": "Auditoría local de seguidores y seguidos de Instagram.",
+  "description": "Analiza tu perfil de Instagram con tu descarga de datos, sin subirla a ningún servidor.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
@@ -15,5 +15,36 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "zips",
+          "accept": [
+            "application/zip",
+            "application/x-zip-compressed",
+            "application/octet-stream",
+            ".zip"
+          ]
+        }
+      ]
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "./",
+      "accept": {
+        "application/zip": [
+          ".zip"
+        ]
+      }
+    }
+  ],
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  }
 }
