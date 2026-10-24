@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v9';
+const CACHE_NAME = 'golifiar-v10';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
@@ -6,7 +6,8 @@ const APP_SHELL = [
   './perfil.js',
   './manifest.webmanifest',
   './icons/icon.svg',
-  './vendor/jszip.min.js'
+  './vendor/jszip.min.js',
+  './vendor/zip-inflate.min.js'
 ];
 
 self.addEventListener('install', event => {

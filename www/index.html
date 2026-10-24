@@ -10,6 +10,7 @@
     <title>Golifiar | Análisis de tu perfil de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
     <script src="./vendor/jszip.min.js"></script>
+    <script src="./vendor/zip-inflate.min.js"></script>
     <script src="./perfil.js" defer></script>
     <style>
         :root {
@@ -1305,7 +1306,7 @@
                 <!-- ZIP Dropzone -->
                 <div id="uploadModeZip" class="upload-mode-content">
                     <div class="dropzone">
-                        <input type="file" id="zipFileInput" accept=".zip" multiple onchange="procesarZipAutomatico(this)">
+                        <input type="file" id="zipFileInput" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream" multiple onchange="procesarZipAutomatico(this)">
                         <div class="dropzone-content">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             <span class="dropzone-title">Elige o arrastra tu archivo .ZIP (sin descomprimir)</span>
@@ -1616,7 +1617,7 @@
             <li>Abre el enlace del correo desde el dispositivo donde vas a usar Golifiar, pulsa <strong>Descargar</strong> e inicia sesión si te lo pide.</li>
             <li>El enlace caduca a los pocos días (Instagram indica 4), así que descárgalo pronto.</li>
             <li>Guarda el ZIP tal cual: <strong>no lo descomprimas ni lo renombres</strong>. En iPhone suele quedar en Archivos → Descargas y en Android, en la carpeta Descargas.</li>
-            <li>Si Instagram te da varios ZIP, súbelos todos a la vez en Golifiar. Cada uno puede pesar hasta 250 MB.</li>
+            <li>Si Instagram te da varios ZIP, súbelos todos a la vez en Golifiar. No importa lo que pesen: solo se leen los archivos de datos, no las fotos ni los vídeos.</li>
             <li><strong>Atajo:</strong> si tienes Golifiar instalado en el móvil, puedes compartir el ZIP desde Archivos o Descargas y elegir Golifiar: se abre y lo analiza solo.</li>
         </ol>
 
@@ -1624,7 +1625,7 @@
         <ul>
             <li><strong>No llega el correo:</strong> comprueba el correo de tu cuenta en Centro de cuentas y repite la solicitud.</li>
             <li><strong>«No se encontraron seguidores»:</strong> vuelve a pedirla marcando «Seguidores y seguidos» y el intervalo «Desde el principio».</li>
-            <li><strong>El ZIP pesa demasiado:</strong> pide menos categorías y calidad multimedia baja.</li>
+            <li><strong>El ZIP tarda mucho en descargarse:</strong> puedes volver a pedirlo con menos categorías y calidad multimedia baja. Golifiar lo leerá igual.</li>
         </ul>
         <div class="dialog-actions"><button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button></div>
     </dialog>
@@ -1641,7 +1642,6 @@
         let zipFollowersArray = [];
         let zipFollowingArray = [];
         let zipPerfil = null;
-        const MAX_ZIP_SIZE = 250 * 1024 * 1024;
 
         function ajustarAltoCabecera() {
             const h = document.querySelector('.header-minimal');
@@ -1778,6 +1778,24 @@
             }
         }
 
+        // Abre un ZIP leyendo solo su índice; cada entrada se descomprime bajo demanda.
+        // Así un ZIP de varios GB con fotos y vídeos no llena la memoria.
+        async function abrirZip(file) {
+            if (window.zip && window.zip.ZipReader) {
+                window.zip.configure({ useWebWorkers: false }); // sin workers: es la configuración que funciona sin servidor ni CSP especiales
+                const lector = new window.zip.ZipReader(new window.zip.BlobReader(file));
+                const todas = await lector.getEntries();
+                return {
+                    entradas: todas.filter(e => !e.directory).map(e => ({ ruta: e.filename, texto: () => e.getData(new window.zip.TextWriter()) })),
+                    cerrar: () => lector.close().catch(() => {})
+                };
+            }
+            const z = await new JSZip().loadAsync(file);
+            const entradas = [];
+            z.forEach((ruta, ent) => { if (!ent.dir) entradas.push({ ruta, texto: () => ent.async('string') }); });
+            return { entradas, cerrar: () => Promise.resolve() };
+        }
+
         function procesarZipAutomatico(input) {
             return procesarArchivosZip(Array.from(input.files || []), input);
         }
@@ -1791,21 +1809,28 @@
             const progressFill = document.getElementById('zipProgressFill');
 
             if (!files.length) return false;
-            if (files.some(f => !f.name.toLowerCase().endsWith('.zip'))) {
+
+            // El motivo del rechazo se muestra dentro de la zona de carga, con el nombre del archivo
+            const rechazar = texto => {
                 limpiarInput();
-                mostrarEstado('Selecciona archivos con extensión .zip. No descomprimas la descarga de Instagram.', 'error');
+                tag.innerText = texto;
+                tag.classList.add('active');
+                tag.style.color = 'var(--accent-rose)';
+                mostrarEstado(texto, 'error');
                 return false;
-            }
-            if (files.some(f => f.size > MAX_ZIP_SIZE)) {
-                limpiarInput();
-                mostrarEstado('Un archivo supera el límite de 250 MB. Vuelve a pedir la descarga con menos categorías y calidad multimedia baja.', 'error');
-                return false;
-            }
+            };
+            const tam = f => f.size >= 1073741824 ? (f.size / 1073741824).toFixed(1) + ' GB' : (f.size / 1048576).toFixed(1) + ' MB';
+            const incompleto = files.find(f => /\.(crdownload|part|tmp|download|partial)$/i.test(f.name));
+            if (incompleto) return rechazar(`«${incompleto.name}» es una descarga sin terminar. Espera a que acabe y vuelve a elegirla.`);
+            const noZip = files.find(f => !f.name.toLowerCase().endsWith('.zip'));
+            if (noZip) return rechazar(`«${noZip.name}» no es un archivo .zip. Sube el ZIP tal como lo descargaste de Instagram, sin descomprimirlo.`);
+            const vacio = files.find(f => f.size === 0);
+            if (vacio) return rechazar(`«${vacio.name}» está vacío (0 bytes). Vuelve a descargarlo desde el correo de Instagram.`);
 
             const totalMb = files.reduce((n, f) => n + f.size, 0) / (1024 * 1024);
             progressContainer.classList.add('active');
             progressFill.style.width = '10%';
-            tag.innerText = `Analizando ${files.length > 1 ? files.length + ' archivos ZIP' : 'archivo ZIP'} (${totalMb.toFixed(1)} MB)...`;
+            tag.innerText = `Leyendo ${files.length > 1 ? files.length + ' archivos ZIP' : '«' + files[0].name + '»'} (${totalMb >= 1024 ? (totalMb / 1024).toFixed(1) + ' GB' : totalMb.toFixed(1) + ' MB'})...`;
             tag.classList.add('active');
             tag.style.color = 'var(--accent-blue)';
             mostrarEstado('Leyendo el archivo localmente. No cierres esta ventana.', '');
@@ -1817,11 +1842,11 @@
                 let nJson = 0, nHtml = 0;
 
                 for (let i = 0; i < files.length; i++) {
-                    const zipContent = await new JSZip().loadAsync(files[i]);
+                    const abierto = await abrirZip(files[i]);
                     const entries = [];
-                    zipContent.forEach((relativePath, zipEntry) => {
-                        const low = relativePath.toLowerCase();
-                        if (!zipEntry.dir && (low.endsWith('.json') || low.endsWith('.html') || low.endsWith('.htm'))) entries.push({ relativePath, zipEntry });
+                    abierto.entradas.forEach(ent => {
+                        const low = ent.ruta.toLowerCase();
+                        if (low.endsWith('.json') || low.endsWith('.html') || low.endsWith('.htm')) entries.push({ relativePath: ent.ruta, zipEntry: ent });
                     });
 
                     let hechos = 0;
@@ -1832,18 +1857,18 @@
                         try {
                             if (esHtml) {
                                 if (/^followers(_\d+)?\.html?$/.test(fileName)) {
-                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuariosHtml(await zipEntry.async('string')));
+                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuariosHtml(await zipEntry.texto()));
                                     nHtml++;
                                 } else if (/^following\.html?$/.test(fileName)) {
-                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuariosHtml(await zipEntry.async('string')));
+                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuariosHtml(await zipEntry.texto()));
                                     nHtml++;
                                 } else if (zipPerfil) {
                                     const tipo = window.Perfil.tipoHtml(relativePath);
-                                    if (tipo === 'lista') window.Perfil.procesarHtml(relativePath, await zipEntry.async('string'), zipPerfil);
+                                    if (tipo === 'lista') window.Perfil.procesarHtml(relativePath, await zipEntry.texto(), zipPerfil);
                                     else if (tipo === 'solojson') zipPerfil.htmlOmitidos++;
                                 }
                             } else {
-                                const json = JSON.parse(await zipEntry.async('string'));
+                                const json = JSON.parse(await zipEntry.texto());
                                 if (/^followers(_\d+)?\.json$/.test(fileName)) {
                                     zipFollowersArray = zipFollowersArray.concat(extraerUsuarios(json));
                                     nJson++;
@@ -1860,6 +1885,7 @@
                         hechos++;
                         progressFill.style.width = `${10 + Math.floor(((i + hechos / (entries.length || 1)) / files.length) * 85)}%`;
                     }
+                    await abierto.cerrar();
                 }
 
                 progressFill.style.width = '100%';
@@ -1893,9 +1919,10 @@
             } catch (error) {
                 console.error(error);
                 progressContainer.classList.remove('active');
-                tag.innerText = 'Error al descomprimir o leer el archivo ZIP';
+                const motivo = String((error && error.message) || error || '').slice(0, 140);
+                tag.innerText = 'No se pudo leer el ZIP' + (motivo ? ` (${motivo})` : '');
                 tag.style.color = 'var(--accent-rose)';
-                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido.', 'error');
+                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido. Si sigue fallando, descárgalo de nuevo desde el enlace del correo.', 'error');
             }
             return false;
         }

@@ -915,18 +915,17 @@
     const file = input.files && input.files[0];
     if (!file) return;
     try {
-      if (typeof global.JSZip === 'undefined' || typeof global.extraerUsuarios !== 'function' || typeof global.extraerUsuariosHtml !== 'function') throw new Error('Falta JSZip');
-      const zip = await global.JSZip.loadAsync(file);
+      if (typeof global.abrirZip !== 'function' || typeof global.extraerUsuarios !== 'function' || typeof global.extraerUsuariosHtml !== 'function') throw new Error('Falta el lector de ZIP');
+      const zip = await global.abrirZip(file);
       let seg = [], sig = [];
-      const nombres = [];
-      zip.forEach((ruta, ent) => { if (!ent.dir) nombres.push([ruta, ent]); });
-      for (const [ruta, ent] of nombres) {
-        const base = ruta.toLowerCase().split('/').pop();
-        if (/^followers(_\d+)?\.json$/.test(base)) seg = seg.concat(global.extraerUsuarios(JSON.parse(await ent.async('string'))));
-        else if (base === 'following.json') sig = global.extraerUsuarios(JSON.parse(await ent.async('string')));
-        else if (/^followers(_\d+)?\.html?$/.test(base)) seg = seg.concat(global.extraerUsuariosHtml(await ent.async('string')));
-        else if (/^following\.html?$/.test(base)) sig = global.extraerUsuariosHtml(await ent.async('string'));
+      for (const ent of zip.entradas) {
+        const base = ent.ruta.toLowerCase().split('/').pop();
+        if (/^followers(_\d+)?\.json$/.test(base)) seg = seg.concat(global.extraerUsuarios(JSON.parse(await ent.texto())));
+        else if (base === 'following.json') sig = global.extraerUsuarios(JSON.parse(await ent.texto()));
+        else if (/^followers(_\d+)?\.html?$/.test(base)) seg = seg.concat(global.extraerUsuariosHtml(await ent.texto()));
+        else if (/^following\.html?$/.test(base)) sig = global.extraerUsuariosHtml(await ent.texto());
       }
+      await zip.cerrar();
       if (!seg.length && !sig.length) { aviso('Ese ZIP no contiene seguidores ni seguidos (JSON o HTML).'); return; }
       comparar({ seg: seg.map(o => o.username), sig: sig.map(o => o.username) }, file.name.replace(/\.zip$/i, ''));
     } catch (e) {
