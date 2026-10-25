@@ -1070,7 +1070,7 @@
       const panel = document.getElementById('panel-' + p);
       const tab = document.getElementById('ptab-' + p);
       if (panel) panel.classList.toggle('hidden', p !== nombre);
-      if (tab) { tab.classList.toggle('active', p === nombre); tab.setAttribute('aria-selected', p === nombre ? 'true' : 'false'); }
+      if (tab) { tab.classList.toggle('active', p === nombre); tab.setAttribute('aria-selected', p === nombre ? 'true' : 'false'); tab.tabIndex = p === nombre ? 0 : -1; }
     });
     const act = document.getElementById('ptab-' + nombre);
     if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' });
@@ -1115,6 +1115,20 @@
     ESTADO.resumen = Object.assign({ generado: new Date().toISOString(), secciones: secciones(d) }, c.res);
     cambiarPanelSilencioso('resumen');
   }
+  // Teclado en las pestañas: flechas, Inicio y Fin
+  document.addEventListener('keydown', e => {
+    const tab = e.target && e.target.closest && e.target.closest('#profileTabs [role="tab"]');
+    if (!tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const lista = [...document.querySelectorAll('#profileTabs [role="tab"]')].filter(t => t.offsetParent !== null);
+    let i = lista.indexOf(tab);
+    if (e.key === 'ArrowRight') i = (i + 1) % lista.length;
+    else if (e.key === 'ArrowLeft') i = (i - 1 + lista.length) % lista.length;
+    else if (e.key === 'Home') i = 0; else i = lista.length - 1;
+    e.preventDefault();
+    lista[i].focus();
+    lista[i].click();
+  });
+
   function cambiarPanelSilencioso(n) {
     const h = global.trigHaptic; global.trigHaptic = null; cambiarPanel(n); global.trigHaptic = h;
   }

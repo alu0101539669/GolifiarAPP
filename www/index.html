@@ -201,7 +201,7 @@
             padding: 0.45rem 0.9rem;
             border-radius: 9999px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
         }
 
         .nav-tab-btn.active {
@@ -394,7 +394,7 @@
             padding: 0.75rem;
             border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -424,7 +424,7 @@
             padding: 2rem 1rem;
             text-align: center;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             position: relative;
             overflow: hidden;
             min-height: 190px;
@@ -478,7 +478,7 @@
             border-radius: 6px;
             opacity: 0;
             transform: translateY(4px);
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
         }
 
         .file-status-tag.active {
@@ -517,7 +517,7 @@
             font-size: 1rem;
             font-weight: 750;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -606,7 +606,7 @@
             padding: 0.65rem 0.5rem;
             border-radius: 9px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
             text-align: center;
         }
 
@@ -681,7 +681,7 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
         }
 
         .btn-sub:hover {
@@ -728,7 +728,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            transition: all 0.2s ease;
+            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
         }
 
@@ -1089,8 +1089,21 @@
             .user-actions { align-items: flex-end; flex-direction: column; gap: 0.3rem; }
         }
 
+
+        /* ===== Guías de interfaz web (accesibilidad y tacto) ===== */
+        button, a, summary, label, select, input[type="checkbox"] { touch-action: manipulation; }
+        html { -webkit-tap-highlight-color: rgba(11, 110, 153, 0.15); scroll-padding-top: 130px; }
+        h1, h2, h3 { text-wrap: balance; }
+        .metric-number, .metric-label, .pf-hval, .pf-hdet, .pf-badge, .count, .cat-tab { font-variant-numeric: tabular-nums; }
+        .user-link, .pf-hlabel { overflow-wrap: anywhere; min-width: 0; }
+        .skip-link { position: absolute; left: 1rem; top: -4rem; z-index: 100; background: var(--accent-blue); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; transition: top 0.2s ease; }
+        .skip-link:focus { top: 0.75rem; }
+        dialog { overscroll-behavior: contain; }
+        @media (pointer: fine) { html { overscroll-behavior: none; } }
+
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            html { scroll-behavior: auto; }
+            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
         }
     
         /* ===== Análisis de perfil (perfil.js) ===== */
@@ -1231,6 +1244,7 @@
     <div class="minimal-aura"></div>
 
     <!-- Header & Navigation -->
+    <a class="skip-link" href="#contenidoPrincipal">Saltar al contenido</a>
     <header class="header-minimal">
         <div class="header-container">
             <a onclick="cambiarVista('auditoria')" class="brand-minimal">
@@ -1238,7 +1252,7 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-3-3"/></svg>
                 </div>
                 <div class="brand-text">
-                    <h1>Golifiar</h1>
+                    <h1 translate="no">Golifiar</h1>
                     <span>DonseCanarias</span>
                 </div>
             </a>
@@ -1255,7 +1269,7 @@
     </header>
 
     <!-- Main Content Wrapper -->
-    <main class="main-wrapper">
+    <main class="main-wrapper" id="contenidoPrincipal" tabindex="-1">
 
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
         <div id="viewAuditoria" class="view-container">
@@ -1358,17 +1372,17 @@
             <section id="resultsSection" class="results-section hidden">
                 <div id="resultsStatus" class="status-message success" role="status" aria-live="polite"></div>
                 <div id="profileTabs" class="category-tabs profile-tabs hidden" role="tablist" aria-label="Secciones del análisis de perfil">
-                    <button class="cat-tab active" id="ptab-resumen" role="tab" aria-selected="true" onclick="Perfil.cambiarPanel('resumen')">Resumen</button>
-                    <button class="cat-tab" id="ptab-seguidores" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
-                    <button class="cat-tab" id="ptab-interacciones" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
-                    <button class="cat-tab" id="ptab-limpieza" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('limpieza')">Limpieza</button>
-                    <button class="cat-tab" id="ptab-actividad" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
-                    <button class="cat-tab" id="ptab-mensajes" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
-                    <button class="cat-tab" id="ptab-contenido" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
-                    <button class="cat-tab" id="ptab-comparar" role="tab" aria-selected="false" onclick="Perfil.cambiarPanel('comparar')">Comparar</button>
+                    <button class="cat-tab active" id="ptab-resumen" role="tab" aria-controls="panel-resumen" aria-selected="true" onclick="Perfil.cambiarPanel('resumen')">Resumen</button>
+                    <button class="cat-tab" id="ptab-seguidores" role="tab" aria-controls="panel-seguidores" aria-selected="false" onclick="Perfil.cambiarPanel('seguidores')">Seguidores</button>
+                    <button class="cat-tab" id="ptab-interacciones" role="tab" aria-controls="panel-interacciones" aria-selected="false" onclick="Perfil.cambiarPanel('interacciones')">Interacciones</button>
+                    <button class="cat-tab" id="ptab-limpieza" role="tab" aria-controls="panel-limpieza" aria-selected="false" onclick="Perfil.cambiarPanel('limpieza')">Limpieza</button>
+                    <button class="cat-tab" id="ptab-actividad" role="tab" aria-controls="panel-actividad" aria-selected="false" onclick="Perfil.cambiarPanel('actividad')">Actividad</button>
+                    <button class="cat-tab" id="ptab-mensajes" role="tab" aria-controls="panel-mensajes" aria-selected="false" onclick="Perfil.cambiarPanel('mensajes')">Mensajes</button>
+                    <button class="cat-tab" id="ptab-contenido" role="tab" aria-controls="panel-contenido" aria-selected="false" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
+                    <button class="cat-tab" id="ptab-comparar" role="tab" aria-controls="panel-comparar" aria-selected="false" onclick="Perfil.cambiarPanel('comparar')">Comparar</button>
                 </div>
-                <div id="panel-resumen" class="pf-panel"></div>
-                <div id="panel-seguidores" class="pf-panel hidden">
+                <div id="panel-resumen" role="tabpanel" aria-labelledby="ptab-resumen" class="pf-panel"></div>
+                <div id="panel-seguidores" role="tabpanel" aria-labelledby="ptab-seguidores" class="pf-panel hidden">
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-label">Seguidores</div>
@@ -1398,7 +1412,7 @@
                 <div class="toolbar">
                     <div class="search-box">
                         <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        <input type="text" id="searchInput" placeholder="Filtrar por nombre de usuario..." oninput="filtrarResultados()">
+                        <input type="search" id="searchInput" name="filtro" aria-label="Filtrar por nombre de usuario" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Filtrar por nombre de usuario…" oninput="filtrarResultados()">
                     </div>
                     <div class="filter-dropdowns">
                         <select id="letterFilter" class="btn-sub" onchange="filtrarResultados()">
@@ -1453,12 +1467,12 @@
                     Los resultados proceden de tu exportación de Instagram, que conserva cuentas eliminadas, desactivadas o con otro nombre. Si al abrir un perfil da error, pulsa «No existe» y se ocultará. Las marcas se guardan solo en este dispositivo.
                 </p>
                 </div>
-                <div id="panel-interacciones" class="pf-panel hidden"></div>
-                <div id="panel-limpieza" class="pf-panel hidden"></div>
-                <div id="panel-actividad" class="pf-panel hidden"></div>
-                <div id="panel-mensajes" class="pf-panel hidden"></div>
-                <div id="panel-contenido" class="pf-panel hidden"></div>
-                <div id="panel-comparar" class="pf-panel hidden"></div>
+                <div id="panel-interacciones" role="tabpanel" aria-labelledby="ptab-interacciones" class="pf-panel hidden"></div>
+                <div id="panel-limpieza" role="tabpanel" aria-labelledby="ptab-limpieza" class="pf-panel hidden"></div>
+                <div id="panel-actividad" role="tabpanel" aria-labelledby="ptab-actividad" class="pf-panel hidden"></div>
+                <div id="panel-mensajes" role="tabpanel" aria-labelledby="ptab-mensajes" class="pf-panel hidden"></div>
+                <div id="panel-contenido" role="tabpanel" aria-labelledby="ptab-contenido" class="pf-panel hidden"></div>
+                <div id="panel-comparar" role="tabpanel" aria-labelledby="ptab-comparar" class="pf-panel hidden"></div>
             </section>
             <section class="premium-panel" aria-labelledby="premiumTitle">
                 <h3 id="premiumTitle">Golifiar Premium</h3>
@@ -1895,7 +1909,7 @@
                 progressFill.style.width = '100%';
                 // Con varios ZIP, las listas de seguidores/seguidos se toman SOLO del export más reciente:
                 // mezclar exports antiguos resucita cuentas que ya no sigues o que ya no te siguen.
-                const fechaLista = l => Math.max(0, ...l.seg.concat(l.sig).map(u => u.timestamp || 0));
+                const fechaLista = l => { let m = 0; for (const u of l.seg) if ((u.timestamp || 0) > m) m = u.timestamp; for (const u of l.sig) if ((u.timestamp || 0) > m) m = u.timestamp; return m; };
                 const conListas = listasPorZip.filter(l => l.seg.length || l.sig.length);
                 let avisoListas = '';
                 let elegida = conListas[0];
@@ -2147,7 +2161,7 @@
             trigHaptic(50);
             const resultsSection = document.getElementById('resultsSection');
             resultsSection.classList.add('hidden');
-            mostrarEstado('Validando los archivos seleccionados...', '');
+            mostrarEstado('Validando los archivos seleccionados…', '');
 
             const wrapper = document.getElementById('resultsWrapper');
             wrapper.innerHTML = `
@@ -2306,7 +2320,7 @@
                 const user = obj.username;
                 let metaInfo = badgeText;
                 if (obj.timestamp > 0) {
-                    const fecha = new Date(obj.timestamp * 1000).toLocaleDateString();
+                    const fecha = new Date(obj.timestamp * 1000).toLocaleDateString('es-ES');
                     metaInfo = `${badgeText} (${fecha})`;
                 }
 
@@ -2425,7 +2439,7 @@
                 alert('No hay registros disponibles para exportar.');
                 return;
             }
-            const csvContent = "data:text/csv;charset=utf-8,Usuario,FechaConexion\n" + lista.map(u => `@${u.username},${u.timestamp ? new Date(u.timestamp*1000).toLocaleDateString() : 'N/D'}`).join("\n");
+            const csvContent = "data:text/csv;charset=utf-8,Usuario,FechaConexion\n" + lista.map(u => `@${u.username},${u.timestamp ? new Date(u.timestamp*1000).toLocaleDateString('es-ES') : 'N/D'}`).join("\n");
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
