@@ -1641,6 +1641,7 @@
         let usarModoZip = true;
         let zipFollowersArray = [];
         let zipFollowingArray = [];
+        let zipAviso = '';
         let zipPerfil = null;
 
         function ajustarAltoCabecera() {
@@ -1840,8 +1841,11 @@
                 zipFollowingArray = [];
                 zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;
                 let nJson = 0, nHtml = 0;
+                const listasPorZip = [];
 
                 for (let i = 0; i < files.length; i++) {
+                    const lista = { nombre: files[i].name, seg: [], sig: [] };
+                    listasPorZip.push(lista);
                     const abierto = await abrirZip(files[i]);
                     const entries = [];
                     abierto.entradas.forEach(ent => {
@@ -1857,10 +1861,10 @@
                         try {
                             if (esHtml) {
                                 if (/^followers(_\d+)?\.html?$/.test(fileName)) {
-                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuariosHtml(await zipEntry.texto()));
+                                    lista.seg = lista.seg.concat(extraerUsuariosHtml(await zipEntry.texto()));
                                     nHtml++;
                                 } else if (/^following\.html?$/.test(fileName)) {
-                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuariosHtml(await zipEntry.texto()));
+                                    lista.sig = lista.sig.concat(extraerUsuariosHtml(await zipEntry.texto()));
                                     nHtml++;
                                 } else if (zipPerfil) {
                                     const tipo = window.Perfil.tipoHtml(relativePath);
@@ -1870,10 +1874,10 @@
                             } else {
                                 const json = JSON.parse(await zipEntry.texto());
                                 if (/^followers(_\d+)?\.json$/.test(fileName)) {
-                                    zipFollowersArray = zipFollowersArray.concat(extraerUsuarios(json));
+                                    lista.seg = lista.seg.concat(extraerUsuarios(json));
                                     nJson++;
                                 } else if (fileName === 'following.json') {
-                                    zipFollowingArray = zipFollowingArray.concat(extraerUsuarios(json));
+                                    lista.sig = lista.sig.concat(extraerUsuarios(json));
                                     nJson++;
                                 } else if (zipPerfil) {
                                     window.Perfil.procesarEntrada(relativePath, json, zipPerfil);
@@ -1889,8 +1893,31 @@
                 }
 
                 progressFill.style.width = '100%';
-                zipFollowersArray = unirUsuarios(zipFollowersArray);
-                zipFollowingArray = unirUsuarios(zipFollowingArray);
+                // Con varios ZIP, las listas de seguidores/seguidos se toman SOLO del export más reciente:
+                // mezclar exports antiguos resucita cuentas que ya no sigues o que ya no te siguen.
+                const fechaLista = l => Math.max(0, ...l.seg.concat(l.sig).map(u => u.timestamp || 0));
+                const conListas = listasPorZip.filter(l => l.seg.length || l.sig.length);
+                let avisoListas = '';
+                let elegida = conListas[0];
+                conListas.forEach(l => { if (fechaLista(l) > fechaLista(elegida)) elegida = l; });
+                if (elegida) {
+                    zipFollowersArray = unirUsuarios(elegida.seg);
+                    zipFollowingArray = unirUsuarios(elegida.sig);
+                    if (conListas.length > 1) avisoListas = `Había ${conListas.length} ZIP con listas; se usó «${elegida.nombre}» (el más reciente) para seguidores y seguidos.`;
+                }
+                // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
+                let quitadas = 0;
+                if (zipPerfil && zipPerfil.rel.dejados.length && zipFollowingArray.length) {
+                    const dejadoTs = new Map();
+                    zipPerfil.rel.dejados.forEach(o => { if (o.username) dejadoTs.set(o.username, Math.max(dejadoTs.get(o.username) || 0, o.timestamp || 0)); });
+                    const antes = zipFollowingArray.length;
+                    zipFollowingArray = zipFollowingArray.filter(o => {
+                        const t = dejadoTs.get(o.username);
+                        return !(t !== undefined && t >= (o.timestamp || 0));
+                    });
+                    quitadas = antes - zipFollowingArray.length;
+                }
+                zipAviso = [avisoListas, quitadas ? `Se descartaron ${quitadas} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.` : ''].filter(Boolean).join(' ');
 
                 setTimeout(() => {
                     progressContainer.classList.remove('active');
@@ -1906,7 +1933,7 @@
                     if (omitidos > 0) {
                         mostrarEstado('Descarga en HTML: se han leído seguidores y seguidos. Para analizar interacciones, actividad y mensajes, vuelve a pedir la descarga en JSON.', 'success');
                     } else {
-                        mostrarEstado('Archivo preparado. Pulsa «Analizar mi perfil».', 'success');
+                        mostrarEstado('Archivo preparado. Pulsa «Analizar mi perfil».' + (zipAviso ? ' ' + zipAviso : ''), 'success');
                     }
                     trigHaptic(60);
                     return true;

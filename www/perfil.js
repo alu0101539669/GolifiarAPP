@@ -598,6 +598,22 @@
     const yo = c.yo;
     hilos.forEach(h => { h.grupo = new Set([...h.participantes, ...h.emisores.keys()]).size > 2; });
     const nombre = h => h.titulo || [...h.emisores.keys()].filter(x => x !== yo).join(', ') || '(sin nombre)';
+    const normN = x => String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const porNorm = new Map();
+    new Set([...c.seguidores, ...c.seguidos]).forEach(u => {
+      const k = normN(u); if (!k) return;
+      porNorm.set(k, porNorm.has(k) ? null : u);
+    });
+    let resueltos = 0;
+    const usuarioHilo = h => {
+      if (h.grupo || h._u !== undefined) return h._u || '';
+      const carpeta = (h.id.split('/').pop() || '').replace(/_\d+$/, '');
+      const cand = [...new Set([normN(nombre(h)), normN(carpeta)].filter(Boolean))].map(k => porNorm.get(k)).filter(Boolean);
+      h._u = cand.length && cand.every(x => x === cand[0]) ? cand[0] : '';
+      if (h._u) resueltos++;
+      return h._u;
+    };
+    const etiqueta = h => { const u = usuarioHilo(h); return u ? `<a href="${esc(ig(u))}" target="_blank" rel="noopener noreferrer" class="user-link">${esc(nombre(h))}</a>` : esc(nombre(h)); };
     const total = sum(hilos.map(h => h.total));
     const enviados = yo ? sum(hilos.map(h => h.emisores.get(yo) || 0)) : 0;
     const grupos = hilos.filter(h => h.grupo).length;
@@ -614,12 +630,12 @@
         leyenda2('Tú', 'Los demás') + '<div class="pf-hbars">' + top.map(h => {
           const a = h.emisores.get(yo) || 0, b = h.total - a;
           return `<div class="pf-hrow pf-hrow2" title="${esc(nombre(h))}: ${num(a)} tuyos, ${num(b)} de los demás">
-            <span class="pf-hlabel">${esc(nombre(h))}${h.grupo ? ' ' + badge('grupo') : ''}</span>
+            <span class="pf-hlabel">${etiqueta(h)}${h.grupo ? ' ' + badge('grupo') : ''}</span>
             <span class="pf-stack"><span class="pf-seg a" style="flex:${a || 0.0001}"></span><span class="pf-seg b" style="flex:${b || 0.0001}"></span></span>
             <span class="pf-hval">${num(h.total)}</span></div>`;
         }).join('') + '</div>');
     } else {
-      html += tarjeta('Conversaciones con más mensajes', '', barrasH(top.map(h => ({ label: nombre(h), valor: h.total })), 'mensajes'));
+      html += tarjeta('Conversaciones con más mensajes', '', barrasH(top.map(h => ({ label: nombre(h), valor: h.total, href: usuarioHilo(h) ? ig(usuarioHilo(h)) : '' })), 'mensajes'));
     }
 
     if (yo) {
@@ -637,13 +653,13 @@
       html += tarjeta(`Esperan tu respuesta (${num(pendientes.length)})`,
         'Chats 1 a 1 en los que el último mensaje es de la otra persona.',
         desplegable('Ver los 15 más recientes', pendientes.slice(0, 15).map(h =>
-          `<div class="user-card"><span class="user-link">${esc(nombre(h))}</span><div class="user-actions"><span class="pf-badge">${fmtFecha(h.ultimo)} · hace ${num(diasDesde(h.ultimo))} d</span></div></div>`)));
+          `<div class="user-card">${usuarioHilo(h) ? etiqueta(h) : `<span class="user-link">${esc(nombre(h))}</span>`}<div class="user-actions"><span class="pf-badge">${fmtFecha(h.ultimo)} · hace ${num(diasDesde(h.ultimo))} d</span></div></div>`)));
       const frios = hilos.filter(h => !h.grupo && h.total >= 50 && diasDesde(h.ultimo) > 365).sort((a, b) => b.total - a.total);
       c.res.mensajes.chatsFrios = frios.length;
       html += tarjeta(`Chats que se enfriaron (${num(frios.length)})`,
         'Conversaciones con 50 o más mensajes y sin actividad desde hace más de un año.',
         desplegable('Ver los 15 con más historia', frios.slice(0, 15).map(h =>
-          `<div class="user-card"><span class="user-link">${esc(nombre(h))}</span><div class="user-actions"><span class="pf-badge">${num(h.total)} msgs · último ${fmtFecha(h.ultimo)}</span></div></div>`)));
+          `<div class="user-card">${usuarioHilo(h) ? etiqueta(h) : `<span class="user-link">${esc(nombre(h))}</span>`}<div class="user-actions"><span class="pf-badge">${num(h.total)} msgs · último ${fmtFecha(h.ultimo)}</span></div></div>`)));
     }
 
     if (yo) html += bloqueRespuesta(hilos, yo, nombre, c);
@@ -653,6 +669,10 @@
     html += `<div class="pf-two">${tarjeta('Mensajes por periodo', 'Todos los chats.', colSerie(serieDesdeMapa(porMes), 'mensajes', 'Mensajes por periodo'))}${
       yo && d.actMsg.has(yo) ? tarjeta('A qué hora escribes', 'Mensajes enviados por ti, hora local.', colHoras(d.actMsg.get(yo).horas, 'mensajes', 'Mensajes enviados por hora')) : ''}</div>`;
     html += nota('Solo se cuentan mensajes y fechas. El contenido de tus chats no se guarda ni se muestra.');
+    hilos.forEach(h => usuarioHilo(h));
+    html += nota(c.hayRel
+      ? `Los nombres son enlazables cuando coinciden con una sola cuenta de tus seguidores o seguidos (${num(resueltos)} de ${num(hilos.filter(h => !h.grupo).length)} chats 1 a 1). Instagram no incluye el @usuario en los mensajes, así que el resto se queda sin enlace en lugar de arriesgarse a abrir un perfil equivocado.`
+      : 'Para poder abrir el perfil desde los nombres, carga también seguidores y seguidos: Instagram no incluye el @usuario dentro de los mensajes.');
     return html;
   }
 
