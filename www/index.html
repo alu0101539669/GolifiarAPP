@@ -1090,6 +1090,35 @@
         }
 
 
+
+        /* ===== Inicio ===== */
+        .in-hero { padding: 2.5rem 0 1.5rem; max-width: 760px; }
+        .in-kicker { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.02em; color: var(--accent-blue); margin: 0 0 0.75rem; }
+        .in-title { font-size: clamp(3.2rem, 14vw, 6.5rem); line-height: 0.95; letter-spacing: -0.04em; margin: 0 0 1.25rem; color: var(--text-primary); }
+        .in-lead { font-size: 1.15rem; line-height: 1.6; color: var(--text-secondary); margin: 0 0 1.75rem; max-width: 62ch; }
+        .in-cta { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .in-btn { min-height: 48px; padding-inline: 1.5rem; }
+        .in-facts { list-style: none; padding: 0; margin: 1.75rem 0 0; display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .in-facts li::before { content: "✓"; color: var(--accent-blue); font-weight: 700; margin-right: 0.45rem; }
+        .in-sec { padding: 2.5rem 0 0.5rem; max-width: 900px; }
+        .in-h { font-size: 1.5rem; letter-spacing: -0.02em; margin: 0 0 1.25rem; }
+        .in-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+        .in-steps li { display: grid; grid-template-columns: 2.75rem 1fr; gap: 1rem; padding: 1.25rem 0; border-top: 1px solid var(--border-color); }
+        .in-steps li:last-child { border-bottom: 1px solid var(--border-color); }
+        .in-num { font-size: 2rem; font-weight: 800; line-height: 1; color: var(--accent-blue); font-variant-numeric: tabular-nums; }
+        .in-steps h4 { margin: 0 0 0.35rem; font-size: 1.1rem; }
+        .in-steps p { margin: 0 0 0.5rem; color: var(--text-secondary); line-height: 1.6; }
+        .in-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--border-color); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+        .in-grid article { background: var(--bg-card); padding: 1.25rem; }
+        .in-grid h4 { margin: 0 0 0.4rem; font-size: 1.05rem; }
+        .in-grid p { margin: 0; color: var(--text-secondary); line-height: 1.55; font-size: 0.95rem; }
+        .in-priv p { color: var(--text-secondary); line-height: 1.65; max-width: 66ch; }
+        .in-final { margin: 2.5rem 0 1rem; padding: 2rem 1.5rem; border: 1px solid var(--border-color); border-radius: 14px; background: var(--bg-card); max-width: 900px; }
+        .in-final h3 { margin: 0 0 1rem; font-size: 1.3rem; }
+        .hero-compact { padding-bottom: 0.5rem; }
+        .nav-tab-btn { white-space: nowrap; }
+        @media (max-width: 520px) { .nav-menu { width: 100%; } .nav-tab-btn { padding-inline: 0.65rem; font-size: 0.82rem; flex: 1 1 auto; } }
+
         /* ===== Guías de interfaz web (accesibilidad y tacto) ===== */
         button, a, summary, label, select, input[type="checkbox"] { touch-action: manipulation; }
         html { -webkit-tap-highlight-color: rgba(11, 110, 153, 0.15); scroll-padding-top: 130px; }
@@ -1247,7 +1276,7 @@
     <a class="skip-link" href="#contenidoPrincipal">Saltar al contenido</a>
     <header class="header-minimal">
         <div class="header-container">
-            <a onclick="cambiarVista('auditoria')" class="brand-minimal">
+            <a href="#" onclick="event.preventDefault(); cambiarVista('inicio')" class="brand-minimal" aria-label="Golifiar, ir al inicio">
                 <div class="brand-logo-box">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 11l-3 3-3-3"/></svg>
                 </div>
@@ -1257,7 +1286,8 @@
                 </div>
             </a>
             <nav class="nav-menu">
-                <button class="nav-tab-btn active" id="navAuditoria" onclick="cambiarVista('auditoria')">Analizar</button>
+                <button class="nav-tab-btn active" id="navInicio" onclick="cambiarVista('inicio')">Inicio</button>
+                <button class="nav-tab-btn" id="navAuditoria" onclick="cambiarVista('auditoria')">Analizar</button>
                 <button class="nav-tab-btn" id="navComoUsar" onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button class="nav-tab-btn" id="navQuienSoy" onclick="cambiarVista('quiensoy')">Quién soy</button>
             </nav>
@@ -1272,36 +1302,82 @@
     <main class="main-wrapper" id="contenidoPrincipal" tabindex="-1">
 
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
-        <div id="viewAuditoria" class="view-container">
-            <section class="hero-section">
-                <h2>Analiza tu perfil de Instagram</h2>
-                <p>Sube el ZIP que te descarga Instagram y descubre quién no te sigue de vuelta, con quién interactúas y cuándo estás más activo. Todo se procesa en tu dispositivo.</p>
-                <p><button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">Cómo descargar tus datos de Instagram</button></p>
+        <!-- ================= VIEW 0: INICIO ================= -->
+        <div id="viewInicio" class="view-container">
+            <section class="in-hero">
+                <p class="in-kicker">Análisis de Instagram · 100&nbsp;% en tu dispositivo</p>
+                <h2 class="in-title" translate="no">Golifiar</h2>
+                <p class="in-lead">Sube el ZIP que te da Instagram y descubre quién no te sigue de vuelta, con quién interactúas de verdad y cuándo estás más activo. Sin contraseña, sin servidores y sin límite de tamaño.</p>
+                <div class="in-cta">
+                    <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Empezar a analizar</button>
+                    <button class="btn-sub in-btn" type="button" onclick="mostrarAyudaDescarga()">Cómo descargar mis datos</button>
+                </div>
+                <ul class="in-facts" aria-label="Garantías">
+                    <li>Nunca te pedimos la contraseña</li>
+                    <li>Tu ZIP no sale de tu dispositivo</li>
+                    <li>Acepta JSON y HTML, de cualquier tamaño</li>
+                </ul>
             </section>
 
-            <!-- Guide Cards (3 Steps) -->
-            <section class="guide-grid">
-                <div class="guide-card">
-                    <div class="guide-step-header">
-                        <div class="guide-number">1</div>
-                        <h3>Pide tus datos</h3>
-                    </div>
-                    <p>En el Centro de cuentas de Instagram, descarga tu información en formato JSON.</p>
+            <section class="in-sec" aria-labelledby="inPasos">
+                <h3 id="inPasos" class="in-h">Cómo funciona, paso a paso</h3>
+                <ol class="in-steps">
+                    <li>
+                        <span class="in-num">1</span>
+                        <div><h4>Pide tus datos a Instagram</h4>
+                        <p>En <strong>Centro de cuentas → Tu información y permisos → Descargar tu información</strong>. Elige formato <strong>JSON</strong>, intervalo <strong>Desde el principio</strong> y marca seguidores y seguidos, más lo que quieras analizar.</p>
+                        <button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">Ver la guía con todos los pasos</button></div>
+                    </li>
+                    <li>
+                        <span class="in-num">2</span>
+                        <div><h4>Espera el correo y descarga el ZIP</h4>
+                        <p>Instagram tarda desde unos minutos hasta algunas horas. Descarga el archivo <strong>.zip</strong> tal cual, <strong>sin descomprimirlo</strong>. Si te da varios, súbelos todos.</p></div>
+                    </li>
+                    <li>
+                        <span class="in-num">3</span>
+                        <div><h4>Súbelo a Golifiar</h4>
+                        <p>En la pestaña <strong>Analizar</strong>, elige el ZIP y pulsa <strong>Analizar mi perfil</strong>. El archivo se lee en tu móvil u ordenador, por partes, así que pesa lo que pese funciona.</p></div>
+                    </li>
+                    <li>
+                        <span class="in-num">4</span>
+                        <div><h4>Explora y limpia tu cuenta</h4>
+                        <p>Consulta los resultados en pestañas, sigue la limpieza guiada, compara con descargas anteriores y exporta el resumen. Cuando quieras, borra todo con un botón.</p></div>
+                    </li>
+                </ol>
+            </section>
+
+            <section class="in-sec" aria-labelledby="inVer">
+                <h3 id="inVer" class="in-h">Qué vas a poder ver</h3>
+                <div class="in-grid">
+                    <article><h4>Seguidores</h4><p>Quién no te sigue, quiénes te siguen sin que los sigas y tus seguidores mutuos, con enlace a cada perfil.</p></article>
+                    <article><h4>Interacciones</h4><p>A quién das más me gusta y comentarios, y qué cuentas buscas o guardas.</p></article>
+                    <article><h4>Actividad</h4><p>Tus horas y días más activos, y tus accesos y dispositivos.</p></article>
+                    <article><h4>Mensajes</h4><p>Tus chats más largos, quién da el primer paso, quién espera respuesta y cuánto tardáis en contestaros. Solo se cuentan fechas y cantidades.</p></article>
+                    <article><h4>Contenido y cuenta</h4><p>Tus publicaciones, reels e historias, los cambios de perfil y las cuentas bloqueadas o restringidas.</p></article>
+                    <article><h4>Limpieza guiada y comparar</h4><p>Revisa cuenta a cuenta a quién dejar de seguir y compara dos descargas para ver quién entró y quién salió.</p></article>
                 </div>
-                <div class="guide-card">
-                    <div class="guide-step-header">
-                        <div class="guide-number">2</div>
-                        <h3>Sube el ZIP</h3>
-                    </div>
-                    <p>Arrastra el archivo o elígelo desde tu dispositivo. No se envía a ningún servidor.</p>
+            </section>
+
+            <section class="in-sec in-priv" aria-labelledby="inPriv">
+                <h3 id="inPriv" class="in-h">Tus datos se quedan contigo</h3>
+                <p>Golifiar no tiene servidor ni base de datos: la lectura del ZIP y todos los cálculos ocurren en tu navegador o en la app. Solo se guardan en tu dispositivo los resúmenes de análisis anteriores y las marcas de limpieza, y puedes eliminarlos desde «Borrar todos mis datos».</p>
+                <p><button class="helper-link" type="button" onclick="cambiarVista('privacidad')">Leer la política de privacidad</button></p>
+            </section>
+
+            <section class="in-final">
+                <h3>¿Listo? Ya tienes el ZIP o lo estás esperando.</h3>
+                <div class="in-cta">
+                    <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Ir a analizar</button>
                 </div>
-                <div class="guide-card">
-                    <div class="guide-step-header">
-                        <div class="guide-number">3</div>
-                        <h3>Explora tu perfil</h3>
-                    </div>
-                    <p>Seguidores, interacciones, actividad, mensajes y contenido, en pestañas.</p>
-                </div>
+            </section>
+        </div>
+
+        <!-- ================= VIEW 1: AUDITORÍA ================= -->
+        <div id="viewAuditoria" class="view-container hidden">
+            <section class="hero-section hero-compact">
+                <h2>Analiza tu perfil</h2>
+                <p>Elige el ZIP que te descargó Instagram. Se procesa aquí, en tu dispositivo.</p>
+                <p><button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">¿Aún no lo tienes? Cómo descargar tus datos</button></p>
             </section>
 
             <!-- Upload Section Card -->
@@ -1576,7 +1652,8 @@
                 Golifiar &copy; 2026. Desarrollado por <strong>DonseCanarias</strong>.
             </div>
             <div class="footer-links">
-                <button onclick="cambiarVista('auditoria')">Inicio</button>
+                <button onclick="cambiarVista('inicio')">Inicio</button>
+                <button onclick="cambiarVista('auditoria')">Analizar</button>
                 <button onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button onclick="cambiarVista('quiensoy')">Quién soy</button>
                 <button onclick="cambiarVista('privacidad')">Privacidad</button>
@@ -1715,18 +1792,22 @@
 
         function cambiarVista(vista) {
             trigHaptic(30);
-            const vistas = ['viewAuditoria', 'viewComoUsar', 'viewQuienSoy', 'viewPrivacidad', 'viewTransparencia', 'viewDocumentacion'];
+            const vistas = ['viewInicio', 'viewAuditoria', 'viewComoUsar', 'viewQuienSoy', 'viewPrivacidad', 'viewTransparencia', 'viewDocumentacion'];
             vistas.forEach(v => {
                 const el = document.getElementById(v);
                 if (el) el.classList.add('hidden');
             });
 
-            ['navAuditoria', 'navComoUsar', 'navQuienSoy'].forEach(n => {
+            ['navInicio', 'navAuditoria', 'navComoUsar', 'navQuienSoy'].forEach(n => {
                 const el = document.getElementById(n);
                 if (el) el.classList.remove('active');
             });
 
-            if (vista === 'auditoria') {
+            if (vista === 'inicio') {
+                document.getElementById('viewInicio').classList.remove('hidden');
+                const nav = document.getElementById('navInicio');
+                if (nav) nav.classList.add('active');
+            } else if (vista === 'auditoria') {
                 document.getElementById('viewAuditoria').classList.remove('hidden');
                 const nav = document.getElementById('navAuditoria');
                 if (nav) nav.classList.add('active');
