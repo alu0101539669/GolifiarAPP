@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "node scripts/verify-build.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node tests/smoke.js",
+    "start": "npx --yes serve www"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +17,8 @@
     "@capacitor/cli": "^8.5.3",
     "@capacitor/core": "^8.5.3",
     "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
   }
 }
