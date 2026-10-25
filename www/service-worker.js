@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v10';
+const CACHE_NAME = 'golifiar-v11';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
@@ -53,11 +53,14 @@ self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   // Archivos del usuario recibidos por la app nativa: nunca se interceptan ni se guardan en caché
   if (url.pathname.startsWith('/_capacitor_file_/') || url.pathname.includes('/compartido/')) return;
+  // Red primero (así las actualizaciones llegan siempre) y caché como respaldo sin conexión
   event.respondWith(
-    caches.match(event.request, { ignoreSearch: true }).then(cached => cached || fetch(event.request).then(response => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+    fetch(event.request).then(response => {
+      if (response && response.ok) {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+      }
       return response;
-    }))
+    }).catch(() => caches.match(event.request, { ignoreSearch: true }).then(c => c || caches.match('./index.html')))
   );
 });

@@ -1249,7 +1249,7 @@
             </nav>
             <div class="certification-badge">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span>Análisis Local en RAM</span>
+                <span>Análisis 100% local</span>
             </div>
         </div>
     </header>
@@ -1507,7 +1507,7 @@
                 <h2>Quién soy y Filosofía del Proyecto</h2>
                 <p>Golifiar es un proyecto de desarrollo de software independiente impulsado por <strong>DonseCanarias</strong>, con base y sello técnico en el archipiélago canario.</p>
                 <p>Golifiar nace como alternativa a las aplicaciones de terceros que comercializan datos de usuario, muestran publicidad abusiva o solicitan las credenciales de Instagram, poniendo en riesgo la seguridad digital de las personas.</p>
-                <p>Frente a ese modelo opaco, Golifiar ofrece un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (RAM del navegador o app).</p>
+                <p>Frente a ese modelo opaco, Golifiar ofrece un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (en tu navegador o app).</p>
             </div>
         </div>
 
@@ -1521,7 +1521,7 @@
                 <p>No. Ningún dato, nombre de usuario, lista de seguidores, archivo JSON ni archivo ZIP es recopilado, almacenado, registrado ni enviado a ningún servidor externo o nube.</p>
 
                 <h3>¿Cómo se procesa la información?</h3>
-                <p>Toda la lógica de descompresión y cruce de conjuntos de datos se realiza mediante la librería cliente JSZip y algoritmos nativos de JavaScript que operan exclusivamente en la memoria volátil (RAM) de su teléfono o ordenador durante la sesión activa.</p>
+                <p>Toda la lógica de descompresión y cruce de conjuntos de datos se realiza mediante librerías cliente de lectura de ZIP (sin límite de tamaño: los archivos se leen por partes, sin cargar todo en memoria) y algoritmos nativos de JavaScript que se ejecutan en su teléfono u ordenador. Solo se guardan en su dispositivo (localStorage) los resúmenes de análisis anteriores y las marcas de limpieza; puede borrarlos cuando quiera con «Borrar todos mis datos». Se admiten descargas de Instagram en JSON y en HTML.</p>
             </div>
         </div>
 
