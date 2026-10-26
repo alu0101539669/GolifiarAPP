@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v14';
+const CACHE_NAME = 'golifiar-v15';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
