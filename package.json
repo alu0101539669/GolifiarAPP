@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node scripts/verify-build.js",
-    "test": "node tests/smoke.js",
+    "test": "node tests/smoke.js && node tests/i18n.js",
     "start": "npx --yes serve www"
   },
   "keywords": [],

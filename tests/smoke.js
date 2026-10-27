@@ -10,7 +10,7 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
 (async () => {
   const browser = await chromium.launch({ args: ['--no-sandbox'], executablePath: process.env.CHROMIUM_PATH || undefined });
   const errores = [];
-  const pg = await (await browser.newContext({ viewport: { width: 1200, height: 900 } })).newPage();
+  const pg = await (await browser.newContext({ viewport: { width: 1200, height: 900 }, locale: 'es-ES' })).newPage();
   pg.on('pageerror', e => errores.push(e.message));
   await pg.goto(web);
   await pg.waitForTimeout(400);

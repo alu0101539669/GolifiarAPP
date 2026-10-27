@@ -1,9 +1,13 @@
-const CACHE_NAME = 'golifiar-v15';
+const CACHE_NAME = 'golifiar-v16';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
   './index.html',
   './perfil.js',
+  './i18n.js',
+  './lang-en-ui.js',
+  './lang-en-app.js',
+  './lang-en-perfil.js',
   './motion.js',
   './inicio.css',
   './manifest.webmanifest',

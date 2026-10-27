@@ -5,24 +5,35 @@
   var quieto = false;
   try { quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { /* sin matchMedia */ }
   var soportaObs = 'IntersectionObserver' in window;
-  var fmt = function (n) { return Number(n).toLocaleString('es-ES'); };
+  var loc = function () { return (window.I18n && window.I18n.locale) || 'es-ES'; };
+  var fmt = function (n) { return Number(n).toLocaleString(loc()); };
+  var fmtDec = function (n, dec) { return Number(n).toLocaleString(loc(), { minimumFractionDigits: dec, maximumFractionDigits: dec }); };
 
   function contar(el) {
     var meta = Number(el.getAttribute('data-count'));
     if (!isFinite(meta)) return;
     var sufijo = el.getAttribute('data-suffix') || '';
     var dec = Number(el.getAttribute('data-dec') || 0);
-    var final = (dec ? meta.toFixed(dec).replace('.', ',') : fmt(meta)) + sufijo;
+    var final = (dec ? fmtDec(meta, dec) : fmt(meta)) + sufijo;
     if (quieto) { el.textContent = final; return; }
     var t0 = null, dur = 1100;
     function paso(t) {
       if (t0 === null) t0 = t;
       var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3), v = meta * e;
-      el.textContent = (dec ? v.toFixed(dec).replace('.', ',') : fmt(Math.round(v))) + sufijo;
+      el.textContent = (dec ? fmtDec(v, dec) : fmt(Math.round(v))) + sufijo;
       if (p < 1) requestAnimationFrame(paso); else el.textContent = final;
     }
     requestAnimationFrame(paso);
   }
+
+  // Al cambiar de idioma los contadores ya mostrados se reescriben con el formato nuevo.
+  if (window.I18n) window.I18n.alAplicar(function () {
+    document.querySelectorAll('[data-count]').forEach(function (el) {
+      if (!el.closest('.in-go')) return;
+      var dec = Number(el.getAttribute('data-dec') || 0), m = Number(el.getAttribute('data-count'));
+      el.textContent = (dec ? fmtDec(m, dec) : fmt(m)) + (el.getAttribute('data-suffix') || '');
+    });
+  });
 
   var obs = null;
   function entrar(el) {

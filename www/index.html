@@ -10,6 +10,10 @@
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <title>Golifiar | Análisis de tu perfil de Instagram</title>
     <!-- JSZip for direct Instagram backup zip processing -->
+    <script src="./i18n.js"></script>
+    <script src="./lang-en-ui.js"></script>
+    <script src="./lang-en-app.js"></script>
+    <script src="./lang-en-perfil.js"></script>
     <script src="./vendor/jszip.min.js"></script>
     <script src="./vendor/zip-inflate.min.js"></script>
     <script src="./perfil.js" defer></script>
@@ -1146,6 +1150,11 @@
             :root:not([data-theme="light"]) .tool-btn .icon-sun { display: block; }
             :root:not([data-theme="light"]) .tool-btn .icon-moon { display: none; }
         }
+
+        .lang-switch { display: inline-flex; padding: 3px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card); }
+        .lang-switch button { min-width: 38px; height: 32px; padding: 0 0.55rem; border: 0; border-radius: 9px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
+        .lang-switch button:hover { color: var(--accent-blue); }
+        .lang-switch button.on { background: var(--accent-blue); color: var(--on-accent); }
         @media (max-width: 760px) {
             .brand-minimal { order: 1; }
             .header-tools { order: 2; }
@@ -1330,6 +1339,10 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                 <span>Análisis 100% local</span>
                 </div>
+                <div class="lang-switch" id="langSwitch" role="group" aria-label="Idioma">
+                    <button type="button" data-lang="es" lang="es" data-i18n-no onclick="I18n.fijar('es')" aria-label="Español" title="Español">ES</button>
+                    <button type="button" data-lang="en" lang="en" data-i18n-no onclick="I18n.fijar('en')" aria-label="English" title="English">EN</button>
+                </div>
                 <button type="button" class="tool-btn" id="themeToggle" onclick="alternarTema()" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
                     <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
                     <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -1365,9 +1378,9 @@
                         <div class="in-pv-top">
                             <svg class="in-pv-ring" viewBox="0 0 108 108" role="img" aria-label="Reciprocidad de ejemplo: 62 %"><circle class="t" cx="54" cy="54" r="46"/><circle class="v" cx="54" cy="54" r="46"/><text x="54" y="54" text-anchor="middle" dominant-baseline="central">62%</text></svg>
                             <div class="in-pv-kpis">
-                                <div><small>Seguidores</small><strong data-count="1248">1248</strong></div>
-                                <div><small>Seguidos</small><strong data-count="892">892</strong></div>
-                                <div><small>No te siguen</small><strong data-count="214">214</strong></div>
+                                <div><small>Seguidores</small><strong data-i18n-no data-count="1248">1248</strong></div>
+                                <div><small>Seguidos</small><strong data-i18n-no data-count="892">892</strong></div>
+                                <div><small>No te siguen</small><strong data-i18n-no data-count="214">214</strong></div>
                             </div>
                         </div>
                         <div><div class="in-pv-hours" aria-hidden="true"><i style="--i:0;--h:0.25"></i><i style="--i:1;--h:0.2"></i><i style="--i:2;--h:0.15"></i><i style="--i:3;--h:0.12"></i><i style="--i:4;--h:0.1"></i><i style="--i:5;--h:0.12"></i><i style="--i:6;--h:0.2"></i><i style="--i:7;--h:0.35"></i><i style="--i:8;--h:0.5"></i><i style="--i:9;--h:0.55"></i><i style="--i:10;--h:0.5"></i><i style="--i:11;--h:0.6"></i><i style="--i:12;--h:0.7"></i><i style="--i:13;--h:0.62"></i><i style="--i:14;--h:0.55"></i><i style="--i:15;--h:0.6"></i><i style="--i:16;--h:0.72"></i><i style="--i:17;--h:0.9"></i><i style="--i:18;--h:1"></i><i style="--i:19;--h:0.95"></i><i style="--i:20;--h:0.8"></i><i style="--i:21;--h:0.6"></i><i style="--i:22;--h:0.45"></i><i style="--i:23;--h:0.35"></i></div><p class="in-pv-cap">Cuándo estás más activo, por hora</p></div>
@@ -1383,8 +1396,8 @@
             <dl class="in-trust rv" aria-label="Datos de Golifiar">
                 <div><dt>0</dt><dd>servidores: tu ZIP se queda contigo</dd></div>
                 <div><dt>0</dt><dd>contraseñas: nunca las pedimos</dd></div>
-                <div><dt data-count="8">8</dt><dd>análisis en pestañas separadas</dd></div>
-                <div><dt data-count="1.5" data-dec="1" data-suffix=" GB">1,5 GB</dt><dd>de ZIP probados sin problema</dd></div>
+                <div><dt data-i18n-no data-count="8">8</dt><dd>análisis en pestañas separadas</dd></div>
+                <div><dt data-i18n-no data-count="1.5" data-dec="1" data-suffix=" GB">1,5 GB</dt><dd>de ZIP probados sin problema</dd></div>
             </dl>
 
             <section class="in-sec" aria-labelledby="inPasos">
@@ -1396,14 +1409,14 @@
                 <ol class="in-steps" data-go>
                     <li class="rv" style="--d:0"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg><span class="in-num">1</span>
                         <h4>Pide tus datos a Instagram</h4>
-                        <p>En <strong>Centro de cuentas → Tu información y permisos → Descargar tu información</strong>. Elige <strong>JSON</strong> y <strong>Desde el principio</strong>.</p>
+                        <p data-i18n-html>En <strong>Centro de cuentas → Tu información y permisos → Descargar tu información</strong>. Elige <strong>JSON</strong> y <strong>Desde el principio</strong>.</p>
                         <button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">Ver la guía completa</button></li>
                     <li class="rv" style="--d:1"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span class="in-num">2</span>
                         <h4>Descarga el ZIP del correo</h4>
-                        <p>Instagram tarda desde minutos hasta algunas horas. Guárdalo tal cual, <strong>sin descomprimir</strong>. Si te da varios, súbelos todos.</p></li>
+                        <p data-i18n-html>Instagram tarda desde minutos hasta algunas horas. Guárdalo tal cual, <strong>sin descomprimir</strong>. Si te da varios, súbelos todos.</p></li>
                     <li class="rv" style="--d:2"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0l-4 4m4-4l4 4M5 21h14"/></svg><span class="in-num">3</span>
                         <h4>Súbelo a Golifiar</h4>
-                        <p>En <strong>Analizar</strong>, elige el ZIP y pulsa <strong>Analizar mi perfil</strong>. Se lee por partes, así que pesa lo que pese funciona.</p></li>
+                        <p data-i18n-html>En <strong>Analizar</strong>, elige el ZIP y pulsa <strong>Analizar mi perfil</strong>. Se lee por partes, así que pesa lo que pese funciona.</p></li>
                     <li class="rv" style="--d:3"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg><span class="in-num">4</span>
                         <h4>Explora y limpia tu cuenta</h4>
                         <p>Mira los resultados, sigue la limpieza guiada, compara descargas y exporta el resumen. Borra todo con un botón.</p></li>
@@ -1464,7 +1477,7 @@
                 </div>
                 <div class="in-faq rv">
                     <details><summary>¿Es seguro subir mi ZIP?</summary><div><p>El ZIP se lee en tu navegador o en la app y no se envía a ningún servidor. Golifiar nunca te pide la contraseña de Instagram. Solo se guardan en tu dispositivo resúmenes de análisis anteriores, que puedes borrar cuando quieras.</p></div></details>
-                    <details><summary>¿Qué formato elijo en Instagram?</summary><div><p><strong>JSON</strong> es el recomendado: permite todos los análisis. El formato HTML sirve para seguidores, seguidos y listas de cuentas, pero no para mensajes ni actividad.</p></div></details>
+                    <details><summary>¿Qué formato elijo en Instagram?</summary><div><p data-i18n-html><strong>JSON</strong> es el recomendado: permite todos los análisis. El formato HTML sirve para seguidores, seguidos y listas de cuentas, pero no para mensajes ni actividad.</p></div></details>
                     <details><summary>¿Cuánto tarda Instagram en enviarme el ZIP?</summary><div><p>Desde unos minutos hasta algunas horas; con muchos datos puede tardar más. Recibirás un correo con el enlace de descarga.</p></div></details>
                     <details><summary>Mi ZIP pesa muchísimo, ¿hay límite?</summary><div><p>No hay límite de tamaño: el archivo se lee por partes en lugar de cargarlo entero. Se ha probado con un ZIP de 1,5 GB.</p></div></details>
                     <details><summary>Sale alguien en «No te siguen» que ya no sigo</summary><div><p>Golifiar descarta las cuentas que dejaste de seguir después de seguirlas y, si subes varios ZIP, usa solo el más reciente para las listas. Si aun así ves algo raro, tu ZIP puede estar desactualizado: pide uno nuevo.</p></div></details>
@@ -1549,7 +1562,7 @@
                 </button>
                 <div class="privacy-note" role="note">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    <div><strong>Privacidad por diseño</strong>Todo se procesa en este dispositivo y Golifiar nunca pide tu contraseña. De tus mensajes y comentarios solo se cuentan fechas y cantidades; su texto no se guarda ni se muestra.</div>
+                    <div data-i18n-html><strong>Privacidad por diseño</strong>Todo se procesa en este dispositivo y Golifiar nunca pide tu contraseña. De tus mensajes y comentarios solo se cuentan fechas y cantidades; su texto no se guarda ni se muestra.</div>
                 </div>
                 <div id="uploadStatus" class="status-message" role="status" aria-live="polite"></div>
             </section>
@@ -1567,7 +1580,7 @@
                     <button class="cat-tab" id="ptab-contenido" role="tab" aria-controls="panel-contenido" aria-selected="false" onclick="Perfil.cambiarPanel('contenido')">Contenido y cuenta</button>
                     <button class="cat-tab" id="ptab-comparar" role="tab" aria-controls="panel-comparar" aria-selected="false" onclick="Perfil.cambiarPanel('comparar')">Comparar</button>
                 </div>
-                <div id="panel-resumen" role="tabpanel" aria-labelledby="ptab-resumen" class="pf-panel"></div>
+                <div id="panel-resumen" data-i18n-no role="tabpanel" aria-labelledby="ptab-resumen" class="pf-panel"></div>
                 <div id="panel-seguidores" role="tabpanel" aria-labelledby="ptab-seguidores" class="pf-panel hidden">
                 <div class="metrics-grid">
                     <div class="metric-card">
@@ -1639,8 +1652,8 @@
                     </div>
                 </div>
 
-                <div id="resultsWrapper"></div>
-                <div id="filterSummary" class="filter-summary"></div>
+                <div id="resultsWrapper" data-i18n-no></div>
+                <div id="filterSummary" data-i18n-no class="filter-summary"></div>
                 <div class="panel-actions">
                     <button class="btn-sub" type="button" onclick="limpiarFiltros()">Limpiar filtros</button>
                     <button class="btn-sub" type="button" onclick="exportarJSON()">JSON</button>
@@ -1653,12 +1666,12 @@
                     Los resultados proceden de tu exportación de Instagram, que conserva cuentas eliminadas, desactivadas o con otro nombre. Si al abrir un perfil da error, pulsa «No existe» y se ocultará. Las marcas se guardan solo en este dispositivo.
                 </p>
                 </div>
-                <div id="panel-interacciones" role="tabpanel" aria-labelledby="ptab-interacciones" class="pf-panel hidden"></div>
-                <div id="panel-limpieza" role="tabpanel" aria-labelledby="ptab-limpieza" class="pf-panel hidden"></div>
-                <div id="panel-actividad" role="tabpanel" aria-labelledby="ptab-actividad" class="pf-panel hidden"></div>
-                <div id="panel-mensajes" role="tabpanel" aria-labelledby="ptab-mensajes" class="pf-panel hidden"></div>
-                <div id="panel-contenido" role="tabpanel" aria-labelledby="ptab-contenido" class="pf-panel hidden"></div>
-                <div id="panel-comparar" role="tabpanel" aria-labelledby="ptab-comparar" class="pf-panel hidden"></div>
+                <div id="panel-interacciones" data-i18n-no role="tabpanel" aria-labelledby="ptab-interacciones" class="pf-panel hidden"></div>
+                <div id="panel-limpieza" data-i18n-no role="tabpanel" aria-labelledby="ptab-limpieza" class="pf-panel hidden"></div>
+                <div id="panel-actividad" data-i18n-no role="tabpanel" aria-labelledby="ptab-actividad" class="pf-panel hidden"></div>
+                <div id="panel-mensajes" data-i18n-no role="tabpanel" aria-labelledby="ptab-mensajes" class="pf-panel hidden"></div>
+                <div id="panel-contenido" data-i18n-no role="tabpanel" aria-labelledby="ptab-contenido" class="pf-panel hidden"></div>
+                <div id="panel-comparar" data-i18n-no role="tabpanel" aria-labelledby="ptab-comparar" class="pf-panel hidden"></div>
             </section>
             <section class="premium-panel" aria-labelledby="premiumTitle">
                 <h3 id="premiumTitle">Golifiar Premium</h3>
@@ -1686,18 +1699,18 @@
         <div id="viewComoUsar" class="view-container hidden">
             <div class="content-view">
                 <h2>Guía detallada: cómo analizar tus conexiones</h2>
-                <p>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para analizar tus conexiones de Instagram con seguridad y transparencia. Todo el procesamiento se realiza en tu dispositivo.</p>
+                <p data-i18n-html>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para analizar tus conexiones de Instagram con seguridad y transparencia. Todo el procesamiento se realiza en tu dispositivo.</p>
 
                 <h3>Paso 1: Pide tu descarga a Instagram</h3>
-                <p>Instagram te envía un ZIP con tus datos por correo. Elige el formato <strong>JSON</strong> y el intervalo <strong>Desde el principio</strong>, y marca seguidores y seguidos junto con lo que quieras analizar (me gusta, comentarios, mensajes, publicaciones, inicios de sesión).</p>
+                <p data-i18n-html>Instagram te envía un ZIP con tus datos por correo. Elige el formato <strong>JSON</strong> y el intervalo <strong>Desde el principio</strong>, y marca seguidores y seguidos junto con lo que quieras analizar (me gusta, comentarios, mensajes, publicaciones, inicios de sesión).</p>
                 <p><button class="btn-sub" type="button" onclick="mostrarAyudaDescarga()">Abrir la guía de descarga paso a paso</button></p>
-                <p>Si ya la tienes en <strong>HTML</strong>, también sirve: Golifiar leerá seguidores, seguidos y listas de cuentas. Para el resto de análisis hace falta JSON.</p>
+                <p data-i18n-html>Si ya la tienes en <strong>HTML</strong>, también sirve: Golifiar leerá seguidores, seguidos y listas de cuentas. Para el resto de análisis hace falta JSON.</p>
 
                 <h3>Paso 2: Descarga el ZIP y súbelo</h3>
-                <p>Cuando llegue el correo, descarga el archivo <strong>.zip</strong> sin descomprimirlo. Abre Golifiar en tu móvil, tablet u ordenador, elige el ZIP (o varios, si Instagram te dio más de uno) y pulsa <strong>Analizar mi perfil</strong>. Todo se procesa en tu dispositivo.</p>
+                <p data-i18n-html>Cuando llegue el correo, descarga el archivo <strong>.zip</strong> sin descomprimirlo. Abre Golifiar en tu móvil, tablet u ordenador, elige el ZIP (o varios, si Instagram te dio más de uno) y pulsa <strong>Analizar mi perfil</strong>. Todo se procesa en tu dispositivo.</p>
 
                 <h3>Paso 3: Explora los resultados</h3>
-                <p>El análisis se organiza en pestañas: <strong>Resumen</strong>, <strong>Seguidores</strong>, <strong>Interacciones</strong>, <strong>Actividad</strong>, <strong>Mensajes</strong>, <strong>Contenido y cuenta</strong> y <strong>Comparar</strong>. En Seguidores puedes filtrar, ordenar, copiar la lista y exportarla en CSV. En Comparar puedes ver los cambios frente a una descarga anterior.</p>
+                <p data-i18n-html>El análisis se organiza en pestañas: <strong>Resumen</strong>, <strong>Seguidores</strong>, <strong>Interacciones</strong>, <strong>Actividad</strong>, <strong>Mensajes</strong>, <strong>Contenido y cuenta</strong> y <strong>Comparar</strong>. En Seguidores puedes filtrar, ordenar, copiar la lista y exportarla en CSV. En Comparar puedes ver los cambios frente a una descarga anterior.</p>
             </div>
         </div>
 
@@ -1705,7 +1718,7 @@
         <div id="viewQuienSoy" class="view-container hidden">
             <div class="content-view">
                 <h2>Quién soy y Filosofía del Proyecto</h2>
-                <p>Golifiar es un proyecto de desarrollo de software independiente impulsado por <strong>DonseCanarias</strong>, con base y sello técnico en el archipiélago canario.</p>
+                <p data-i18n-html>Golifiar es un proyecto de desarrollo de software independiente impulsado por <strong>DonseCanarias</strong>, con base y sello técnico en el archipiélago canario.</p>
                 <p>Golifiar nace como alternativa a las aplicaciones de terceros que comercializan datos de usuario, muestran publicidad abusiva o solicitan las credenciales de Instagram, poniendo en riesgo la seguridad digital de las personas.</p>
                 <p>Frente a ese modelo opaco, Golifiar ofrece un estándar ético: cero servidores intermediarios, cero bases de datos de almacenamiento y ejecución 100% en el entorno cliente (en tu navegador o app).</p>
             </div>
@@ -1715,7 +1728,7 @@
         <div id="viewPrivacidad" class="view-container hidden">
             <div class="content-view">
                 <h2>Política de Privacidad y Seguridad Local</h2>
-                <p>En cumplimiento con las normativas de protección de datos y el compromiso ético de <strong>DonseCanarias</strong>, <strong>Golifiar</strong> opera bajo una arquitectura de <strong>privacidad por diseño</strong>.</p>
+                <p data-i18n-html>En cumplimiento con las normativas de protección de datos y el compromiso ético de <strong>DonseCanarias</strong>, <strong>Golifiar</strong> opera bajo una arquitectura de <strong>privacidad por diseño</strong>.</p>
 
                 <h3>¿Se almacenan mis datos personales?</h3>
                 <p>No. Ningún dato, nombre de usuario, lista de seguidores, archivo JSON ni archivo ZIP es recopilado, almacenado, registrado ni enviado a ningún servidor externo o nube.</p>
@@ -1746,10 +1759,10 @@
                 <h3>Especificación de Ficheros Analizados en el ZIP</h3>
                 <p>Cuando el motor detecta el archivo ZIP exportado desde Meta, busca de forma asíncrona los siguientes archivos oficiales:</p>
                 <ul>
-                    <li><code>connections/followers_and_following/followers_1.json</code> (y sucesivos archivos paginados).</li>
-                    <li><code>connections/followers_and_following/following.json</code>.</li>
+                    <li data-i18n-html><code>connections/followers_and_following/followers_1.json</code> (y sucesivos archivos paginados).</li>
+                    <li data-i18n-html><code>connections/followers_and_following/following.json</code>.</li>
                 </ul>
-                <p>Cada nodo JSON es recorrido mediante algoritmos recursivos de alta eficiencia para extraer los campos <code>string_list_data.value</code> o enlaces de perfil, normalizando los nombres a minúsculas para evitar duplicidades por mayúsculas.</p>
+                <p data-i18n-html>Cada nodo JSON es recorrido mediante algoritmos recursivos de alta eficiencia para extraer los campos <code>string_list_data.value</code> o enlaces de perfil, normalizando los nombres a minúsculas para evitar duplicidades por mayúsculas.</p>
             </div>
         </div>
 
@@ -1758,7 +1771,7 @@
     <!-- Footer -->
     <footer class="footer-minimal">
         <div class="footer-container">
-            <div>
+            <div data-i18n-html>
                 Golifiar &copy; 2026. Desarrollado por <strong>DonseCanarias</strong>.
             </div>
             <div class="footer-links">
@@ -1780,53 +1793,53 @@
         <h3>1. Pídelo desde la app del móvil</h3>
         <ol>
             <li>Abre Instagram y entra en tu perfil (tu foto, abajo a la derecha).</li>
-            <li>Pulsa el menú (las tres rayas, arriba a la derecha) y entra en <strong>Configuración y actividad</strong>.</li>
-            <li>Abre <strong>Centro de cuentas</strong>, luego <strong>Tu información y permisos</strong> y después <strong>Descargar tu información</strong>.</li>
-            <li>Pulsa <strong>Descargar o transferir información</strong> y elige tu cuenta de Instagram.</li>
-            <li>Elige <strong>Parte de tu información</strong> (más rápido y ligero) o <strong>Toda tu información disponible</strong> (más completo) y pulsa Siguiente.</li>
+            <li data-i18n-html>Pulsa el menú (las tres rayas, arriba a la derecha) y entra en <strong>Configuración y actividad</strong>.</li>
+            <li data-i18n-html>Abre <strong>Centro de cuentas</strong>, luego <strong>Tu información y permisos</strong> y después <strong>Descargar tu información</strong>.</li>
+            <li data-i18n-html>Pulsa <strong>Descargar o transferir información</strong> y elige tu cuenta de Instagram.</li>
+            <li data-i18n-html>Elige <strong>Parte de tu información</strong> (más rápido y ligero) o <strong>Toda tu información disponible</strong> (más completo) y pulsa Siguiente.</li>
             <li>Marca las categorías de la lista «Qué marcar» (más abajo).</li>
-            <li>Elige <strong>Descargar en el dispositivo</strong>.</li>
-            <li>Ajusta las opciones: <strong>Intervalo de fechas: Desde el principio</strong>, <strong>Formato: JSON</strong> y <strong>Calidad multimedia: Baja</strong>.</li>
-            <li>Pulsa <strong>Crear archivos</strong> (o <strong>Enviar solicitud</strong>). Si te pide la contraseña, introdúcela.</li>
+            <li data-i18n-html>Elige <strong>Descargar en el dispositivo</strong>.</li>
+            <li data-i18n-html>Ajusta las opciones: <strong>Intervalo de fechas: Desde el principio</strong>, <strong>Formato: JSON</strong> y <strong>Calidad multimedia: Baja</strong>.</li>
+            <li data-i18n-html>Pulsa <strong>Crear archivos</strong> (o <strong>Enviar solicitud</strong>). Si te pide la contraseña, introdúcela.</li>
         </ol>
 
         <h3>2. O pídelo desde el ordenador</h3>
         <ol>
-            <li>Entra en <strong>instagram.com</strong> e inicia sesión.</li>
-            <li>Abre <strong>Más</strong> (abajo a la izquierda), luego <strong>Tu actividad</strong> y <strong>Descargar tu información</strong>. Si no aparece ahí, usa <strong>Centro de cuentas</strong> → <strong>Tu información y permisos</strong> → <strong>Descargar tu información</strong>.</li>
+            <li data-i18n-html>Entra en <strong>instagram.com</strong> e inicia sesión.</li>
+            <li data-i18n-html>Abre <strong>Más</strong> (abajo a la izquierda), luego <strong>Tu actividad</strong> y <strong>Descargar tu información</strong>. Si no aparece ahí, usa <strong>Centro de cuentas</strong> → <strong>Tu información y permisos</strong> → <strong>Descargar tu información</strong>.</li>
             <li>Comprueba que el correo que se muestra es el tuyo.</li>
-            <li>Elige las categorías, el intervalo <strong>Desde el principio</strong> y el formato <strong>JSON</strong>.</li>
-            <li>Pulsa Siguiente, escribe tu contraseña y confirma con <strong>Solicitar descarga</strong>.</li>
+            <li data-i18n-html>Elige las categorías, el intervalo <strong>Desde el principio</strong> y el formato <strong>JSON</strong>.</li>
+            <li data-i18n-html>Pulsa Siguiente, escribe tu contraseña y confirma con <strong>Solicitar descarga</strong>.</li>
         </ol>
 
         <h3>Qué marcar</h3>
         <ul>
-            <li><strong>Seguidores y seguidos</strong>: imprescindible para ver quién no te sigue de vuelta.</li>
-            <li><strong>Me gusta, comentarios y guardados</strong>: para el análisis de interacciones.</li>
-            <li><strong>Mensajes</strong>: para las estadísticas de tus conversaciones.</li>
-            <li><strong>Publicaciones, reels e historias</strong>: para el ritmo de publicación.</li>
-            <li><strong>Información personal, inicios de sesión y anuncios</strong>: para el apartado de cuenta y actividad.</li>
+            <li data-i18n-html><strong>Seguidores y seguidos</strong>: imprescindible para ver quién no te sigue de vuelta.</li>
+            <li data-i18n-html><strong>Me gusta, comentarios y guardados</strong>: para el análisis de interacciones.</li>
+            <li data-i18n-html><strong>Mensajes</strong>: para las estadísticas de tus conversaciones.</li>
+            <li data-i18n-html><strong>Publicaciones, reels e historias</strong>: para el ritmo de publicación.</li>
+            <li data-i18n-html><strong>Información personal, inicios de sesión y anuncios</strong>: para el apartado de cuenta y actividad.</li>
         </ul>
         <p>No hace falta marcar fotos ni vídeos. Si Instagram los incluye, elige calidad multimedia baja para que el ZIP pese menos.</p>
 
         <h3>JSON o HTML</h3>
-        <p><strong>JSON (recomendado):</strong> permite todos los análisis de Golifiar. <strong>HTML:</strong> Golifiar lee seguidores, seguidos y listas de cuentas, pero las interacciones, la actividad, los mensajes y el contenido necesitan JSON. Si ya la descargaste en HTML, súbela igualmente y verás la parte básica.</p>
+        <p data-i18n-html><strong>JSON (recomendado):</strong> permite todos los análisis de Golifiar. <strong>HTML:</strong> Golifiar lee seguidores, seguidos y listas de cuentas, pero las interacciones, la actividad, los mensajes y el contenido necesitan JSON. Si ya la descargaste en HTML, súbela igualmente y verás la parte básica.</p>
 
         <h3>Cuando llegue el correo</h3>
         <ol>
             <li>Puede tardar desde unos minutos hasta varias horas. Si no lo ves, mira en spam, promociones y notificaciones.</li>
-            <li>Abre el enlace del correo desde el dispositivo donde vas a usar Golifiar, pulsa <strong>Descargar</strong> e inicia sesión si te lo pide.</li>
+            <li data-i18n-html>Abre el enlace del correo desde el dispositivo donde vas a usar Golifiar, pulsa <strong>Descargar</strong> e inicia sesión si te lo pide.</li>
             <li>El enlace caduca a los pocos días (Instagram indica 4), así que descárgalo pronto.</li>
-            <li>Guarda el ZIP tal cual: <strong>no lo descomprimas ni lo renombres</strong>. En iPhone suele quedar en Archivos → Descargas y en Android, en la carpeta Descargas.</li>
+            <li data-i18n-html>Guarda el ZIP tal cual: <strong>no lo descomprimas ni lo renombres</strong>. En iPhone suele quedar en Archivos → Descargas y en Android, en la carpeta Descargas.</li>
             <li>Si Instagram te da varios ZIP, súbelos todos a la vez en Golifiar. No importa lo que pesen: solo se leen los archivos de datos, no las fotos ni los vídeos.</li>
-            <li><strong>Atajo:</strong> si tienes Golifiar instalado en el móvil, puedes compartir el ZIP desde Archivos o Descargas y elegir Golifiar: se abre y lo analiza solo.</li>
+            <li data-i18n-html><strong>Atajo:</strong> si tienes Golifiar instalado en el móvil, puedes compartir el ZIP desde Archivos o Descargas y elegir Golifiar: se abre y lo analiza solo.</li>
         </ol>
 
         <h3>Si algo falla</h3>
         <ul>
-            <li><strong>No llega el correo:</strong> comprueba el correo de tu cuenta en Centro de cuentas y repite la solicitud.</li>
-            <li><strong>«No se encontraron seguidores»:</strong> vuelve a pedirla marcando «Seguidores y seguidos» y el intervalo «Desde el principio».</li>
-            <li><strong>El ZIP tarda mucho en descargarse:</strong> puedes volver a pedirlo con menos categorías y calidad multimedia baja. Golifiar lo leerá igual.</li>
+            <li data-i18n-html><strong>No llega el correo:</strong> comprueba el correo de tu cuenta en Centro de cuentas y repite la solicitud.</li>
+            <li data-i18n-html><strong>«No se encontraron seguidores»:</strong> vuelve a pedirla marcando «Seguidores y seguidos» y el intervalo «Desde el principio».</li>
+            <li data-i18n-html><strong>El ZIP tarda mucho en descargarse:</strong> puedes volver a pedirlo con menos categorías y calidad multimedia baja. Golifiar lo leerá igual.</li>
         </ul>
         <div class="dialog-actions"><button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button></div>
     </dialog>
@@ -1853,7 +1866,7 @@
         window.addEventListener('load', ajustarAltoCabecera);
 
         function borrarTodo() {
-            if (!confirm('Se borrarán los análisis cargados, el historial, las descargas guardadas, la limpieza guiada y las marcas de este dispositivo. ¿Continuar?')) return;
+            if (!confirm(t('Se borrarán los análisis cargados, el historial, las descargas guardadas, la limpieza guiada y las marcas de este dispositivo. ¿Continuar?'))) return;
             ['golifiar-history', 'golifiar-snapshots', 'golifiar-limpieza', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
             noDisponibles = new Set();
             usuariosSinRetornoGlobal = []; usuariosFansGlobal = []; usuariosMutuosGlobal = [];
@@ -1862,10 +1875,10 @@
             if (window.Perfil) window.Perfil.render(null, [], []);
             document.getElementById('resultsSection').classList.add('hidden');
             const hp = document.getElementById('historyPanel'); if (hp) hp.classList.add('hidden');
-            const tag = document.getElementById('tagZip'); if (tag) { tag.classList.remove('active'); tag.innerText = 'Ningún archivo ZIP seleccionado'; }
+            const tag = document.getElementById('tagZip'); if (tag) { tag.classList.remove('active'); tag.innerText = t('Ningún archivo ZIP seleccionado'); }
             mostrarEstado('', '');
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            mostrarToast('Datos borrados de este dispositivo.');
+            mostrarToast(t('Datos borrados de este dispositivo.'));
         }
 
         function trigHaptic(duration = 35) {
@@ -1991,7 +2004,7 @@
                 const files = document.getElementById('followersFile').files;
                 const tag = document.getElementById('tagFollowers');
                 if (files.length > 0) {
-                    tag.innerText = `${files.length} archivo(s) listo(s)`;
+                    tag.innerText = t('{n} archivo(s) listo(s)', { n: files.length });
                     tag.classList.add('active');
                 } else {
                     tag.classList.remove('active');
@@ -2000,7 +2013,7 @@
                 const file = document.getElementById('followingFile').files[0];
                 const tag = document.getElementById('tagFollowing');
                 if (file) {
-                    tag.innerText = 'Archivo listo';
+                    tag.innerText = t('Archivo listo');
                     tag.classList.add('active');
                 } else {
                     tag.classList.remove('active');
@@ -2051,19 +2064,19 @@
             };
             const tam = f => f.size >= 1073741824 ? (f.size / 1073741824).toFixed(1) + ' GB' : (f.size / 1048576).toFixed(1) + ' MB';
             const incompleto = files.find(f => /\.(crdownload|part|tmp|download|partial)$/i.test(f.name));
-            if (incompleto) return rechazar(`«${incompleto.name}» es una descarga sin terminar. Espera a que acabe y vuelve a elegirla.`);
+            if (incompleto) return rechazar(t('«{nombre}» es una descarga sin terminar. Espera a que acabe y vuelve a elegirla.', { nombre: incompleto.name }));
             const noZip = files.find(f => !f.name.toLowerCase().endsWith('.zip'));
-            if (noZip) return rechazar(`«${noZip.name}» no es un archivo .zip. Sube el ZIP tal como lo descargaste de Instagram, sin descomprimirlo.`);
+            if (noZip) return rechazar(t('«{nombre}» no es un archivo .zip. Sube el ZIP tal como lo descargaste de Instagram, sin descomprimirlo.', { nombre: noZip.name }));
             const vacio = files.find(f => f.size === 0);
-            if (vacio) return rechazar(`«${vacio.name}» está vacío (0 bytes). Vuelve a descargarlo desde el correo de Instagram.`);
+            if (vacio) return rechazar(t('«{nombre}» está vacío (0 bytes). Vuelve a descargarlo desde el correo de Instagram.', { nombre: vacio.name }));
 
             const totalMb = files.reduce((n, f) => n + f.size, 0) / (1024 * 1024);
             progressContainer.classList.add('active');
             progressFill.style.width = '10%';
-            tag.innerText = `Leyendo ${files.length > 1 ? files.length + ' archivos ZIP' : '«' + files[0].name + '»'} (${totalMb >= 1024 ? (totalMb / 1024).toFixed(1) + ' GB' : totalMb.toFixed(1) + ' MB'})...`;
+            tag.innerText = t('Leyendo {que} ({tam})...', { que: files.length > 1 ? t('{n} archivos ZIP', { n: files.length }) : '«' + files[0].name + '»', tam: totalMb >= 1024 ? I18n.num((totalMb / 1024).toFixed(1)) + ' GB' : I18n.num(totalMb.toFixed(1)) + ' MB' });
             tag.classList.add('active');
             tag.style.color = 'var(--accent-blue)';
-            mostrarEstado('Leyendo el archivo localmente. No cierres esta ventana.', '');
+            mostrarEstado(t('Leyendo el archivo localmente. No cierres esta ventana.'), '');
 
             try {
                 zipFollowersArray = [];
@@ -2132,7 +2145,7 @@
                 if (elegida) {
                     zipFollowersArray = unirUsuarios(elegida.seg);
                     zipFollowingArray = unirUsuarios(elegida.sig);
-                    if (conListas.length > 1) avisoListas = `Había ${conListas.length} ZIP con listas; se usó «${elegida.nombre}» (el más reciente) para seguidores y seguidos.`;
+                    if (conListas.length > 1) avisoListas = t('Había {n} ZIP con listas; se usó «{nombre}» (el más reciente) para seguidores y seguidos.', { n: conListas.length, nombre: elegida.nombre });
                 }
                 // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
                 let quitadas = 0;
@@ -2146,7 +2159,7 @@
                     });
                     quitadas = antes - zipFollowingArray.length;
                 }
-                zipAviso = [avisoListas, quitadas ? `Se descartaron ${quitadas} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.` : ''].filter(Boolean).join(' ');
+                zipAviso = [avisoListas, quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
 
                 setTimeout(() => {
                     progressContainer.classList.remove('active');
@@ -2155,30 +2168,30 @@
                 const extras = zipPerfil ? window.Perfil.secciones(zipPerfil) : [];
                 const omitidos = zipPerfil ? zipPerfil.htmlOmitidos : 0;
                 if (zipFollowersArray.length > 0 || zipFollowingArray.length > 0 || extras.length) {
-                    tag.innerText = `Procesado: ${zipFollowersArray.length} seguidores y ${zipFollowingArray.length} seguidos` +
-                        (nHtml && !nJson ? ' (formato HTML)' : '') +
-                        (extras.length ? ` · también: ${extras.join(', ')}` : '');
+                    tag.innerText = t('Procesado: {a} seguidores y {b} seguidos', { a: zipFollowersArray.length, b: zipFollowingArray.length }) +
+                        (nHtml && !nJson ? t(' (formato HTML)') : '') +
+                        (extras.length ? t(' · también: {lista}', { lista: extras.join(', ') }) : '');
                     tag.style.color = 'var(--accent-green)';
                     if (omitidos > 0) {
-                        mostrarEstado('Descarga en HTML: se han leído seguidores y seguidos. Para analizar interacciones, actividad y mensajes, vuelve a pedir la descarga en JSON.', 'success');
+                        mostrarEstado(t('Descarga en HTML: se han leído seguidores y seguidos. Para analizar interacciones, actividad y mensajes, vuelve a pedir la descarga en JSON.'), 'success');
                     } else {
-                        mostrarEstado('Archivo preparado. Pulsa «Analizar mi perfil».' + (zipAviso ? ' ' + zipAviso : ''), 'success');
+                        mostrarEstado(t('Archivo preparado. Pulsa «Analizar mi perfil».') + (zipAviso ? ' ' + zipAviso : ''), 'success');
                     }
                     trigHaptic(60);
                     return true;
                 } else {
-                    tag.innerText = 'No se encontraron seguidores ni seguidos en este ZIP';
+                    tag.innerText = t('No se encontraron seguidores ni seguidos en este ZIP');
                     tag.style.color = 'var(--accent-rose)';
-                    mostrarEstado('El ZIP no contiene seguidores ni seguidos. Al pedir la descarga, marca «Seguidores y seguidos» y elige el intervalo «Desde el principio». Si necesitas ayuda, abre la guía de descarga.', 'error');
+                    mostrarEstado(t('El ZIP no contiene seguidores ni seguidos. Al pedir la descarga, marca «Seguidores y seguidos» y elige el intervalo «Desde el principio». Si necesitas ayuda, abre la guía de descarga.'), 'error');
                 }
 
             } catch (error) {
                 console.error(error);
                 progressContainer.classList.remove('active');
                 const motivo = String((error && error.message) || error || '').slice(0, 140);
-                tag.innerText = 'No se pudo leer el ZIP' + (motivo ? ` (${motivo})` : '');
+                tag.innerText = t('No se pudo leer el ZIP') + (motivo ? ` (${motivo})` : '');
                 tag.style.color = 'var(--accent-rose)';
-                mostrarEstado('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido. Si sigue fallando, descárgalo de nuevo desde el enlace del correo.', 'error');
+                mostrarEstado(t('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido. Si sigue fallando, descárgalo de nuevo desde el enlace del correo.'), 'error');
             }
             return false;
         }
@@ -2188,7 +2201,7 @@
             if (!files.length) return;
             cambiarVista('auditoria');
             cambiarModoUpload('zip');
-            mostrarToast('ZIP recibido. Analizando…');
+            mostrarToast(t('ZIP recibido. Analizando…'));
             if (await procesarArchivosZip(files, null)) await ejecutarAnalisis();
         }
 
@@ -2216,7 +2229,7 @@
                 return true;
             } catch (e) {
                 console.error('Archivo compartido:', e);
-                mostrarEstado('No se pudo abrir el archivo recibido. Elige el ZIP desde aquí.', 'error');
+                mostrarEstado(t('No se pudo abrir el archivo recibido. Elige el ZIP desde aquí.'), 'error');
                 return false;
             }
         };
@@ -2225,7 +2238,7 @@
             const q = new URLSearchParams(location.search).get('compartido');
             if (q !== null) {
                 history.replaceState(null, '', location.pathname);
-                if (q === 'error' || q === '0') mostrarEstado('No se recibió ningún archivo. Elige el ZIP desde aquí.', 'error');
+                if (q === 'error' || q === '0') mostrarEstado(t('No se recibió ningún archivo. Elige el ZIP desde aquí.'), 'error');
                 else leerCompartidos().then(analizarArchivosRecibidos);
             }
             if ('launchQueue' in window) {
@@ -2376,7 +2389,7 @@
             trigHaptic(50);
             const resultsSection = document.getElementById('resultsSection');
             resultsSection.classList.add('hidden');
-            mostrarEstado('Validando los archivos seleccionados…', '');
+            mostrarEstado(t('Validando los archivos seleccionados…'), '');
 
             const wrapper = document.getElementById('resultsWrapper');
             wrapper.innerHTML = `
@@ -2397,7 +2410,7 @@
                 if (usarModoZip) {
                     const hayExtras = zipPerfil && window.Perfil.secciones(zipPerfil).length > 0;
                     if (zipFollowersArray.length === 0 && zipFollowingArray.length === 0 && !hayExtras) {
-                        mostrarEstado('Carga un ZIP de Instagram válido antes de ejecutar el análisis.', 'error');
+                        mostrarEstado(t('Carga un ZIP de Instagram válido antes de ejecutar el análisis.'), 'error');
                         return;
                     }
                     followersObjs = zipFollowersArray;
@@ -2407,7 +2420,7 @@
                     const followingInput = document.getElementById('followingFile').files[0];
 
                     if (followersInputs.length === 0 && !followingInput) {
-                        mostrarEstado('Selecciona al menos un archivo de seguidores o seguidos (JSON o HTML).', 'error');
+                        mostrarEstado(t('Selecciona al menos un archivo de seguidores o seguidos (JSON o HTML).'), 'error');
                         return;
                     }
 
@@ -2453,15 +2466,16 @@
 
                 renderizarResultadosActuales();
                 const resultsStatus = document.getElementById('resultsStatus');
-                if (resultsStatus) resultsStatus.textContent = `Análisis completado: ${followersArray.length + followingArray.length} registros procesados.`;
+                ultimoTotalRegistros = followersArray.length + followingArray.length;
+                if (resultsStatus) resultsStatus.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros });
                 if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : window.Perfil.nuevo(), followersObjs, followingObjs);
                 requestAnimationFrame(() => resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-                mostrarEstado('Análisis completado.', 'success');
+                mostrarEstado(t('Análisis completado.'), 'success');
                 trigHaptic(80);
 
             } catch (error) {
                 console.error(error);
-                mostrarEstado('No se pudo completar el análisis. Comprueba que los archivos procedan de la descarga de Instagram.', 'error');
+                mostrarEstado(t('No se pudo completar el análisis. Comprueba que los archivos procedan de la descarga de Instagram.'), 'error');
                 resultsSection.classList.add('hidden');
             }
         }
@@ -2505,6 +2519,15 @@
             renderizarResultadosActuales();
         }
 
+        let ultimoTotalRegistros = null;
+        // Al cambiar de idioma se repintan la lista de Seguidores y el estado (el resto de paneles lo hace perfil.js).
+        I18n.alAplicar(() => {
+            const rs = document.getElementById('resultsStatus');
+            if (rs && ultimoTotalRegistros !== null) rs.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros });
+            const sec = document.getElementById('resultsSection');
+            if (sec && !sec.classList.contains('hidden')) renderizarResultadosActuales();
+        });
+
         function renderizarResultadosActuales() {
             filtrarResultados();
         }
@@ -2526,16 +2549,16 @@
             }
 
             let badgeClass = 'badge-status';
-            let badgeText = 'Sin Retorno';
-            if (categoriaActual === 'fans') { badgeClass = 'badge-fan'; badgeText = 'Te Sigue'; }
-            if (categoriaActual === 'mutuos') { badgeClass = 'badge-mutual'; badgeText = 'Mutuo'; }
+            let badgeText = t('Sin Retorno');
+            if (categoriaActual === 'fans') { badgeClass = 'badge-fan'; badgeText = t('Te Sigue'); }
+            if (categoriaActual === 'mutuos') { badgeClass = 'badge-mutual'; badgeText = t('Mutuo'); }
 
             let html = '<div class="results-list">';
             lista.forEach((obj) => {
                 const user = obj.username;
                 let metaInfo = badgeText;
                 if (obj.timestamp > 0) {
-                    const fecha = new Date(obj.timestamp * 1000).toLocaleDateString('es-ES');
+                    const fecha = I18n.fecha(obj.timestamp);
                     metaInfo = `${badgeText} (${fecha})`;
                 }
 
@@ -2544,7 +2567,7 @@
                 const dudosa = invalido || marcado;
                 const enlace = invalido
                     ? `<span class="user-link">@${escHtml(user)}</span>`
-                    : `<a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link" title="Abrir el perfil en Instagram">
+                    : `<a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link" title="${t('Abrir el perfil en Instagram')}">
                             @${escHtml(user)}
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                         </a>`;
@@ -2553,8 +2576,8 @@
                     <div class="user-card${dudosa ? ' no-disponible' : ''}">
                     ${enlace}
                     <div class="user-actions">
-                        ${invalido ? '<span class="user-flag">Nombre no válido</span>' : (marcado ? '<span class="user-flag">No disponible</span>' : '')}
-                        ${invalido ? '' : `<button class="user-mark" type="button" data-user="${escHtml(user)}" onclick="marcarNoDisponible(this.dataset.user)" title="Si el perfil da error al abrirlo, márcalo para ocultarlo">${marcado ? 'Mostrar' : 'No existe'}</button>`}
+                        ${invalido ? `<span class="user-flag">${t('Nombre no válido')}</span>` : (marcado ? `<span class="user-flag">${t('No disponible')}</span>` : '')}
+                        ${invalido ? '' : `<button class="user-mark" type="button" data-user="${escHtml(user)}" onclick="marcarNoDisponible(this.dataset.user)" title="${t('Si el perfil da error al abrirlo, márcalo para ocultarlo')}">${marcado ? t('Mostrar') : t('No existe')}</button>`}
                         <span class="${badgeClass}">${metaInfo}</span>
                     </div>
                 </div>
@@ -2584,7 +2607,7 @@
             if (noDisponibles.has(u)) noDisponibles.delete(u); else noDisponibles.add(u);
             guardarNoDisponibles();
             filtrarResultados();
-            mostrarToast(noDisponibles.has(u) ? `@${u} marcada como no disponible.` : `@${u} vuelve a mostrarse.`);
+            mostrarToast(noDisponibles.has(u) ? t('@{u} marcada como no disponible.', { u }) : t('@{u} vuelve a mostrarse.', { u }));
         }
 
         function listaFiltrada(conOcultas) {
@@ -2626,7 +2649,7 @@
             const cnt = document.getElementById('countUnavail');
             if (cnt) cnt.textContent = nOcultas;
             const summary = document.getElementById('filterSummary');
-            if (summary) summary.textContent = `${lista.length} resultado(s) visibles en esta categoría.`;
+            if (summary) summary.textContent = t('{n} resultado(s) visibles en esta categoría.', { n: lista.length });
             renderizarResultados(lista);
         }
 
@@ -2635,12 +2658,12 @@
             const lista = listaFiltrada().lista;
 
             if (lista.length === 0) {
-                alert('No hay registros disponibles para copiar.');
+                alert(t('No hay registros disponibles para copiar.'));
                 return;
             }
             const text = lista.map(u => `@${u.username}`).join('\n');
             navigator.clipboard.writeText(text).then(() => {
-                alert('Lista filtrada de perfiles copiada al portapapeles.');
+                alert(t('Lista filtrada de perfiles copiada al portapapeles.'));
             }).catch(err => {
                 console.error('Error al copiar:', err);
             });
@@ -2651,10 +2674,10 @@
             const lista = listaFiltrada().lista;
 
             if (lista.length === 0) {
-                alert('No hay registros disponibles para exportar.');
+                alert(t('No hay registros disponibles para exportar.'));
                 return;
             }
-            const csvContent = "data:text/csv;charset=utf-8,Usuario,FechaConexion\n" + lista.map(u => `@${u.username},${u.timestamp ? new Date(u.timestamp*1000).toLocaleDateString('es-ES') : 'N/D'}`).join("\n");
+            const csvContent = "data:text/csv;charset=utf-8," + t('Usuario,FechaConexion') + "\n" + lista.map(u => `@${u.username},${u.timestamp ? I18n.fecha(u.timestamp) : t('N/D')}`).join("\n");
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -2699,15 +2722,15 @@
 
         function activarPremiumDemo() {
             localStorage.setItem('golifiar-premium-demo', 'true');
-            document.getElementById('premiumStatus').textContent = 'Premium de demostración activo en este dispositivo';
+            document.getElementById('premiumStatus').textContent = t('Premium de demostración activo en este dispositivo');
             document.getElementById('historyPanel').classList.remove('hidden');
             cargarHistorial();
-            mostrarToast('Premium de demostración activado. No es una compra real.');
+            mostrarToast(t('Premium de demostración activado. No es una compra real.'));
         }
 
         function requerirPremium() {
             if (premiumActivo()) return true;
-            mostrarToast('Esta función pertenece a Golifiar Premium. Pulsa “Probar Premium” para verla.');
+            mostrarToast(t('Esta función pertenece a Golifiar Premium. Pulsa “Probar Premium” para verla.'));
             return false;
         }
 
@@ -2733,7 +2756,7 @@
             localStorage.setItem('golifiar-history', JSON.stringify(history.slice(0, 10)));
             document.getElementById('historyPanel').classList.remove('hidden');
             cargarHistorial();
-            mostrarToast('Análisis guardado únicamente en este dispositivo.');
+            mostrarToast(t('Análisis guardado únicamente en este dispositivo.'));
         }
 
         function cargarHistorial() {
@@ -2742,22 +2765,23 @@
             const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
             list.innerHTML = history.length ? history.map(item => `
                 <div class="history-item">
-                    <span>${new Date(item.date).toLocaleString('es-ES')}</span>
-                    <span>${item.followers} seguidores · ${item.discrepancy} sin retorno</span>
+                    <span>${new Date(item.date).toLocaleString(I18n.locale)}</span>
+                    <span>${t('{a} seguidores · {b} sin retorno', { a: item.followers, b: item.discrepancy })}</span>
                 </div>
-            `).join('') : '<span class="premium-lock">Todavía no hay análisis guardados.</span>';
+            `).join('') : `<span class="premium-lock">${t('Todavía no hay análisis guardados.')}</span>`;
         }
 
         function borrarHistorial() {
             if (!requerirPremium()) return;
             localStorage.removeItem('golifiar-history');
             cargarHistorial();
-            mostrarToast('Historial local eliminado.');
+            mostrarToast(t('Historial local eliminado.'));
         }
 
         function generarInformePremium() {
             if (!requerirPremium()) return;
-            const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe Golifiar</title><style>body{font:16px Arial;max-width:760px;margin:40px auto;color:#172033}h1{color:#0b6e99}.metric{display:inline-block;margin:8px;padding:16px;border:1px solid #e5e7eb;border-radius:8px}</style></head><body><h1>Informe de auditoría Golifiar</h1><p>Generado el ${new Date().toLocaleString('es-ES')}</p><div class="metric">Seguidores: ${document.getElementById('valFollowers').textContent}</div><div class="metric">Seguidos: ${document.getElementById('valFollowing').textContent}</div><div class="metric">Sin retorno: ${document.getElementById('valDiscrepancy').textContent}</div><div class="metric">Reciprocidad: ${document.getElementById('valReciprocity').textContent}</div><p>Este informe se ha generado localmente. Los datos proceden de la exportación de Instagram y pueden no reflejar el estado actual de los perfiles.</p></body></html>`;
+            const val = id => document.getElementById(id).textContent;
+            const html = `<!doctype html><html lang="${I18n.lang}"><head><meta charset="utf-8"><title>${t('Informe Golifiar')}</title><style>body{font:16px Arial;max-width:760px;margin:40px auto;color:#172033}h1{color:#0b6e99}.metric{display:inline-block;margin:8px;padding:16px;border:1px solid #e5e7eb;border-radius:8px}</style></head><body><h1>${t('Informe de auditoría Golifiar')}</h1><p>${t('Generado el {fecha}', { fecha: new Date().toLocaleString(I18n.locale) })}</p><div class="metric">${t('Seguidores')}: ${val('valFollowers')}</div><div class="metric">${t('Seguidos')}: ${val('valFollowing')}</div><div class="metric">${t('Sin retorno')}: ${val('valDiscrepancy')}</div><div class="metric">${t('Reciprocidad')}: ${val('valReciprocity')}</div><p>${t('Este informe se ha generado localmente. Los datos proceden de la exportación de Instagram y pueden no reflejar el estado actual de los perfiles.')}</p></body></html>`;
             descargarArchivo(`golifiar-informe-${new Date().toISOString().slice(0, 10)}.html`, html, 'text/html');
         }
 
@@ -2790,13 +2814,13 @@
             });
 
             if (lista.length === 0) {
-                alert('No hay registros disponibles para compartir.');
+                alert(t('No hay registros disponibles para compartir.'));
                 return;
             }
             if (navigator.share) {
                 navigator.share({
                     title: 'Golifiar',
-                    text: `Análisis completado con Golifiar: ${lista.length} perfiles en esta categoría.`,
+                    text: t('Análisis completado con Golifiar: {n} perfiles en esta categoría.', { n: lista.length }),
                     url: window.location.href
                 }).catch(console.error);
             } else {
@@ -2809,7 +2833,7 @@
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js');
                 if (premiumActivo()) {
-                    document.getElementById('premiumStatus').textContent = 'Premium de demostración activo en este dispositivo';
+                    document.getElementById('premiumStatus').textContent = t('Premium de demostración activo en este dispositivo');
                     document.getElementById('historyPanel').classList.remove('hidden');
                     cargarHistorial();
                 }
