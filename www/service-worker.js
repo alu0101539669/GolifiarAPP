@@ -1,9 +1,16 @@
-const CACHE_NAME = 'golifiar-v16';
+const CACHE_NAME = 'golifiar-v20';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
   './index.html',
   './perfil.js',
+  './agentes.js',
+  './styles/main.css',
+  './app/state.js',
+  './app/results.js',
+  './modules/instagram/importer.js',
+  './modules/whatsapp/lector.js',
+  './modules/whatsapp/app.js',
   './i18n.js',
   './lang-en-ui.js',
   './lang-en-app.js',

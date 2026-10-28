@@ -2,10 +2,11 @@
 
 /* ---------- estructura general ---------- */
 .main-wrapper { max-width: 1120px; }
+.in-sec, .in-trust, .in-preview, .in-steps { --in-space-1: 0.5rem; --in-space-2: 1rem; --in-space-3: 1.5rem; --in-space-4: 2rem; }
 .view-container:not(#viewInicio) { max-width: 1000px; width: 100%; margin-inline: auto; }
 #viewInicio { display: flex; flex-direction: column; gap: 0; }
 
-.in-sec { padding: 4.5rem 0 0; }
+.in-sec { padding: clamp(3.5rem, 8vw, 4.5rem) 0 0; }
 .in-sec-head { max-width: 640px; margin-bottom: 2rem; }
 .in-eyebrow { display: inline-flex; align-items: center; gap: 0.6rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-blue); margin: 0 0 0.75rem; }
 .in-eyebrow b { display: inline-grid; place-items: center; min-width: 2rem; height: 1.5rem; padding: 0 0.4rem; border-radius: 999px; border: 1px solid var(--border-accent); background: var(--accent-blue-light); font-variant-numeric: tabular-nums; }

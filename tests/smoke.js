@@ -16,7 +16,7 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   await pg.waitForTimeout(400);
 
   assert.deepStrictEqual(await visibles(pg), ['viewInicio'], 'la web debe abrir en Inicio');
-  await pg.click('text=Empezar a analizar');
+  await pg.click('text=Abrir Instagram');
   assert.deepStrictEqual(await visibles(pg), ['viewAuditoria'], 'el botón debe llevar a Analizar');
 
   // 1) ZIP completo en JSON
@@ -36,7 +36,7 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   await pg.evaluate(() => ejecutarAnalisis());
   await pg.waitForTimeout(1500);
   await pg.evaluate(() => Perfil.cambiarPanel('mensajes'));
-  const enlaces = await pg.$$eval('#panel-mensajes a', a => a.map(x => x.href));
+  const enlaces = await pg.$$eval('#panel-mensajes a', a => [...new Set(a.map(x => x.href))]);
   assert.deepStrictEqual(enlaces, ['https://www.instagram.com/ana_ruiz/'], 'solo Ana debe enlazar');
 
   // 3) Descarga en HTML

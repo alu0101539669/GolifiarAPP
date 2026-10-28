@@ -6,6 +6,14 @@
     <meta name="theme-color" content="#0b6e99">
     <script>try { var _t = localStorage.getItem("golifiar-tema"); if (_t === "dark" || _t === "light") document.documentElement.setAttribute("data-theme", _t); } catch (e) { /* sin almacenamiento */ }</script>
     <meta name="description" content="Analiza tu perfil de Instagram a partir de tu descarga de datos: seguidores, interacciones, actividad y mensajes. Tus archivos no salen de tu dispositivo.">
+    <meta name="application-name" content="Golifiar">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Golifiar | Análisis privado de tu perfil">
+    <meta property="og:description" content="Analiza tus exportaciones de Instagram localmente, sin cuentas ni servidores.">
+    <meta property="og:locale" content="es_ES">
+    <script type="application/ld+json">
+        {"@context":"https://schema.org","@type":"WebApplication","name":"Golifiar","applicationCategory":"UtilitiesApplication","operatingSystem":"Web","description":"Análisis local y privado de exportaciones de redes sociales."}
+    </script>
     <link rel="manifest" href="./manifest.webmanifest">
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
     <title>Golifiar | Análisis de tu perfil de Instagram</title>
@@ -14,1303 +22,19 @@
     <script src="./lang-en-ui.js"></script>
     <script src="./lang-en-app.js"></script>
     <script src="./lang-en-perfil.js"></script>
+    <script src="./agentes.js"></script>
     <script src="./vendor/jszip.min.js"></script>
     <script src="./vendor/zip-inflate.min.js"></script>
+    <script src="./modules/whatsapp/lector.js"></script>
+    <script src="./modules/whatsapp/app.js"></script>
+    <script src="./modules/tiktok/lector.js"></script>
+    <script src="./modules/tiktok/app.js"></script>
     <script src="./perfil.js" defer></script>
     <script src="./motion.js" defer></script>
-    <style>
-        :root {
-            color-scheme: light dark;
-            --bg-body: #f4f7f9;
-            --bg-card: #ffffff;
-            --bg-card-hover: #f8fafc;
-            --border-color: #e2e8ee;
-            --border-accent: rgba(11, 110, 153, 0.24);
-            --text-primary: #0c2230;
-            --text-secondary: #455a68;
-            --text-muted: #62767f;
-            --accent-blue: #0b6e99;
-            --accent-blue-light: #e6f3f9;
-            --accent-gold: #b57f0c;
-            --accent-green: #2f7a5f;
-            --accent-rose: #c2415b;
-            --surface-1: #f8fafc;
-            --surface-2: #f1f5f9;
-            --surface-3: #e2e8f0;
-            --line-strong: #cbd5e1;
-            --header-bg: rgba(255, 255, 255, 0.88);
-            --on-accent: #ffffff;
-            --gold-bg: #fffdf5;
-            --gold-border: #ead9a6;
-            --gold-ink: #795f17;
-            --gold-ink-2: #6b5a25;
-            --gold-ink-3: #8a6c18;
-            --shadow-ink: 15, 23, 42;
-            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --header-h: 72px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) {
-                --bg-body: #0a1a24;
-                --bg-card: #112533;
-                --bg-card-hover: #16303f;
-                --border-color: #234052;
-                --border-accent: rgba(76, 180, 222, 0.35);
-                --text-primary: #e8f1f6;
-                --text-secondary: #b4c6d2;
-                --text-muted: #8aa0ae;
-                --accent-blue: #4cb4de;
-                --accent-blue-light: #12344a;
-                --accent-gold: #e6b448;
-                --accent-green: #5fb89a;
-                --accent-rose: #f0728b;
-                --surface-1: #0f2230;
-                --surface-2: #16303f;
-                --surface-3: #1f3d4f;
-                --line-strong: #35566b;
-                --header-bg: rgba(10, 26, 36, 0.88);
-                --gold-bg: #231f10;
-                --gold-border: #5c4a1b;
-                --gold-ink: #e6c875;
-                --gold-ink-2: #d8c28a;
-                --gold-ink-3: #e0bf6a;
-                --shadow-ink: 0, 0, 0;
-                color-scheme: dark;
-            }
-            :root:not([data-theme="light"]) select.btn-sub { background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b4c6d2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); }
-            :root:not([data-theme="light"]) .privacy-note { background: rgba(95, 184, 154, 0.1); border-color: rgba(95, 184, 154, 0.3); }
-            :root:not([data-theme="light"]) .badge-status { background: rgba(240, 114, 139, 0.12); border-color: rgba(240, 114, 139, 0.3); }
-            :root:not([data-theme="light"]) .badge-fan { background: rgba(230, 180, 72, 0.12); border-color: rgba(230, 180, 72, 0.3); }
-            :root:not([data-theme="light"]) .badge-mutual { background: rgba(95, 184, 154, 0.12); border-color: rgba(95, 184, 154, 0.3); }
-        }
-
-        :root[data-theme="dark"] {
-                --bg-body: #0a1a24;
-                --bg-card: #112533;
-                --bg-card-hover: #16303f;
-                --border-color: #234052;
-                --border-accent: rgba(76, 180, 222, 0.35);
-                --text-primary: #e8f1f6;
-                --text-secondary: #b4c6d2;
-                --text-muted: #8aa0ae;
-                --accent-blue: #4cb4de;
-                --accent-blue-light: #12344a;
-                --accent-gold: #e6b448;
-                --accent-green: #5fb89a;
-                --accent-rose: #f0728b;
-                --surface-1: #0f2230;
-                --surface-2: #16303f;
-                --surface-3: #1f3d4f;
-                --line-strong: #35566b;
-                --header-bg: rgba(10, 26, 36, 0.88);
-                --gold-bg: #231f10;
-                --gold-border: #5c4a1b;
-                --gold-ink: #e6c875;
-                --gold-ink-2: #d8c28a;
-                --gold-ink-3: #e0bf6a;
-                --shadow-ink: 0, 0, 0;
-            color-scheme: dark;
-        }
-        :root[data-theme="dark"] select.btn-sub { background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23b4c6d2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); }
-        :root[data-theme="dark"] .privacy-note { background: rgba(95, 184, 154, 0.1); border-color: rgba(95, 184, 154, 0.3); }
-        :root[data-theme="dark"] .badge-status { background: rgba(240, 114, 139, 0.12); border-color: rgba(240, 114, 139, 0.3); }
-        :root[data-theme="dark"] .badge-fan { background: rgba(230, 180, 72, 0.12); border-color: rgba(230, 180, 72, 0.3); }
-        :root[data-theme="dark"] .badge-mutual { background: rgba(95, 184, 154, 0.12); border-color: rgba(95, 184, 154, 0.3); }
-        :root[data-theme="light"] { color-scheme: light; }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: var(--font-sans);
-            background-color: var(--bg-body);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden;
-            position: relative;
-        }
-
-        /* Minimalist Light Background Aura */
-        .minimal-aura {
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(11, 110, 153, 0.06) 0%, rgba(11, 110, 153, 0) 70%);
-            top: -150px;
-            right: -150px;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        /* Header & Navigation */
-        .header-minimal {
-            border-bottom: 1px solid var(--border-color);
-            background: var(--header-bg);
-            backdrop-filter: blur(16px);
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            padding: 1rem 2rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-        }
-
-        .header-minimal::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            right: 0;
-            bottom: -1px;
-            height: 2px;
-            background: linear-gradient(90deg, var(--accent-blue) 0 72%, var(--accent-gold) 72% 100%);
-            opacity: 0.7;
-        }
-
-        .header-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .brand-minimal {
-            display: flex;
-            align-items: center;
-            gap: 0.85rem;
-            text-decoration: none;
-            color: var(--text-primary);
-            cursor: pointer;
-        }
-
-        .brand-logo-box {
-            width: 38px;
-            height: 38px;
-            background: #0b6e99;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
-        }
-
-        .brand-text h1 {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            line-height: 1.1;
-        }
-
-        .brand-text span {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-        }
-
-        .brand-text span::before {
-            content: "• ";
-            color: var(--accent-gold);
-        }
-
-        /* Nav Tabs in Header */
-        .nav-menu {
-            display: flex;
-            gap: 0.25rem;
-            background: var(--surface-2);
-            padding: 0.25rem;
-            border-radius: 9999px;
-            border: 1px solid var(--border-color);
-        }
-
-        .nav-tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 0.45rem 0.9rem;
-            border-radius: 9999px;
-            cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-        }
-
-        .nav-tab-btn.active {
-            background: var(--bg-card);
-            color: var(--accent-blue);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-        }
-
-        .certification-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.75rem;
-            color: var(--accent-blue);
-            background: rgba(2, 132, 199, 0.08);
-            border: 1px solid rgba(2, 132, 199, 0.2);
-            padding: 0.35rem 0.75rem;
-            border-radius: 9999px;
-            font-weight: 600;
-        }
-
-        /* Main Container */
-        .main-wrapper {
-            max-width: 1000px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 3.5rem 1.5rem 4.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 3.5rem;
-            flex: 1;
-            position: relative;
-            z-index: 10;
-        }
-
-        @media (max-width: 640px) {
-            .main-wrapper { padding: 2rem 1rem 3.5rem; }
-        }
-
-        /* Hero Section */
-        .hero-section {
-            text-align: center;
-            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .hero-section h2 {
-            font-size: 2.35rem;
-            font-weight: 850;
-            letter-spacing: -0.03em;
-            line-height: 1.2;
-            color: var(--text-primary);
-        }
-
-        .hero-section h2 span {
-            background: linear-gradient(
-                105deg,
-                #1682aa 0%,
-                #4b8874 48%,
-                #c4932b 100%
-            );
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            color: transparent;
-        }
-
-        .hero-section h2::after {
-            content: "";
-            display: block;
-            width: 52px;
-            height: 3px;
-            margin: 1rem auto 0;
-            border-radius: 99px;
-            background: var(--accent-gold);
-        }
-
-        .hero-section p {
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            margin-top: 0.75rem;
-            max-width: 680px;
-            margin-left: auto;
-            margin-right: auto;
-            line-height: 1.6;
-        }
-
-        .hero-section > p:last-child {
-            margin-bottom: 2rem;
-        }
-
-        @media (max-width: 640px) {
-            .hero-section h2 { font-size: 1.65rem; }
-            .hero-section > p:last-child { margin-bottom: 2.5rem; }
-        }
-
-        /* Guide Cards (3 Steps) */
-        .guide-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.25rem;
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
-        }
-
-        @media (max-width: 768px) {
-            .guide-grid { grid-template-columns: 1fr; }
-        }
-
-        .guide-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .guide-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.08);
-            border-color: var(--accent-blue);
-        }
-
-        .guide-step-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .guide-number {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--accent-blue-light);
-            color: var(--accent-blue);
-            font-size: 0.85rem;
-            font-weight: 750;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .guide-card h3 {
-            font-size: 0.95rem;
-            font-weight: 750;
-            color: var(--text-primary);
-        }
-
-        .guide-card p {
-            font-size: 0.825rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-        }
-
-        /* Upload Section Card */
-        .upload-section-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-            animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
-        }
-
-        @media (max-width: 640px) {
-            .upload-section-card { padding: 2rem 1.25rem; }
-        }
-
-        .upload-tabs {
-            display: flex;
-            gap: 0.5rem;
-            background: var(--surface-2);
-            padding: 0.35rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-        }
-
-        .tab-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            font-weight: 650;
-            padding: 0.75rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .tab-btn.active {
-            background: var(--bg-card);
-            color: var(--accent-blue);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .upload-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        @media (max-width: 640px) {
-            .upload-grid { grid-template-columns: 1fr; }
-        }
-
-        .dropzone {
-            background: var(--surface-1);
-            border: 2px dashed var(--line-strong);
-            border-radius: 12px;
-            padding: 2rem 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
-            position: relative;
-            overflow: hidden;
-            min-height: 190px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .dropzone:hover {
-            border-color: var(--accent-blue);
-            background: var(--accent-blue-light);
-        }
-
-        .dropzone input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .dropzone-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            pointer-events: none;
-            width: 100%;
-        }
-
-        .dropzone-title {
-            font-size: 0.9rem;
-            font-weight: 750;
-            color: var(--text-primary);
-        }
-
-        .dropzone-desc {
-            font-size: 0.775rem;
-            color: var(--text-muted);
-        }
-
-        .file-status-tag {
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--accent-green);
-            background: rgba(5, 150, 105, 0.1);
-            padding: 0.25rem 0.65rem;
-            border-radius: 6px;
-            opacity: 0;
-            transform: translateY(4px);
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-        }
-
-        .file-status-tag.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            max-width: 280px;
-            height: 6px;
-            background: var(--surface-3);
-            border-radius: 9999px;
-            overflow: hidden;
-            margin-top: 0.75rem;
-            display: none;
-        }
-        .progress-bar-container.active {
-            display: block;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: #0b6e99;
-            border-radius: 9999px;
-            transition: width 0.3s ease;
-        }
-
-        /* Action Button */
-        .btn-minimal {
-            background: #0b6e99;
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            padding: 1.1rem;
-            font-size: 1rem;
-            font-weight: 750;
-            cursor: pointer;
-            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, opacity 0.25s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.3);
-        }
-
-        .btn-minimal:hover {
-            background: #095b7e;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
-        }
-
-        /* Results Dashboard */
-        .results-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        @media (max-width: 480px) {
-            .metrics-grid { grid-template-columns: 1fr; }
-        }
-
-        .metric-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 1.25rem;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
-        }
-
-        .metric-label {
-            font-size: 0.82rem;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .metric-number {
-            font-size: 2.25rem;
-            font-weight: 850;
-            margin-top: 0.25rem;
-            letter-spacing: -0.03em;
-            color: var(--text-primary);
-        }
-
-        .metric-number.highlight {
-            color: var(--accent-gold);
-        }
-
-        .metric-number.green {
-            color: var(--accent-green);
-        }
-
-        /* Category Tabs */
-        .category-tabs {
-            display: flex;
-            gap: 0.5rem;
-            background: var(--surface-3);
-            padding: 0.35rem;
-            border-radius: 12px;
-            flex-wrap: wrap;
-        }
-
-        .cat-tab {
-            flex: 1;
-            min-width: 120px;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            font-weight: 700;
-            padding: 0.65rem 0.5rem;
-            border-radius: 9px;
-            cursor: pointer;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-            text-align: center;
-        }
-
-        .cat-tab.active {
-            background: var(--bg-card);
-            color: var(--accent-blue);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        /* Toolbar & Search */
-        .toolbar {
-            display: flex;
-            gap: 0.75rem;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-        }
-
-        .search-box {
-            position: relative;
-            flex: 1;
-            min-width: 220px;
-        }
-
-        .search-box input {
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 0.85rem 1rem 0.85rem 2.75rem;
-            color: var(--text-primary);
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.2s ease;
-        }
-
-        .search-box input:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            pointer-events: none;
-        }
-
-        .filter-dropdowns {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .results-actions {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .btn-sub {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            padding: 0.75rem 1.1rem;
-            border-radius: 10px;
-            font-size: 0.825rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-        }
-
-        .btn-sub:hover {
-            background: var(--surface-1);
-            border-color: var(--accent-blue);
-            color: var(--text-primary);
-        }
-
-        select.btn-sub {
-            appearance: none;
-            padding-right: 2rem;
-            background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%polyline points='6 9 12 15 18 9'%3E%e%svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-        }
-
-        /* Results List */
-        .results-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-            max-height: 520px;
-            overflow-y: auto;
-            padding: 0 0.3rem 1.25rem 0;
-            scroll-padding-bottom: 1.25rem;
-            -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
-            mask-image: linear-gradient(to bottom, #000 calc(100% - 28px), transparent);
-        }
-
-        .results-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .results-list::-webkit-scrollbar-thumb {
-            background: var(--line-strong);
-            border-radius: 9999px;
-        }
-
-        .user-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1rem 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02);
-        }
-
-        .user-card:hover {
-            background: var(--surface-1);
-            border-color: var(--accent-blue);
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);
-        }
-
-        .user-link {
-            font-size: 0.95rem;
-            font-weight: 750;
-            color: var(--text-primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .user-link:hover {
-            color: var(--accent-blue);
-        }
-
-        .user-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.65rem;
-        }
-
-        .user-search-link {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            font-weight: 650;
-            text-decoration: none;
-            white-space: nowrap;
-        }
-
-        .user-search-link:hover {
-            color: var(--accent-blue);
-            text-decoration: underline;
-        }
-
-        .badge-status {
-            background: rgba(225, 29, 72, 0.08);
-            color: var(--accent-rose);
-            border: 1px solid rgba(225, 29, 72, 0.2);
-            font-size: 0.75rem;
-            font-weight: 750;
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-        }
-
-        .badge-fan {
-            background: rgba(217, 119, 6, 0.08);
-            color: var(--accent-gold);
-            border: 1px solid rgba(217, 119, 6, 0.2);
-            font-size: 0.75rem;
-            font-weight: 750;
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-        }
-
-        .badge-mutual {
-            background: rgba(5, 150, 105, 0.08);
-            color: var(--accent-green);
-            border: 1px solid rgba(5, 150, 105, 0.2);
-            font-size: 0.75rem;
-            font-weight: 750;
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-        }
-
-        .skeleton-loader {
-            display: flex;
-            flex-direction: column;
-            gap: 0.6rem;
-        }
-        .skeleton-item {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 1.1rem 1.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            animation: pulseSkeleton 1.4s infinite ease-in-out;
-        }
-        .skeleton-line {
-            height: 14px;
-            background: var(--surface-3);
-            border-radius: 4px;
-            width: 140px;
-        }
-        .skeleton-badge {
-            height: 22px;
-            background: var(--surface-3);
-            border-radius: 6px;
-            width: 80px;
-        }
-        @keyframes pulseSkeleton {
-            0% { opacity: 0.8; }
-            50% { opacity: 0.3; }
-            100% { opacity: 0.8; }
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1.5rem;
-            background: var(--bg-card);
-            border: 1px dashed var(--border-color);
-            border-radius: 12px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .results-disclaimer {
-            margin-top: 0.25rem;
-            color: var(--text-muted);
-            font-size: 0.78rem;
-            line-height: 1.6;
-            text-align: center;
-        }
-
-        .premium-panel,
-        .history-panel {
-            border: 1px solid var(--gold-border);
-            border-radius: 14px;
-            background: var(--gold-bg);
-            padding: 1.25rem;
-        }
-        .premium-panel h3, .history-panel h3 { color: var(--gold-ink); margin-bottom: 0.4rem; }
-        .premium-panel p, .history-panel p { color: var(--text-secondary); line-height: 1.55; font-size: 0.86rem; margin-bottom: 0.9rem; }
-        .premium-features { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.55rem; margin: 0.9rem 0; }
-        .premium-feature { color: var(--gold-ink-2); font-size: 0.82rem; }
-        .premium-feature::before { content: "—"; margin-right: 0.4rem; color: var(--accent-gold); }
-        .panel-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-        .history-list { display: grid; gap: 0.5rem; margin-top: 0.8rem; }
-        .history-item { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.7rem; border: 1px solid var(--border-color); border-radius: 9px; background: var(--bg-card); font-size: 0.82rem; }
-        .premium-lock { color: var(--gold-ink-3); font-size: 0.76rem; font-weight: 700; }
-        .filter-summary { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.4rem; }
-        @media (max-width: 640px) {
-            .premium-features { grid-template-columns: 1fr; }
-            .history-item { align-items: flex-start; flex-direction: column; }
-        }
-
-        /* Additional Views */
-        .content-view {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-            animation: fadeInDown 0.4s ease;
-        }
-
-        .content-view h2 {
-            font-size: 1.75rem;
-            font-weight: 850;
-            color: var(--text-primary);
-            margin-bottom: 1.25rem;
-            letter-spacing: -0.02em;
-        }
-
-        .content-view h3 {
-            font-size: 1.15rem;
-            font-weight: 750;
-            color: var(--text-primary);
-            margin: 1.5rem 0 0.5rem 0;
-        }
-
-        .content-view p, .content-view li {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 1rem;
-        }
-
-        .content-view ul {
-            padding-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        /* Footer */
-        .footer-minimal {
-            border-top: 1px solid var(--border-color);
-            background: var(--bg-card);
-            padding: 2rem 1.5rem;
-            margin-top: 3rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            position: relative;
-            z-index: 10;
-        }
-
-        .footer-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .footer-links button {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 650;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-
-        .footer-links button:hover {
-            color: var(--accent-blue);
-            text-decoration: underline;
-        }
-
-        /* Animations */
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .hidden { display: none !important; }
-
-        .guide-card,
-        .metric-card,
-        .user-card,
-        .content-view {
-            overflow-wrap: anywhere;
-        }
-
-        .guide-card {
-            min-height: 172px;
-            justify-content: flex-start;
-        }
-
-        .guide-card h3,
-        .dropzone-title,
-        .metric-label {
-            line-height: 1.35;
-        }
-
-        .guide-card p {
-            margin-top: 0.15rem;
-        }
-
-        .upload-mode-content {
-            min-width: 0;
-        }
-
-        .dropzone-content {
-            line-height: 1.45;
-        }
-
-        @media (max-width: 640px) {
-            .hero-section p {
-                font-size: 0.98rem;
-                line-height: 1.7;
-            }
-
-            .guide-card {
-                min-height: 0;
-                padding: 1.5rem;
-            }
-
-            .upload-section-card {
-                gap: 2rem;
-            }
-        }
-
-        .privacy-note {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 1rem;
-            border: 1px solid rgba(5, 150, 105, 0.25);
-            border-radius: 10px;
-            background: rgba(5, 150, 105, 0.06);
-            color: var(--text-secondary);
-            font-size: 0.84rem;
-            line-height: 1.5;
-        }
-        .privacy-note strong { color: var(--text-primary); display: block; margin-bottom: 0.15rem; }
-        .helper-link {
-            border: 0;
-            background: none;
-            color: var(--accent-blue);
-            font: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .status-message {
-            min-height: 1.25rem;
-            color: var(--text-secondary);
-            font-size: 0.84rem;
-            text-align: center;
-        }
-        .status-message.error { color: var(--accent-rose); }
-        .status-message.success { color: var(--accent-green); }
-        .toast {
-            position: fixed;
-            left: 50%;
-            bottom: 1.5rem;
-            z-index: 100;
-            max-width: min(90vw, 420px);
-            padding: 0.85rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
-            transform: translate(-50%, 1rem);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease, transform 0.2s ease;
-        }
-        .toast.visible { opacity: 1; transform: translate(-50%, 0); }
-        dialog {
-            width: min(92vw, 560px);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 1.5rem;
-            color: var(--text-primary);
-            background: var(--bg-card);
-            box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
-        }
-        dialog::backdrop { background: rgba(15, 23, 42, 0.55); }
-        dialog h2 { font-size: 1.25rem; margin-bottom: 1rem; }
-        dialog ol { padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 1.25rem; }
-        dialog strong { color: var(--text-primary); }
-        @media (max-width: 640px) {
-            .header-minimal { padding: 0.75rem 1rem; }
-            .header-container { justify-content: center; }
-            .brand-minimal { margin-right: auto; }
-            .certification-badge { display: none; }
-            .nav-menu { width: 100%; }
-            .nav-tab-btn { min-height: 42px; }
-            .upload-tabs { flex-direction: column; }
-            .tab-btn, .btn-minimal, .btn-sub { min-height: 44px; }
-            .toast { bottom: 1rem; }
-            .user-card { align-items: flex-start; gap: 0.75rem; }
-            .user-actions { align-items: flex-end; flex-direction: column; gap: 0.3rem; }
-        }
-
-
-
-        .hero-compact { padding-bottom: 0.5rem; }
-        .nav-tab-btn { white-space: nowrap; }
-        @media (max-width: 520px) { .nav-menu { width: 100%; } .nav-tab-btn { padding-inline: 0.65rem; font-size: 0.82rem; flex: 1 1 auto; } }
-
-
-        /* ===== Herramientas de la cabecera ===== */
-        .header-container { max-width: 1120px; }
-        .header-tools { display: flex; align-items: center; gap: 0.6rem; }
-        .tool-btn { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease; }
-        .tool-btn:hover { background: var(--bg-card-hover); border-color: var(--border-accent); color: var(--accent-blue); }
-        .tool-btn:active { transform: scale(0.94); }
-        .tool-btn .icon-sun { display: none; }
-        :root[data-theme="dark"] .tool-btn .icon-sun { display: block; }
-        :root[data-theme="dark"] .tool-btn .icon-moon { display: none; }
-        @media (prefers-color-scheme: dark) {
-            :root:not([data-theme="light"]) .tool-btn .icon-sun { display: block; }
-            :root:not([data-theme="light"]) .tool-btn .icon-moon { display: none; }
-        }
-
-        .lang-switch { display: inline-flex; padding: 3px; border: 1px solid var(--border-color); border-radius: 12px; background: var(--bg-card); }
-        .lang-switch button { min-width: 38px; height: 32px; padding: 0 0.55rem; border: 0; border-radius: 9px; background: transparent; color: var(--text-secondary); font: inherit; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
-        .lang-switch button:hover { color: var(--accent-blue); }
-        .lang-switch button.on { background: var(--accent-blue); color: var(--on-accent); }
-        @media (max-width: 760px) {
-            .brand-minimal { order: 1; }
-            .header-tools { order: 2; }
-            .nav-menu { order: 3; }
-        }
-
-        /* ===== Guías de interfaz web (accesibilidad y tacto) ===== */
-        button, a, summary, label, select, input[type="checkbox"] { touch-action: manipulation; }
-        html { -webkit-tap-highlight-color: rgba(11, 110, 153, 0.15); scroll-padding-top: 130px; }
-        h1, h2, h3 { text-wrap: balance; }
-        .metric-number, .metric-label, .pf-hval, .pf-hdet, .pf-badge, .count, .cat-tab { font-variant-numeric: tabular-nums; }
-        .user-link, .pf-hlabel { overflow-wrap: anywhere; min-width: 0; }
-        .skip-link { position: absolute; left: 1rem; top: -4rem; z-index: 100; background: var(--accent-blue); color: #fff; padding: 0.6rem 1rem; border-radius: 8px; text-decoration: none; transition: top 0.2s ease; }
-        .skip-link:focus { top: 0.75rem; }
-        dialog { overscroll-behavior: contain; }
-        @media (pointer: fine) { html { overscroll-behavior: none; } }
-
-        @media (prefers-reduced-motion: reduce) {
-            html { scroll-behavior: auto; }
-            *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
-        }
-    
-        /* ===== Análisis de perfil (perfil.js) ===== */
-        .profile-tabs { position: sticky; top: 64px; z-index: 20; }
-        .pf-panel { display: flex; flex-direction: column; gap: 1.25rem; }
-        .pf-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem; min-width: 0; }
-        .pf-card h3 { font-size: 1rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 0.25rem; }
-        .pf-sub { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.9rem; }
-        .pf-card > :last-child { margin-bottom: 0; }
-        .pf-note { color: var(--text-muted); font-size: 0.78rem; line-height: 1.5; margin-top: 0.75rem; }
-        .pf-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
-        @media (max-width: 768px) { .pf-two { grid-template-columns: minmax(0, 1fr); } }
-        .pf-badge { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); background: var(--surface-2); border-radius: 999px; padding: 0.15rem 0.55rem; white-space: nowrap; }
-        .pf-hbars { display: flex; flex-direction: column; gap: 0.55rem; }
-        .pf-hrow { display: grid; grid-template-columns: minmax(90px, 170px) 1fr auto; gap: 0.2rem 0.75rem; align-items: center; font-size: 0.82rem; }
-        .pf-hlabel { color: var(--text-primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .pf-hlabel a { color: inherit; text-decoration: none; }
-        .pf-hlabel a:hover { color: var(--accent-blue); }
-        .pf-htrack { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-        .pf-hbar { display: block; height: 100%; background: var(--accent-blue); border-radius: 0 4px 4px 0; }
-        .pf-hval { color: var(--text-secondary); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2.5ch; text-align: right; }
-        .pf-hdet { grid-column: 2 / 4; color: var(--text-muted); font-size: 0.74rem; margin-top: -0.1rem; }
-        .pf-stack { display: flex; gap: 2px; height: 10px; }
-        .pf-seg { display: block; height: 100%; min-width: 0; }
-        .pf-seg.a, .pf-key.a { background: var(--accent-blue); }
-        .pf-seg.b, .pf-key.b { background: var(--accent-gold); }
-        .pf-seg.a { border-radius: 4px 0 0 4px; } .pf-seg.b { border-radius: 0 4px 4px 0; }
-        .pf-legend { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 0.7rem; }
-        .pf-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 0.4rem; }
-        .pf-cols { display: flex; align-items: flex-end; gap: 2px; height: 146px; padding-top: 16px; box-sizing: border-box; border-bottom: 1px solid var(--border-color); }
-        .pf-col { position: relative; flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
-        .pf-col:hover { background: var(--bg-card-hover); }
-        .pf-colbar { display: block; width: 100%; max-width: 24px; background: var(--accent-blue); border-radius: 4px 4px 0 0; }
-        .pf-colval { position: absolute; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); white-space: nowrap; }
-        .pf-labs { display: flex; gap: 2px; margin-top: 0.35rem; }
-        .pf-lab { flex: 1 1 0; min-width: 0; text-align: center; font-size: 0.66rem; color: var(--text-muted); white-space: nowrap; overflow: visible; }
-        .pf-heat { display: grid; grid-template-columns: 2.6rem repeat(24, minmax(0, 1fr)); gap: 2px; align-items: center; overflow-x: auto; }
-        .pf-heath, .pf-heatd { font-size: 0.64rem; color: var(--text-muted); text-align: center; }
-        .pf-heatd { text-align: left; }
-        .pf-hc { height: 18px; border-radius: 3px; background: var(--surface-2); }
-        .pf-heatkey { display: flex; gap: 4px; align-items: center; margin-top: 0.6rem; font-size: 0.7rem; color: var(--text-muted); }
-        .pf-heatkey i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; }
-        .pf-det { border: 1px solid var(--border-color); border-radius: 10px; margin-top: 0.5rem; }
-        .pf-det summary, .pf-tabla summary { cursor: pointer; padding: 0.6rem 0.8rem; font-size: 0.82rem; font-weight: 700; color: var(--accent-blue); }
-        .pf-det .results-list { padding: 0 0.6rem 0.6rem; max-height: 340px; }
-        .pf-det .empty-state { padding: 0.8rem; }
-        .pf-tabla { margin-top: 0.6rem; }
-        .pf-tabla summary { padding: 0.3rem 0; font-size: 0.74rem; color: var(--text-muted); }
-        .pf-tabla table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-top: 0.4rem; }
-        .pf-tabla th, .pf-tabla td { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border-color); }
-        .pf-tabla { max-height: 260px; overflow: auto; }
-        .pf-resumen-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
-    
-        /* ===== Diseño: ajustes generales ===== */
-        :focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
-        #resultsSection { scroll-margin-top: calc(var(--header-h) + 8px); }
-        .profile-tabs { top: calc(var(--header-h) + 6px); box-shadow: 0 6px 16px rgba(var(--shadow-ink), 0.06); }
-        .cat-tab.sin-datos { opacity: 0.55; }
-        .cat-tab.sin-datos::after { content: " ·"; opacity: 0.6; }
-        .chk { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 650; color: var(--text-secondary); cursor: pointer; min-height: 40px; }
-        .chk input { width: 16px; height: 16px; accent-color: var(--accent-blue); }
-        .user-flag { font-size: 0.72rem; font-weight: 700; color: var(--accent-rose); }
-        .user-mark { background: none; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); font: inherit; font-size: 0.72rem; font-weight: 650; padding: 0.25rem 0.5rem; cursor: pointer; white-space: nowrap; }
-        .user-mark:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
-        .user-card.no-disponible { opacity: 0.6; }
-        .danger-link { background: none; border: 0; color: var(--text-muted); font: inherit; font-size: 0.8rem; font-weight: 650; text-decoration: underline; cursor: pointer; padding: 0.5rem 0; }
-        .danger-link:hover { color: var(--accent-rose); }
-        .hero-section h2 span { background: none; -webkit-text-fill-color: currentColor; color: inherit; }
-
-        @media (max-width: 640px) {
-            .profile-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-            .profile-tabs::-webkit-scrollbar { display: none; }
-            .profile-tabs .cat-tab { flex: 0 0 auto; min-width: 0; padding: 0.65rem 0.9rem; white-space: nowrap; }
-            .filter-dropdowns { display: flex; flex-wrap: nowrap; gap: 0.5rem; overflow-x: auto; width: 100%; padding-bottom: 0.25rem; scrollbar-width: none; }
-            .filter-dropdowns > * { flex: 0 0 auto; }
-            .filter-dropdowns .btn-sub { min-height: 40px; padding: 0.5rem 2rem 0.5rem 0.8rem; }
-            .results-actions { width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
-            .results-actions .btn-sub { flex: 0 0 auto; }
-            .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-            .metric-card { padding: 1rem; }
-            .metric-number { font-size: 1.75rem; }
-            .user-card { padding: 0.8rem 0.9rem; }
-            .pf-heat { min-width: 560px; }
-            .pf-heatwrap { overflow-x: auto; }
-        }
-
-        /* ===== Resumen y comparación ===== */
-        .pf-hero { display: grid; grid-template-columns: auto 1fr; gap: 1.75rem; align-items: center; padding: 1.75rem; border: 1px solid var(--border-accent); border-radius: 16px; background: var(--bg-card); }
-        .pf-hero h3 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
-        .pf-hero p { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.55; max-width: 62ch; margin-bottom: 1rem; }
-        .pf-ring { width: 150px; height: 150px; display: block; }
-        .pf-ring-num { font-size: 40px; font-weight: 800; fill: var(--text-primary); letter-spacing: -0.03em; }
-        @media (max-width: 640px) { .pf-hero { grid-template-columns: 1fr; justify-items: center; text-align: left; padding: 1.25rem; } .pf-hero-body { width: 100%; } }
-        .pf-finds { list-style: none; display: flex; flex-direction: column; }
-        .pf-finds li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; color: var(--text-primary); }
-        .pf-finds li:last-child { border-bottom: 0; padding-bottom: 0; }
-        .pf-link { background: none; border: 0; color: var(--accent-blue); font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; white-space: nowrap; padding: 0.35rem 0; }
-        .pf-link:hover { text-decoration: underline; }
-        .pf-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-        .pf-chip { font-size: 0.8rem; font-weight: 650; padding: 0.3rem 0.7rem; border-radius: 999px; border: 1px dashed var(--line-strong); color: var(--text-muted); }
-        .pf-chip.on { border-style: solid; border-color: var(--accent-green); color: var(--accent-green); }
-        .pf-upload { display: inline-flex; width: fit-content; cursor: pointer; }
-        .pf-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-        .pf-upload:focus-within { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
-        .pf-snaps { margin-top: 0.9rem; max-height: 260px; }
-    
-        dialog { max-height: 88vh; overflow-y: auto; }
-        dialog h3 { font-size: 1rem; margin: 1.4rem 0 0.5rem; }
-        dialog ul { padding-left: 1.25rem; color: var(--text-secondary); line-height: 1.7; margin-bottom: 0.9rem; }
-        dialog p { color: var(--text-secondary); line-height: 1.65; font-size: 0.92rem; margin-bottom: 0.8rem; max-width: 70ch; }
-        dialog li { margin-bottom: 0.25rem; }
-        dialog .guide-intro { font-size: 0.95rem; }
-        dialog { margin: auto; }
-        dialog .dialog-actions { position: sticky; bottom: -1.5rem; margin: 1rem -1.5rem -1.5rem; padding: 0.85rem 1.5rem; background: var(--bg-card); border-top: 1px solid var(--border-color); }
-    
-        /* ===== Limpieza guiada ===== */
-        .profile-tabs .cat-tab { min-width: 84px; padding-left: 0.4rem; padding-right: 0.4rem; }
-        .pf-chipbtn { background: none; font: inherit; font-size: 0.8rem; font-weight: 650; cursor: pointer; }
-        .pf-chipbtn.on { background: var(--accent-blue-light); }
-        .pf-prog { height: 8px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin: 1rem 0 0.4rem; }
-        .pf-prog span { display: block; height: 100%; background: var(--accent-green); border-radius: 999px; transition: width 0.25s ease; }
-        .pf-limpcard { display: flex; flex-direction: column; gap: 0.9rem; align-items: flex-start; }
-        .pf-limpname { font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 800; letter-spacing: -0.02em; color: var(--text-primary); text-decoration: none; overflow-wrap: anywhere; }
-        a.pf-limpname:hover { color: var(--accent-blue); text-decoration: underline; }
-        .pf-reasons { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        .pf-reason { font-size: 0.8rem; font-weight: 700; padding: 0.3rem 0.7rem; border-radius: 999px; background: var(--surface-2); color: var(--text-secondary); }
-        .pf-reason.nosigue { background: rgba(194, 65, 91, 0.1); color: var(--accent-rose); }
-        .pf-reason.rotas { background: rgba(194, 65, 91, 0.16); color: var(--accent-rose); }
-        .pf-reason.sinint { background: rgba(181, 127, 12, 0.12); color: var(--accent-gold); }
-        .pf-limpbtns { display: flex; flex-wrap: wrap; gap: 0.6rem; width: 100%; }
-        .pf-limpbtns .btn-sub, .pf-limpbtns .btn-minimal { flex: 1 1 130px; justify-content: center; min-height: 48px; width: auto; }
-        .pf-dejar { margin: 0; }
-    </style>
+    <link rel="stylesheet" href="./styles/main.css">
     <link rel="stylesheet" href="./inicio.css">
 </head>
-<body>
+<body data-modulo="inicio">
 
     <!-- Minimal Aura background element -->
     <div class="minimal-aura"></div>
@@ -1328,9 +52,12 @@
                     <span>DonseCanarias</span>
                 </div>
             </a>
-            <nav class="nav-menu">
+            <nav class="nav-menu" aria-label="Sección de plataforma">
                 <button class="nav-tab-btn active" id="navInicio" onclick="cambiarVista('inicio')">Inicio</button>
-                <button class="nav-tab-btn" id="navAuditoria" onclick="cambiarVista('auditoria')">Analizar</button>
+                <button class="nav-tab-btn" id="navAuditoria" onclick="cambiarVista('auditoria')">Instagram</button>
+                <button class="nav-tab-btn" id="navWhatsapp" onclick="cambiarVista('whatsapp')">WhatsApp</button>
+                <button class="nav-tab-btn" id="navTikTok" onclick="cambiarVista('tiktok')">TikTok</button>
+                <button class="nav-tab-btn" id="navSpotify" onclick="cambiarVista('spotify')">Spotify</button>
                 <button class="nav-tab-btn" id="navComoUsar" onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button class="nav-tab-btn" id="navQuienSoy" onclick="cambiarVista('quiensoy')">Quién soy</button>
             </nav>
@@ -1343,6 +70,7 @@
                     <button type="button" data-lang="es" lang="es" data-i18n-no onclick="I18n.fijar('es')" aria-label="Español" title="Español">ES</button>
                     <button type="button" data-lang="en" lang="en" data-i18n-no onclick="I18n.fijar('en')" aria-label="English" title="English">EN</button>
                 </div>
+                <button type="button" class="tool-btn tool-btn-ghost" onclick="abrirLegal()" aria-label="Abrir aviso legal" title="Aviso legal">Legal</button>
                 <button type="button" class="tool-btn" id="themeToggle" onclick="alternarTema()" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
                     <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
                     <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -1351,25 +79,124 @@
         </div>
     </header>
 
+    <div class="global-privacy-banner" role="note">
+        <span class="privacy-pill">Procesamiento 100% Local</span>
+        <span>Ningún texto, historial de chat o archivo subido se envía a servidores externos ni a bases de datos.</span>
+    </div>
+
     <!-- Main Content Wrapper -->
     <main class="main-wrapper" id="contenidoPrincipal" tabindex="-1">
 
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
+        <div id="viewWhatsapp" class="view-container hidden">
+            <section class="upload-section-card">
+                <p class="in-eyebrow">Módulo WhatsApp</p>
+                <h2 class="in-h">Analiza una conversación exportada</h2>
+                <p class="in-sub">Selecciona un archivo .txt exportado desde WhatsApp. Todo se procesa localmente.</p>
+                <div class="whatsapp-guide">
+                    <h3>Cómo exportar una conversación</h3>
+                    <div class="whatsapp-guide-grid">
+                        <article>
+                            <span>1</span>
+                            <h4>Abre WhatsApp</h4>
+                            <p>Entra en el chat que quieres analizar.</p>
+                        </article>
+                        <article>
+                            <span>2</span>
+                            <h4>Abre las opciones del chat</h4>
+                            <p>En iPhone, toca el nombre del contacto. En Android, toca los tres puntos.</p>
+                        </article>
+                        <article>
+                            <span>3</span>
+                            <h4>Exporta sin archivos</h4>
+                            <p>Elige «Exportar chat» y selecciona «Sin archivos multimedia».</p>
+                        </article>
+                    </div>
+                    <p class="whatsapp-guide-note">Guarda el archivo .txt en tu dispositivo y selecciónalo aquí. Solo se analizará esta conversación exportada.</p>
+                </div>
+                <label class="visually-hidden" for="whatsappFile">Exportación de conversación de WhatsApp</label>
+                <input type="file" id="whatsappFile" accept=".txt,text/plain" onchange="cargarWhatsApp(this)">
+                <p class="privacy-note" role="note">No se muestra ni se guarda el texto de tus mensajes. Solo se cuentan fechas, horas y participantes.</p>
+                <div id="whatsappResults"></div>
+            </section>
+        </div>
+
+        <div id="viewTikTok" class="view-container hidden">
+            <section class="upload-section-card">
+                <p class="in-eyebrow">Módulo TikTok</p>
+                <h2 class="in-h">Analiza exportaciones de TikTok</h2>
+                <p class="in-sub">Sube un JSON o un texto con tus métricas. Todo se procesa localmente y no se envía a ningún servidor.</p>
+                <label class="visually-hidden" for="tiktokFile">Exportación de TikTok</label>
+                <input type="file" id="tiktokFile" accept=".json,.txt,text/plain" multiple onchange="cargarTikTok(this)">
+                <p class="privacy-note" role="note">Solo se cuentan métricas, categorías y actividad. No se muestra ni se guarda el contenido de tus vídeos o mensajes.</p>
+                <div id="tiktokResults"></div>
+            </section>
+        </div>
+
+        <div id="viewSpotify" class="view-container hidden">
+            <section class="upload-section-card suite-card">
+                <p class="in-eyebrow">Módulo Spotify</p>
+                <h2 class="in-h">Test de compatibilidad musical y afinidad</h2>
+                <p class="in-sub">Procesa tus exportaciones locales para comparar artistas, géneros, sesiones y patrones de escucha sin salir del navegador.</p>
+                <div class="score-grid">
+                    <div class="score-ring">
+                        <svg viewBox="0 0 120 120" aria-hidden="true">
+                            <circle cx="60" cy="60" r="46"></circle>
+                            <circle cx="60" cy="60" r="46" class="score-ring-progress"></circle>
+                        </svg>
+                        <div class="score-content"><strong>82%</strong><span>Afinidad</span></div>
+                    </div>
+                    <div class="suite-metrics">
+                        <div><strong>1,240</strong><span>artistas</span></div>
+                        <div><strong>14</strong><span>géneros</span></div>
+                        <div><strong>6.2h</strong><span>escucha media</span></div>
+                        <div><strong>91%</strong><span>compatibilidad</span></div>
+                    </div>
+                </div>
+                <div class="privacy-note"><strong>Privacidad local:</strong> el análisis de Spotify se procesa en memoria del dispositivo y no se envía a servidores externos.</div>
+                <div class="module-panel-grid">
+                    <article class="mini-panel">
+                        <p class="panel-kicker">Puntos fuertes</p>
+                        <ul>
+                            <li>Géneros coincidentes</li>
+                            <li>Horarios de escucha compatibles</li>
+                            <li>Artistas repetidos</li>
+                        </ul>
+                    </article>
+                    <article class="mini-panel">
+                        <p class="panel-kicker">Temas en común</p>
+                        <ul>
+                            <li>Indie pop</li>
+                            <li>Electrónica</li>
+                            <li>Ambient</li>
+                        </ul>
+                    </article>
+                    <article class="mini-panel">
+                        <p class="panel-kicker">Futuro</p>
+                        <ul>
+                            <li>Comparación de playlists</li>
+                            <li>Estadísticas de escucha</li>
+                            <li>Compatibilidad por género</li>
+                        </ul>
+                    </article>
+                </div>
+            </section>
+        </div>
         <!-- ================= VIEW 0: INICIO ================= -->
         <div id="viewInicio" class="view-container">
             <section class="in-hero" data-go>
                 <div>
                     <p class="in-pill rv"><i></i>Gratis · sin cuenta · todo en tu dispositivo</p>
                     <h2 class="in-title rv" style="--d:1" translate="no">Goli<span>fiar</span></h2>
-                    <p class="in-lead rv" style="--d:2">Sube el ZIP que te da Instagram y descubre quién no te sigue de vuelta, con quién interactúas de verdad y cuándo estás más activo. Sin contraseña, sin servidores y sin límite de tamaño.</p>
+                    <p class="in-lead rv" style="--d:2">Suite local de auditoría personal y compatibilidad entre Instagram, WhatsApp, TikTok y Spotify. Procesa tus exportaciones sin servidores, sin credenciales ni envío de datos.</p>
                     <div class="in-cta rv" style="--d:3">
-                        <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Empezar a analizar <svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0l-5-5m5 5l-5 5"/></svg></button>
-                        <button class="btn-sub in-btn" type="button" onclick="mostrarAyudaDescarga()">Cómo descargar mis datos</button>
+                        <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Abrir Instagram <svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0l-5-5m5 5l-5 5"/></svg></button>
+                        <button class="btn-sub in-btn" type="button" onclick="abrirLegal()">Aviso legal</button>
                     </div>
                     <ul class="in-facts rv" style="--d:4" aria-label="Garantías">
                         <li><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4 10-10"/></svg>Nunca te pedimos la contraseña</li>
                         <li><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4 10-10"/></svg>Tu ZIP no sale de tu dispositivo</li>
-                        <li><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4 10-10"/></svg>JSON y HTML, de cualquier tamaño</li>
+                        <li><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4 10-10"/></svg>Procesamiento 100% local</li>
                     </ul>
                 </div>
                 <div class="in-preview rv" style="--d:2" aria-label="Vista previa del análisis con datos ficticios" data-go>
@@ -1400,6 +227,35 @@
                 <div><dt data-i18n-no data-count="1.5" data-dec="1" data-suffix=" GB">1,5 GB</dt><dd>de ZIP probados sin problema</dd></div>
             </dl>
 
+            <section class="suite-overview" aria-labelledby="suiteTitle">
+                <div class="suite-overview-head">
+                    <p class="in-eyebrow"><b>00</b>Suite multi-plataforma</p>
+                    <h3 id="suiteTitle" class="in-h">Comparte una misma base de análisis, con un criterio distinto por red.</h3>
+                </div>
+                <div class="suite-grid">
+                    <article class="suite-card-mini">
+                        <span class="suite-badge suite-badge-blue">Instagram</span>
+                        <h4>Seguimiento y afinidad</h4>
+                        <p>Sin retorno, cuentas mutuas, perfil y puntuación de compatibilidad.</p>
+                    </article>
+                    <article class="suite-card-mini">
+                        <span class="suite-badge suite-badge-gold">WhatsApp</span>
+                        <h4>Respuesta y intensidad</h4>
+                        <p>Horas pico, mensajes, iniciativa y distribución de la conversación.</p>
+                    </article>
+                    <article class="suite-card-mini">
+                        <span class="suite-badge suite-badge-green">TikTok</span>
+                        <h4>Intereses compartidos</h4>
+                        <p>Videos, favoritos y afinidad cultural con base local.</p>
+                    </article>
+                    <article class="suite-card-mini">
+                        <span class="suite-badge suite-badge-spotify">Spotify</span>
+                        <h4>Compatibilidad musical</h4>
+                        <p>Géneros, artistas y patrones de escucha en un entorno local.</p>
+                    </article>
+                </div>
+            </section>
+
             <section class="in-sec" aria-labelledby="inPasos">
                 <div class="in-sec-head rv">
                     <p class="in-eyebrow"><b>01</b>Cómo funciona</p>
@@ -1416,7 +272,7 @@
                         <p data-i18n-html>Instagram tarda desde minutos hasta algunas horas. Guárdalo tal cual, <strong>sin descomprimir</strong>. Si te da varios, súbelos todos.</p></li>
                     <li class="rv" style="--d:2"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3m0 0l-4 4m4-4l4 4M5 21h14"/></svg><span class="in-num">3</span>
                         <h4>Súbelo a Golifiar</h4>
-                        <p data-i18n-html>En <strong>Analizar</strong>, elige el ZIP y pulsa <strong>Analizar mi perfil</strong>. Se lee por partes, así que pesa lo que pese funciona.</p></li>
+                        <p data-i18n-html>En <strong>Instagram</strong>, elige el ZIP y pulsa <strong>Analizar mi perfil</strong>. Se lee por partes, así que pesa lo que pese funciona.</p></li>
                     <li class="rv" style="--d:3"><svg class="in-ico in-step-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg><span class="in-num">4</span>
                         <h4>Explora y limpia tu cuenta</h4>
                         <p>Mira los resultados, sigue la limpieza guiada, compara descargas y exporta el resumen. Borra todo con un botón.</p></li>
@@ -1445,7 +301,7 @@
                     <article class="in-card rv" style="--d:1"><span class="in-ico-box"><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span><h4>Mensajes</h4><p>Tus chats más largos, quién da el primer paso, quién espera respuesta y cuánto tardáis en contestaros. Solo fechas y cantidades.</p></article>
                     <article class="in-card rv" style="--d:2"><span class="in-ico-box"><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg></span><h4>Contenido y cuenta</h4><p>Publicaciones, reels e historias, cambios de perfil y cuentas bloqueadas o restringidas.</p></article>
                     <article class="in-card in-wide rv" style="--d:0"><span class="in-ico-box"><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7l2 2 3-3M5 15l2 2 3-3M13 8h7M13 16h7"/></svg></span><h4>Limpieza guiada y comparar</h4><p>Revisa cuenta a cuenta a quién dejar de seguir y compara dos descargas para ver quién entró y quién salió de tu lista.</p></article>
-                    <article class="in-card rv" style="--d:1"><span class="in-tag">Próximamente</span><span class="in-ico-box"><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span><h4>WhatsApp y TikTok</h4><p>Estamos preparando el análisis de tus datos de otras redes, con el mismo enfoque privado.</p></article>
+                    <article class="in-card rv" style="--d:1" onclick="cambiarVista('whatsapp')" role="link" tabindex="0"><span class="in-tag">Disponible</span><span class="in-ico-box"><svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span><h4>WhatsApp</h4><p>Analiza fechas, horas y participantes de una conversación exportada, sin mostrar ni guardar sus mensajes.</p></article>
                 </div>
             </section>
 
@@ -1489,7 +345,7 @@
                 <h3>Pide tus datos hoy y analízalos en minutos</h3>
                 <p>Si ya tienes el ZIP, empieza ahora. Si todavía no, te explicamos cada paso.</p>
                 <div class="in-cta">
-                    <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Ir a analizar <svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0l-5-5m5 5l-5 5"/></svg></button>
+                    <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')">Abrir Instagram <svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m0 0l-5-5m5 5l-5 5"/></svg></button>
                     <button class="btn-sub in-btn" type="button" onclick="mostrarAyudaDescarga()">Guía de descarga</button>
                 </div>
             </section>
@@ -1498,10 +354,17 @@
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
         <div id="viewAuditoria" class="view-container hidden">
             <section class="hero-section hero-compact">
-                <h2>Analiza tu perfil</h2>
-                <p>Elige el ZIP que te descargó Instagram. Se procesa aquí, en tu dispositivo.</p>
+                <p class="module-kicker">MÓDULO INSTAGRAM</p>
+                <h2>Analiza tu Instagram</h2>
+                <p>Sube tu exportación y descubre tus conexiones, interacciones y actividad. Todo se procesa aquí, en tu dispositivo.</p>
                 <p><button class="helper-link" type="button" onclick="mostrarAyudaDescarga()">¿Aún no lo tienes? Cómo descargar tus datos</button></p>
             </section>
+
+            <ol class="analysis-steps" aria-label="Pasos para analizar Instagram">
+                <li class="is-current"><span>1</span><strong>Sube tu ZIP</strong><small>La exportación de Instagram</small></li>
+                <li><span>2</span><strong>Procesamiento local</strong><small>Sin servidores ni contraseña</small></li>
+                <li><span>3</span><strong>Consulta tus resultados</strong><small>Listas, actividad e interacciones</small></li>
+            </ol>
 
             <!-- Upload Section Card -->
             <section class="upload-section-card">
@@ -1519,6 +382,7 @@
                 <!-- ZIP Dropzone -->
                 <div id="uploadModeZip" class="upload-mode-content">
                     <div class="dropzone">
+                        <label class="visually-hidden" for="zipFileInput">Archivo ZIP de datos de Instagram</label>
                         <input type="file" id="zipFileInput" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream" multiple onchange="procesarZipAutomatico(this)">
                         <div class="dropzone-content">
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1700,17 +564,39 @@
             <div class="content-view">
                 <h2>Guía detallada: cómo analizar tus conexiones</h2>
                 <p data-i18n-html>Golifiar es una aplicación desarrollada por <strong>DonseCanarias</strong> para analizar tus conexiones de Instagram con seguridad y transparencia. Todo el procesamiento se realiza en tu dispositivo.</p>
+                <div class="guide-overview" aria-label="Resumen de la guía">
+                    <div><strong>Privado</strong><span>Sin cuentas ni servidores</span></div>
+                    <div><strong>Local</strong><span>Los archivos no salen de tu dispositivo</span></div>
+                    <div><strong>Flexible</strong><span>Instagram y WhatsApp por módulos</span></div>
+                </div>
 
-                <h3>Paso 1: Pide tu descarga a Instagram</h3>
+                <h3 class="guide-section-title">Instagram · Paso 1: Pide tu descarga</h3>
                 <p data-i18n-html>Instagram te envía un ZIP con tus datos por correo. Elige el formato <strong>JSON</strong> y el intervalo <strong>Desde el principio</strong>, y marca seguidores y seguidos junto con lo que quieras analizar (me gusta, comentarios, mensajes, publicaciones, inicios de sesión).</p>
                 <p><button class="btn-sub" type="button" onclick="mostrarAyudaDescarga()">Abrir la guía de descarga paso a paso</button></p>
                 <p data-i18n-html>Si ya la tienes en <strong>HTML</strong>, también sirve: Golifiar leerá seguidores, seguidos y listas de cuentas. Para el resto de análisis hace falta JSON.</p>
 
-                <h3>Paso 2: Descarga el ZIP y súbelo</h3>
+                <h3 class="guide-section-title">Instagram · Paso 2: Descarga el ZIP y súbelo</h3>
                 <p data-i18n-html>Cuando llegue el correo, descarga el archivo <strong>.zip</strong> sin descomprimirlo. Abre Golifiar en tu móvil, tablet u ordenador, elige el ZIP (o varios, si Instagram te dio más de uno) y pulsa <strong>Analizar mi perfil</strong>. Todo se procesa en tu dispositivo.</p>
 
-                <h3>Paso 3: Explora los resultados</h3>
+                <h3 class="guide-section-title">Instagram · Paso 3: Explora los resultados</h3>
                 <p data-i18n-html>El análisis se organiza en pestañas: <strong>Resumen</strong>, <strong>Seguidores</strong>, <strong>Interacciones</strong>, <strong>Actividad</strong>, <strong>Mensajes</strong>, <strong>Contenido y cuenta</strong> y <strong>Comparar</strong>. En Seguidores puedes filtrar, ordenar, copiar la lista y exportarla en CSV. En Comparar puedes ver los cambios frente a una descarga anterior.</p>
+
+                <h3 class="guide-section-title">WhatsApp · Cómo exportar un chat</h3>
+                <ol class="guide-list">
+                    <li>Abre el chat en WhatsApp.</li>
+                    <li>En iPhone, toca el nombre del contacto; en Android, toca los tres puntos.</li>
+                    <li data-i18n-html>Elige <strong>Exportar chat</strong> y selecciona <strong>Sin archivos multimedia</strong>.</li>
+                    <li data-i18n-html>Guarda el archivo <strong>.txt</strong> y ábrelo desde la sección WhatsApp de Golifiar.</li>
+                </ol>
+                <div class="guide-callout"><strong>Qué analiza WhatsApp:</strong> número de mensajes, participantes, días activos y hora con más actividad. No muestra ni guarda el texto.</div>
+
+                <h3 class="guide-section-title">Antes de empezar</h3>
+                <ul class="guide-checklist">
+                    <li>Usa una exportación original de Instagram o WhatsApp.</li>
+                    <li>No descomprimas el ZIP de Instagram.</li>
+                    <li>Los resultados reflejan la fecha de la exportación.</li>
+                    <li>Si cambias de dispositivo, tendrás que volver a cargar el archivo.</li>
+                </ul>
             </div>
         </div>
 
@@ -1776,7 +662,7 @@
             </div>
             <div class="footer-links">
                 <button onclick="cambiarVista('inicio')">Inicio</button>
-                <button onclick="cambiarVista('auditoria')">Analizar</button>
+                <button onclick="cambiarVista('auditoria')">Instagram</button>
                 <button onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button onclick="cambiarVista('quiensoy')">Quién soy</button>
                 <button onclick="cambiarVista('privacidad')">Privacidad</button>
@@ -1785,6 +671,18 @@
             </div>
         </div>
     </footer>
+    <dialog id="legalModal" aria-labelledby="legalTitle">
+        <div class="legal-modal-header">
+            <h2 id="legalTitle">Aviso legal y privacidad</h2>
+            <button type="button" class="tool-btn tool-btn-ghost" onclick="cerrarLegal()" aria-label="Cerrar aviso legal">Cerrar</button>
+        </div>
+        <div class="legal-copy">
+            <p><strong>Procesamiento 100% Local:</strong> ningún texto, historial de chat, exportación o archivo subido se envía a servidores externos ni a bases de datos.</p>
+            <p><strong>Exención:</strong> la aplicación no sustituye diagnósticos ni conclusiones personales; ofrece métricas basadas en datos históricos del usuario, nunca en inferencias psicológicas.</p>
+            <p><strong>Desvinculación de marcas:</strong> Golifiar no es propiedad ni está afiliada a Meta, TikTok, Spotify, WhatsApp ni a sus proveedores de datos. La marca se usa solo como referencia a las exportaciones del propio usuario.</p>
+            <p><strong>Términos digitales:</strong> los análisis se procesan en tu navegador o dispositivo y los resultados pueden borrarse en cualquier momento con la acción de limpieza local.</p>
+        </div>
+    </dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <dialog id="downloadHelpDialog" aria-labelledby="ayudaTitulo">
         <h2 id="ayudaTitulo">Cómo descargar tus datos de Instagram</h2>
@@ -1844,990 +742,10 @@
         <div class="dialog-actions"><button class="btn-sub" type="button" onclick="cerrarAyudaDescarga()">Cerrar</button></div>
     </dialog>
 
-    <!-- Logic Script -->
-    <script>
-        let usuariosSinRetornoGlobal = [];
-        let usuariosFansGlobal = [];
-        let usuariosMutuosGlobal = [];
-        let categoriaActual = 'noteSiguen';
-        let ordenAscendente = true;
-
-        let usarModoZip = true;
-        let zipFollowersArray = [];
-        let zipFollowingArray = [];
-        let zipAviso = '';
-        let zipPerfil = null;
-
-        function ajustarAltoCabecera() {
-            const h = document.querySelector('.header-minimal');
-            if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
-        }
-        window.addEventListener('resize', ajustarAltoCabecera);
-        window.addEventListener('load', ajustarAltoCabecera);
-
-        function borrarTodo() {
-            if (!confirm(t('Se borrarán los análisis cargados, el historial, las descargas guardadas, la limpieza guiada y las marcas de este dispositivo. ¿Continuar?'))) return;
-            ['golifiar-history', 'golifiar-snapshots', 'golifiar-limpieza', CLAVE_NO_DISP].forEach(k => { try { localStorage.removeItem(k); } catch (e) { /* sin almacenamiento */ } });
-            noDisponibles = new Set();
-            usuariosSinRetornoGlobal = []; usuariosFansGlobal = []; usuariosMutuosGlobal = [];
-            zipFollowersArray = []; zipFollowingArray = []; zipPerfil = null;
-            ['zipFileInput', 'followersFile', 'followingFile'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-            if (window.Perfil) window.Perfil.render(null, [], []);
-            document.getElementById('resultsSection').classList.add('hidden');
-            const hp = document.getElementById('historyPanel'); if (hp) hp.classList.add('hidden');
-            const tag = document.getElementById('tagZip'); if (tag) { tag.classList.remove('active'); tag.innerText = t('Ningún archivo ZIP seleccionado'); }
-            mostrarEstado('', '');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            mostrarToast(t('Datos borrados de este dispositivo.'));
-        }
-
-        function trigHaptic(duration = 35) {
-            if (navigator.vibrate) {
-                try { navigator.vibrate(duration); } catch(e) {}
-            }
-        }
-
-        function mostrarEstado(message, kind = '') {
-            const status = document.getElementById('uploadStatus');
-            if (status) {
-                status.textContent = message;
-                status.className = `status-message ${kind}`.trim();
-            }
-        }
-
-        function mostrarToast(message) {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            toast.textContent = message;
-            toast.classList.add('visible');
-            window.clearTimeout(window.toastTimer);
-            window.toastTimer = window.setTimeout(() => toast.classList.remove('visible'), 3200);
-        }
-
-        function mostrarAyudaDescarga() {
-            const dialog = document.getElementById('downloadHelpDialog');
-            if (dialog?.showModal) dialog.showModal();
-        }
-
-        function cerrarAyudaDescarga() {
-            document.getElementById('downloadHelpDialog')?.close();
-        }
-
-        function temaActual() {
-            const forzado = document.documentElement.getAttribute('data-theme');
-            if (forzado === 'dark' || forzado === 'light') return forzado;
-            return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        }
-        function pintarTema(t) {
-            const meta = document.querySelector('meta[name="theme-color"]');
-            if (meta) meta.setAttribute('content', t === 'dark' ? '#0a1a24' : '#0b6e99');
-            const b = document.getElementById('themeToggle');
-            if (b) {
-                const etiqueta = t === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro';
-                b.setAttribute('aria-label', etiqueta); b.setAttribute('title', etiqueta);
-            }
-        }
-        function alternarTema() {
-            const nuevo = temaActual() === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-theme', nuevo);
-            pintarTema(nuevo);
-            try { localStorage.setItem('golifiar-tema', nuevo); } catch (e) { /* sin almacenamiento */ }
-        }
-        pintarTema(temaActual());
-
-        function cambiarVista(vista) {
-            trigHaptic(30);
-            const vistas = ['viewInicio', 'viewAuditoria', 'viewComoUsar', 'viewQuienSoy', 'viewPrivacidad', 'viewTransparencia', 'viewDocumentacion'];
-            vistas.forEach(v => {
-                const el = document.getElementById(v);
-                if (el) el.classList.add('hidden');
-            });
-
-            ['navInicio', 'navAuditoria', 'navComoUsar', 'navQuienSoy'].forEach(n => {
-                const el = document.getElementById(n);
-                if (el) el.classList.remove('active');
-            });
-
-            if (vista === 'inicio') {
-                document.getElementById('viewInicio').classList.remove('hidden');
-                const nav = document.getElementById('navInicio');
-                if (nav) nav.classList.add('active');
-            } else if (vista === 'auditoria') {
-                document.getElementById('viewAuditoria').classList.remove('hidden');
-                const nav = document.getElementById('navAuditoria');
-                if (nav) nav.classList.add('active');
-            } else if (vista === 'comousar') {
-                document.getElementById('viewComoUsar').classList.remove('hidden');
-                const nav = document.getElementById('navComoUsar');
-                if (nav) nav.classList.add('active');
-            } else if (vista === 'quiensoy') {
-                document.getElementById('viewQuienSoy').classList.remove('hidden');
-                const nav = document.getElementById('navQuienSoy');
-                if (nav) nav.classList.add('active');
-            } else if (vista === 'privacidad') {
-                document.getElementById('viewPrivacidad').classList.remove('hidden');
-            } else if (vista === 'transparencia') {
-                document.getElementById('viewTransparencia').classList.remove('hidden');
-            } else if (vista === 'documentacion') {
-                document.getElementById('viewDocumentacion').classList.remove('hidden');
-            }
-            const visible = document.querySelector('.view-container:not(.hidden)');
-            if (visible) { visible.classList.remove('view-enter'); void visible.offsetWidth; visible.classList.add('view-enter'); }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cambiarModoUpload(modo) {
-            trigHaptic(25);
-            const btnZip = document.querySelectorAll('.tab-btn')[0];
-            const btnManual = document.querySelectorAll('.tab-btn')[1];
-            const contentZip = document.getElementById('uploadModeZip');
-            const contentManual = document.getElementById('uploadModeManual');
-
-            if (modo === 'zip') {
-                usarModoZip = true;
-                btnZip.classList.add('active');
-                btnManual.classList.remove('active');
-                contentZip.classList.remove('hidden');
-                contentManual.classList.add('hidden');
-            } else {
-                usarModoZip = false;
-                btnManual.classList.add('active');
-                btnZip.classList.remove('active');
-                contentManual.classList.remove('hidden');
-                contentZip.classList.add('hidden');
-            }
-        }
-
-        function actualizarEstadoDropzone(tipo) {
-            trigHaptic(25);
-            if (tipo === 'followers') {
-                const files = document.getElementById('followersFile').files;
-                const tag = document.getElementById('tagFollowers');
-                if (files.length > 0) {
-                    tag.innerText = t('{n} archivo(s) listo(s)', { n: files.length });
-                    tag.classList.add('active');
-                } else {
-                    tag.classList.remove('active');
-                }
-            } else if (tipo === 'following') {
-                const file = document.getElementById('followingFile').files[0];
-                const tag = document.getElementById('tagFollowing');
-                if (file) {
-                    tag.innerText = t('Archivo listo');
-                    tag.classList.add('active');
-                } else {
-                    tag.classList.remove('active');
-                }
-            }
-        }
-
-        // Abre un ZIP leyendo solo su índice; cada entrada se descomprime bajo demanda.
-        // Así un ZIP de varios GB con fotos y vídeos no llena la memoria.
-        async function abrirZip(file) {
-            if (window.zip && window.zip.ZipReader) {
-                window.zip.configure({ useWebWorkers: false }); // sin workers: es la configuración que funciona sin servidor ni CSP especiales
-                const lector = new window.zip.ZipReader(new window.zip.BlobReader(file));
-                const todas = await lector.getEntries();
-                return {
-                    entradas: todas.filter(e => !e.directory).map(e => ({ ruta: e.filename, texto: () => e.getData(new window.zip.TextWriter()) })),
-                    cerrar: () => lector.close().catch(() => {})
-                };
-            }
-            const z = await new JSZip().loadAsync(file);
-            const entradas = [];
-            z.forEach((ruta, ent) => { if (!ent.dir) entradas.push({ ruta, texto: () => ent.async('string') }); });
-            return { entradas, cerrar: () => Promise.resolve() };
-        }
-
-        function procesarZipAutomatico(input) {
-            return procesarArchivosZip(Array.from(input.files || []), input);
-        }
-
-        // Devuelve true si el ZIP contiene algo que analizar
-        async function procesarArchivosZip(files, input) {
-            trigHaptic(30);
-            const limpiarInput = () => { if (input) input.value = ''; };
-            const tag = document.getElementById('tagZip');
-            const progressContainer = document.getElementById('zipProgressBar');
-            const progressFill = document.getElementById('zipProgressFill');
-
-            if (!files.length) return false;
-
-            // El motivo del rechazo se muestra dentro de la zona de carga, con el nombre del archivo
-            const rechazar = texto => {
-                limpiarInput();
-                tag.innerText = texto;
-                tag.classList.add('active');
-                tag.style.color = 'var(--accent-rose)';
-                mostrarEstado(texto, 'error');
-                return false;
-            };
-            const tam = f => f.size >= 1073741824 ? (f.size / 1073741824).toFixed(1) + ' GB' : (f.size / 1048576).toFixed(1) + ' MB';
-            const incompleto = files.find(f => /\.(crdownload|part|tmp|download|partial)$/i.test(f.name));
-            if (incompleto) return rechazar(t('«{nombre}» es una descarga sin terminar. Espera a que acabe y vuelve a elegirla.', { nombre: incompleto.name }));
-            const noZip = files.find(f => !f.name.toLowerCase().endsWith('.zip'));
-            if (noZip) return rechazar(t('«{nombre}» no es un archivo .zip. Sube el ZIP tal como lo descargaste de Instagram, sin descomprimirlo.', { nombre: noZip.name }));
-            const vacio = files.find(f => f.size === 0);
-            if (vacio) return rechazar(t('«{nombre}» está vacío (0 bytes). Vuelve a descargarlo desde el correo de Instagram.', { nombre: vacio.name }));
-
-            const totalMb = files.reduce((n, f) => n + f.size, 0) / (1024 * 1024);
-            progressContainer.classList.add('active');
-            progressFill.style.width = '10%';
-            tag.innerText = t('Leyendo {que} ({tam})...', { que: files.length > 1 ? t('{n} archivos ZIP', { n: files.length }) : '«' + files[0].name + '»', tam: totalMb >= 1024 ? I18n.num((totalMb / 1024).toFixed(1)) + ' GB' : I18n.num(totalMb.toFixed(1)) + ' MB' });
-            tag.classList.add('active');
-            tag.style.color = 'var(--accent-blue)';
-            mostrarEstado(t('Leyendo el archivo localmente. No cierres esta ventana.'), '');
-
-            try {
-                zipFollowersArray = [];
-                zipFollowingArray = [];
-                zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;
-                let nJson = 0, nHtml = 0;
-                const listasPorZip = [];
-
-                for (let i = 0; i < files.length; i++) {
-                    const lista = { nombre: files[i].name, seg: [], sig: [] };
-                    listasPorZip.push(lista);
-                    const abierto = await abrirZip(files[i]);
-                    const entries = [];
-                    abierto.entradas.forEach(ent => {
-                        const low = ent.ruta.toLowerCase();
-                        if (low.endsWith('.json') || low.endsWith('.html') || low.endsWith('.htm')) entries.push({ relativePath: ent.ruta, zipEntry: ent });
-                    });
-
-                    let hechos = 0;
-                    for (const { relativePath, zipEntry } of entries) {
-                        const low = relativePath.toLowerCase();
-                        const fileName = low.split('/').pop();
-                        const esHtml = !low.endsWith('.json');
-                        try {
-                            if (esHtml) {
-                                if (/^followers(_\d+)?\.html?$/.test(fileName)) {
-                                    lista.seg = lista.seg.concat(extraerUsuariosHtml(await zipEntry.texto()));
-                                    nHtml++;
-                                } else if (/^following\.html?$/.test(fileName)) {
-                                    lista.sig = lista.sig.concat(extraerUsuariosHtml(await zipEntry.texto()));
-                                    nHtml++;
-                                } else if (zipPerfil) {
-                                    const tipo = window.Perfil.tipoHtml(relativePath);
-                                    if (tipo === 'lista') window.Perfil.procesarHtml(relativePath, await zipEntry.texto(), zipPerfil);
-                                    else if (tipo === 'solojson') zipPerfil.htmlOmitidos++;
-                                }
-                            } else {
-                                const json = JSON.parse(await zipEntry.texto());
-                                if (/^followers(_\d+)?\.json$/.test(fileName)) {
-                                    lista.seg = lista.seg.concat(extraerUsuarios(json));
-                                    nJson++;
-                                } else if (fileName === 'following.json') {
-                                    lista.sig = lista.sig.concat(extraerUsuarios(json));
-                                    nJson++;
-                                } else if (zipPerfil) {
-                                    window.Perfil.procesarEntrada(relativePath, json, zipPerfil);
-                                }
-                            }
-                        } catch (e) {
-                            console.error('Error procesando fichero:', relativePath, e);
-                        }
-                        hechos++;
-                        progressFill.style.width = `${10 + Math.floor(((i + hechos / (entries.length || 1)) / files.length) * 85)}%`;
-                    }
-                    await abierto.cerrar();
-                }
-
-                progressFill.style.width = '100%';
-                // Con varios ZIP, las listas de seguidores/seguidos se toman SOLO del export más reciente:
-                // mezclar exports antiguos resucita cuentas que ya no sigues o que ya no te siguen.
-                const fechaLista = l => { let m = 0; for (const u of l.seg) if ((u.timestamp || 0) > m) m = u.timestamp; for (const u of l.sig) if ((u.timestamp || 0) > m) m = u.timestamp; return m; };
-                const conListas = listasPorZip.filter(l => l.seg.length || l.sig.length);
-                let avisoListas = '';
-                let elegida = conListas[0];
-                conListas.forEach(l => { if (fechaLista(l) > fechaLista(elegida)) elegida = l; });
-                if (elegida) {
-                    zipFollowersArray = unirUsuarios(elegida.seg);
-                    zipFollowingArray = unirUsuarios(elegida.sig);
-                    if (conListas.length > 1) avisoListas = t('Había {n} ZIP con listas; se usó «{nombre}» (el más reciente) para seguidores y seguidos.', { n: conListas.length, nombre: elegida.nombre });
-                }
-                // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
-                let quitadas = 0;
-                if (zipPerfil && zipPerfil.rel.dejados.length && zipFollowingArray.length) {
-                    const dejadoTs = new Map();
-                    zipPerfil.rel.dejados.forEach(o => { if (o.username) dejadoTs.set(o.username, Math.max(dejadoTs.get(o.username) || 0, o.timestamp || 0)); });
-                    const antes = zipFollowingArray.length;
-                    zipFollowingArray = zipFollowingArray.filter(o => {
-                        const t = dejadoTs.get(o.username);
-                        return !(t !== undefined && t >= (o.timestamp || 0));
-                    });
-                    quitadas = antes - zipFollowingArray.length;
-                }
-                zipAviso = [avisoListas, quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
-
-                setTimeout(() => {
-                    progressContainer.classList.remove('active');
-                }, 500);
-
-                const extras = zipPerfil ? window.Perfil.secciones(zipPerfil) : [];
-                const omitidos = zipPerfil ? zipPerfil.htmlOmitidos : 0;
-                if (zipFollowersArray.length > 0 || zipFollowingArray.length > 0 || extras.length) {
-                    tag.innerText = t('Procesado: {a} seguidores y {b} seguidos', { a: zipFollowersArray.length, b: zipFollowingArray.length }) +
-                        (nHtml && !nJson ? t(' (formato HTML)') : '') +
-                        (extras.length ? t(' · también: {lista}', { lista: extras.join(', ') }) : '');
-                    tag.style.color = 'var(--accent-green)';
-                    if (omitidos > 0) {
-                        mostrarEstado(t('Descarga en HTML: se han leído seguidores y seguidos. Para analizar interacciones, actividad y mensajes, vuelve a pedir la descarga en JSON.'), 'success');
-                    } else {
-                        mostrarEstado(t('Archivo preparado. Pulsa «Analizar mi perfil».') + (zipAviso ? ' ' + zipAviso : ''), 'success');
-                    }
-                    trigHaptic(60);
-                    return true;
-                } else {
-                    tag.innerText = t('No se encontraron seguidores ni seguidos en este ZIP');
-                    tag.style.color = 'var(--accent-rose)';
-                    mostrarEstado(t('El ZIP no contiene seguidores ni seguidos. Al pedir la descarga, marca «Seguidores y seguidos» y elige el intervalo «Desde el principio». Si necesitas ayuda, abre la guía de descarga.'), 'error');
-                }
-
-            } catch (error) {
-                console.error(error);
-                progressContainer.classList.remove('active');
-                const motivo = String((error && error.message) || error || '').slice(0, 140);
-                tag.innerText = t('No se pudo leer el ZIP') + (motivo ? ` (${motivo})` : '');
-                tag.style.color = 'var(--accent-rose)';
-                mostrarEstado(t('No se pudo leer el ZIP. Comprueba que la descarga de Instagram esté completa y que no lo hayas descomprimido. Si sigue fallando, descárgalo de nuevo desde el enlace del correo.'), 'error');
-            }
-            return false;
-        }
-
-        /* ---- Entradas directas: compartir con Golifiar, «Abrir con» y Android ---- */
-        async function analizarArchivosRecibidos(files) {
-            if (!files.length) return;
-            cambiarVista('auditoria');
-            cambiarModoUpload('zip');
-            mostrarToast(t('ZIP recibido. Analizando…'));
-            if (await procesarArchivosZip(files, null)) await ejecutarAnalisis();
-        }
-
-        async function leerCompartidos() {
-            try {
-                const cache = await caches.open('golifiar-compartido');
-                const claves = await cache.keys();
-                const files = [];
-                for (const req of claves) {
-                    const resp = await cache.match(req);
-                    if (!resp) continue;
-                    const nombre = decodeURIComponent(new URL(req.url).pathname.split('/').pop() || 'descarga.zip');
-                    files.push(new File([await resp.blob()], nombre, { type: 'application/zip' }));
-                    await cache.delete(req);
-                }
-                return files;
-            } catch (e) { console.error('Compartidos:', e); return []; }
-        }
-
-        // Android nativo: MainActivity llama a esta función con la ruta del ZIP recibido
-        window.golifiarArchivoCompartido = async function (url, nombre) {
-            try {
-                const blob = await (await fetch(url)).blob();
-                await analizarArchivosRecibidos([new File([blob], nombre || 'descarga.zip', { type: 'application/zip' })]);
-                return true;
-            } catch (e) {
-                console.error('Archivo compartido:', e);
-                mostrarEstado(t('No se pudo abrir el archivo recibido. Elige el ZIP desde aquí.'), 'error');
-                return false;
-            }
-        };
-
-        function iniciarEntradasDirectas() {
-            const q = new URLSearchParams(location.search).get('compartido');
-            if (q !== null) {
-                history.replaceState(null, '', location.pathname);
-                if (q === 'error' || q === '0') mostrarEstado(t('No se recibió ningún archivo. Elige el ZIP desde aquí.'), 'error');
-                else leerCompartidos().then(analizarArchivosRecibidos);
-            }
-            if ('launchQueue' in window) {
-                window.launchQueue.setConsumer(async params => {
-                    const files = [];
-                    for (const h of params.files || []) files.push(await h.getFile());
-                    analizarArchivosRecibidos(files);
-                });
-            }
-        }
-        window.addEventListener('load', iniciarEntradasDirectas);
-
-        // Une listas de usuarios (varios ZIP o varios ficheros) conservando la fecha más reciente
-        function unirUsuarios(arr) {
-            const m = new Map();
-            arr.forEach(o => { if (!m.has(o.username) || o.timestamp > m.get(o.username)) m.set(o.username, o.timestamp); });
-            return Array.from(m.entries()).map(([username, timestamp]) => ({ username, timestamp }));
-        }
-
-        /* ---- Lectura de la descarga en formato HTML ---- */
-        const MESES = { ene: 0, jan: 0, feb: 1, mar: 2, abr: 3, apr: 3, may: 4, jun: 5, jul: 6, ago: 7, aug: 7, sep: 8, set: 8, oct: 9, nov: 10, dic: 11, dec: 11 };
-        const RESERVADOS_IG = new Set(['p', 'reel', 'reels', 'explore', 'accounts', 'direct', 'stories', 'tv', 'about', 'legal', 'privacy', 'help', 'web', 'download', 'developer', 'directory', 'press', 'api', 'challenge', 'static']);
-
-        // Instagram escribe la fecha en el idioma de la cuenta: «oct 01, 2024 3:45 pm», «1 de octubre de 2024», «2024-10-01»...
-        function parseFechaHtml(txt) {
-            if (!txt) return 0;
-            let m, y, mo, d, h = 0, mi = 0, pm = '';
-            if ((m = txt.match(/([A-Za-zÀ-ÿ]{3,10})\.?\s+(\d{1,2}),?\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*([ap])\.?\s?m\.?)?/i)) && MESES[m[1].slice(0, 3).toLowerCase()] !== undefined) {
-                mo = MESES[m[1].slice(0, 3).toLowerCase()]; d = +m[2]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0); pm = (m[6] || '').toLowerCase();
-            } else if ((m = txt.match(/(\d{1,2})\s+de\s+([A-Za-zÀ-ÿ]{3,10})\.?\s+de\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/i)) && MESES[m[2].slice(0, 3).toLowerCase()] !== undefined) {
-                mo = MESES[m[2].slice(0, 3).toLowerCase()]; d = +m[1]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
-            } else if ((m = txt.match(/(\d{4})-(\d{2})-(\d{2})(?:[T\s]+(\d{2}):(\d{2}))?/))) {
-                y = +m[1]; mo = +m[2] - 1; d = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
-            } else return 0;
-            if (pm === 'p' && h < 12) h += 12;
-            if (pm === 'a' && h === 12) h = 0;
-            const t = new Date(y, mo, d, h, mi).getTime();
-            return isNaN(t) ? 0 : Math.floor(t / 1000);
-        }
-
-        function usuarioDeEnlace(href) {
-            try {
-                const u = new URL(href, 'https://www.instagram.com');
-                if (!/^(www\.|m\.)?instagram\.com$/i.test(u.hostname)) return '';
-                const parts = u.pathname.split('/').filter(Boolean);
-                if (parts[0] === '_u') parts.shift();
-                const name = (parts[0] || '').toLowerCase();
-                return name && name.length <= 60 && !RESERVADOS_IG.has(name) ? name : '';
-            } catch (e) { return ''; }
-        }
-
-        function extraerUsuariosHtml(html) {
-            const doc = new DOMParser().parseFromString(html, 'text/html');
-            const sel = 'a[href*="instagram.com"]';
-            const mapa = new Map();
-            const anotar = (u, ts) => { if (u && (!mapa.has(u) || ts > mapa.get(u))) mapa.set(u, ts || 0); };
-
-            doc.querySelectorAll(sel).forEach(a => {
-                const u = usuarioDeEnlace(a.getAttribute('href'));
-                if (!u) return;
-                let ts = 0, nodo = a;
-                for (let i = 0; i < 4 && !ts; i++) {
-                    nodo = nodo.parentElement;
-                    if (!nodo || nodo.querySelectorAll(sel).length > 1) break;
-                    ts = parseFechaHtml(nodo.textContent);
-                }
-                anotar(u, ts);
-            });
-
-            if (mapa.size === 0) {
-                // Variante antigua: el nombre aparece solo como título de cada fila
-                doc.querySelectorAll('h2').forEach(h => {
-                    const t = h.textContent.trim().toLowerCase();
-                    if (/^[a-z0-9._]{1,30}$/.test(t) && !['followers', 'following', 'seguidores', 'seguidos', 'siguiendo'].includes(t)) {
-                        anotar(t, parseFechaHtml(h.parentElement ? h.parentElement.textContent : ''));
-                    }
-                });
-            }
-            return Array.from(mapa.entries()).map(([username, timestamp]) => ({ username, timestamp }));
-        }
-
-        // Lee un fichero suelto (JSON o HTML) y devuelve la lista de usuarios
-        async function leerUsuariosArchivo(file) {
-            if (/\.html?$/i.test(file.name)) return extraerUsuariosHtml(await file.text());
-            return extraerUsuarios(JSON.parse(await file.text()));
-        }
-
-        function extraerUsuarios(data) {
-            let registros = [];
-            function buscarUsuarios(nodo) {
-                if (Array.isArray(nodo)) {
-                    nodo.forEach(buscarUsuarios);
-                } else if (nodo !== null && typeof nodo === 'object') {
-                    if (Array.isArray(nodo.string_list_data)) {
-                        nodo.string_list_data.forEach(item => {
-                            let username = "";
-                            let timestamp = item.timestamp || 0;
-                            if (item.value && typeof item.value === 'string' && item.value.trim() !== "") {
-                                username = item.value;
-                            } else if (nodo.title && typeof nodo.title === 'string' && nodo.title.trim() !== "") {
-                                username = nodo.title;
-                            } else if (item.href && typeof item.href === 'string') {
-                                const partes = item.href.split('/').filter(p => p !== "");
-                                username = partes[partes.length - 1]; 
-                            }
-                            if (username) {
-                                registros.push({ username: username.toLowerCase().trim(), timestamp: timestamp });
-                            }
-                        });
-                    } else {
-                        Object.values(nodo).forEach(buscarUsuarios);
-                    }
-                }
-            }
-            buscarUsuarios(data);
-            const map = new Map();
-            registros.forEach(r => {
-                if (!map.has(r.username) || r.timestamp > map.get(r.username)) {
-                    map.set(r.username, r.timestamp);
-                }
-            });
-            return Array.from(map.entries()).map(([username, timestamp]) => ({ username, timestamp }));
-        }
-
-        function animarContador(id, finalValue, isPercentage = false) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            let start = 0;
-            const duration = 900;
-            const startTime = performance.now();
-
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const current = Math.floor(progress * (finalValue - start) + start);
-                el.innerText = isPercentage ? `${current}%` : current;
-
-                if (progress < 1) {
-                    requestAnimationFrame(update);
-                } else {
-                    el.innerText = isPercentage ? `${finalValue}%` : finalValue;
-                }
-            }
-            requestAnimationFrame(update);
-        }
-
-        async function ejecutarAnalisis() {
-            trigHaptic(50);
-            const resultsSection = document.getElementById('resultsSection');
-            resultsSection.classList.add('hidden');
-            mostrarEstado(t('Validando los archivos seleccionados…'), '');
-
-            const wrapper = document.getElementById('resultsWrapper');
-            wrapper.innerHTML = `
-                <div class="skeleton-loader">
-                    <div class="skeleton-item"><div class="skeleton-line"></div><div class="skeleton-badge"></div></div>
-                    <div class="skeleton-item"><div class="skeleton-line" style="width: 150px;"></div><div class="skeleton-badge"></div></div>
-                    <div class="skeleton-item"><div class="skeleton-line" style="width: 110px;"></div><div class="skeleton-badge"></div></div>
-                </div>
-            `;
-            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            await new Promise(r => setTimeout(r, 400));
-
-            try {
-                let followersObjs = [];
-                let followingObjs = [];
-
-                if (usarModoZip) {
-                    const hayExtras = zipPerfil && window.Perfil.secciones(zipPerfil).length > 0;
-                    if (zipFollowersArray.length === 0 && zipFollowingArray.length === 0 && !hayExtras) {
-                        mostrarEstado(t('Carga un ZIP de Instagram válido antes de ejecutar el análisis.'), 'error');
-                        return;
-                    }
-                    followersObjs = zipFollowersArray;
-                    followingObjs = zipFollowingArray;
-                } else {
-                    const followersInputs = document.getElementById('followersFile').files;
-                    const followingInput = document.getElementById('followingFile').files[0];
-
-                    if (followersInputs.length === 0 && !followingInput) {
-                        mostrarEstado(t('Selecciona al menos un archivo de seguidores o seguidos (JSON o HTML).'), 'error');
-                        return;
-                    }
-
-                    for (let file of followersInputs) {
-                        followersObjs = followersObjs.concat(await leerUsuariosArchivo(file));
-                    }
-                    if (followingInput) {
-                        followingObjs = await leerUsuariosArchivo(followingInput);
-                    }
-                    followersObjs = unirUsuarios(followersObjs);
-                }
-                
-                const followersMap = new Map(followersObjs.map(o => [o.username, o.timestamp]));
-                const followingMap = new Map(followingObjs.map(o => [o.username, o.timestamp]));
-
-                const followersArray = Array.from(followersMap.keys());
-                const followingArray = Array.from(followingMap.keys());
-
-                const followersSet = new Set(followersArray);
-                const followingSet = new Set(followingArray);
-
-                const buildObj = (arr, map) => arr.map(u => ({ username: u, timestamp: map.get(u) || 0 }));
-
-                usuariosSinRetornoGlobal = buildObj(followingArray.filter(user => !followersSet.has(user)), followingMap);
-                usuariosFansGlobal = buildObj(followersArray.filter(user => !followingSet.has(user)), followersMap);
-                usuariosMutuosGlobal = buildObj(followingArray.filter(user => followersSet.has(user)), followingMap);
-
-                let reciprocityRate = 100;
-                if (followingArray.length > 0) {
-                    const mutualsCount = usuariosMutuosGlobal.length;
-                    reciprocityRate = Math.round((mutualsCount / followingArray.length) * 100);
-                }
-
-                document.getElementById('countNoTeSiguen').innerText = usuariosSinRetornoGlobal.length;
-                document.getElementById('countFans').innerText = usuariosFansGlobal.length;
-                document.getElementById('countMutuos').innerText = usuariosMutuosGlobal.length;
-
-                resultsSection.classList.remove('hidden');
-                animarContador('valFollowers', followersArray.length);
-                animarContador('valFollowing', followingArray.length);
-                animarContador('valDiscrepancy', usuariosSinRetornoGlobal.length);
-                animarContador('valReciprocity', reciprocityRate, true);
-
-                renderizarResultadosActuales();
-                const resultsStatus = document.getElementById('resultsStatus');
-                ultimoTotalRegistros = followersArray.length + followingArray.length;
-                if (resultsStatus) resultsStatus.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros });
-                if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : window.Perfil.nuevo(), followersObjs, followingObjs);
-                requestAnimationFrame(() => resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));
-                mostrarEstado(t('Análisis completado.'), 'success');
-                trigHaptic(80);
-
-            } catch (error) {
-                console.error(error);
-                mostrarEstado(t('No se pudo completar el análisis. Comprueba que los archivos procedan de la descarga de Instagram.'), 'error');
-                resultsSection.classList.add('hidden');
-            }
-        }
-
-        function cambiarCategoria(cat) {
-            trigHaptic(20);
-            categoriaActual = cat;
-
-            document.getElementById('tabNoTeSiguen').classList.remove('active');
-            document.getElementById('tabFans').classList.remove('active');
-            document.getElementById('tabMutuos').classList.remove('active');
-
-            if (cat === 'noteSiguen') document.getElementById('tabNoTeSiguen').classList.add('active');
-            if (cat === 'fans') document.getElementById('tabFans').classList.add('active');
-            if (cat === 'mutuos') document.getElementById('tabMutuos').classList.add('active');
-
-            document.getElementById('searchInput').value = '';
-            document.getElementById('letterFilter').value = '';
-            document.getElementById('typeFilter').value = 'todos';
-            document.getElementById('ageFilter').value = 'todas';
-            renderizarResultadosActuales();
-        }
-
-        function obtenerListaActual() {
-            let lista = [];
-            if (categoriaActual === 'noteSiguen') lista = [...usuariosSinRetornoGlobal];
-            else if (categoriaActual === 'fans') lista = [...usuariosFansGlobal];
-            else if (categoriaActual === 'mutuos') lista = [...usuariosMutuosGlobal];
-            else lista = [...usuariosSinRetornoGlobal];
-
-            lista.sort((a, b) => {
-                if (ordenAscendente) return a.username.localeCompare(b.username);
-                return b.username.localeCompare(a.username);
-            });
-            return lista;
-        }
-
-        function alternarOrden() {
-            trigHaptic(30);
-            ordenAscendente = !ordenAscendente;
-            renderizarResultadosActuales();
-        }
-
-        let ultimoTotalRegistros = null;
-        // Al cambiar de idioma se repintan la lista de Seguidores y el estado (el resto de paneles lo hace perfil.js).
-        I18n.alAplicar(() => {
-            const rs = document.getElementById('resultsStatus');
-            if (rs && ultimoTotalRegistros !== null) rs.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros });
-            const sec = document.getElementById('resultsSection');
-            if (sec && !sec.classList.contains('hidden')) renderizarResultadosActuales();
-        });
-
-        function renderizarResultadosActuales() {
-            filtrarResultados();
-        }
-
-        function escHtml(t) {
-            return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-        }
-
-        function renderizarResultados(lista) {
-            const wrapper = document.getElementById('resultsWrapper');
-
-            if (lista.length === 0) {
-                wrapper.innerHTML = `
-                    <div class="empty-state">
-                        No se han detectado registros en esta categoría con los filtros seleccionados.
-                    </div>
-                `;
-                return;
-            }
-
-            let badgeClass = 'badge-status';
-            let badgeText = t('Sin Retorno');
-            if (categoriaActual === 'fans') { badgeClass = 'badge-fan'; badgeText = t('Te Sigue'); }
-            if (categoriaActual === 'mutuos') { badgeClass = 'badge-mutual'; badgeText = t('Mutuo'); }
-
-            let html = '<div class="results-list">';
-            lista.forEach((obj) => {
-                const user = obj.username;
-                let metaInfo = badgeText;
-                if (obj.timestamp > 0) {
-                    const fecha = I18n.fecha(obj.timestamp);
-                    metaInfo = `${badgeText} (${fecha})`;
-                }
-
-                const invalido = nombreInvalido(user);
-                const marcado = noDisponibles.has(user);
-                const dudosa = invalido || marcado;
-                const enlace = invalido
-                    ? `<span class="user-link">@${escHtml(user)}</span>`
-                    : `<a href="https://www.instagram.com/${encodeURIComponent(user)}/" target="_blank" rel="noopener noreferrer" class="user-link" title="${t('Abrir el perfil en Instagram')}">
-                            @${escHtml(user)}
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--text-muted);"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                        </a>`;
-
-                html += `
-                    <div class="user-card${dudosa ? ' no-disponible' : ''}">
-                    ${enlace}
-                    <div class="user-actions">
-                        ${invalido ? `<span class="user-flag">${t('Nombre no válido')}</span>` : (marcado ? `<span class="user-flag">${t('No disponible')}</span>` : '')}
-                        ${invalido ? '' : `<button class="user-mark" type="button" data-user="${escHtml(user)}" onclick="marcarNoDisponible(this.dataset.user)" title="${t('Si el perfil da error al abrirlo, márcalo para ocultarlo')}">${marcado ? t('Mostrar') : t('No existe')}</button>`}
-                        <span class="${badgeClass}">${metaInfo}</span>
-                    </div>
-                </div>
-                `;
-            });
-            html += '</div>';
-
-            wrapper.innerHTML = html;
-        }
-
-        /* ---- Cuentas no disponibles (eliminadas, desactivadas o con nombre cambiado) ---- */
-        const CLAVE_NO_DISP = 'golifiar-no-disponibles';
-        function leerNoDisponibles() {
-            try { return new Set(JSON.parse(localStorage.getItem(CLAVE_NO_DISP) || '[]')); } catch (e) { return new Set(); }
-        }
-        let noDisponibles = leerNoDisponibles();
-        function guardarNoDisponibles() {
-            try { localStorage.setItem(CLAVE_NO_DISP, JSON.stringify([...noDisponibles])); } catch (e) { /* sin almacenamiento */ }
-        }
-        // Instagram admite letras, números, puntos y guiones bajos (máx. 30). Lo demás no puede ser una cuenta real.
-        function nombreInvalido(u) {
-            return !u || /^__deleted__/i.test(u) || u.length > 30 || !/^[a-z0-9._]+$/i.test(u);
-        }
-        function esNoDisponible(u) { return nombreInvalido(u) || noDisponibles.has(u); }
-        function marcarNoDisponible(u) {
-            trigHaptic(25);
-            if (noDisponibles.has(u)) noDisponibles.delete(u); else noDisponibles.add(u);
-            guardarNoDisponibles();
-            filtrarResultados();
-            mostrarToast(noDisponibles.has(u) ? t('@{u} marcada como no disponible.', { u }) : t('@{u} vuelve a mostrarse.', { u }));
-        }
-
-        function listaFiltrada(conOcultas) {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
-            const type = document.getElementById('typeFilter').value;
-            const age = document.getElementById('ageFilter').value;
-            const ocultar = document.getElementById('hideUnavail').checked && !conOcultas;
-            const ahora = Date.now() / 1000;
-            const base = obtenerListaActual();
-            const nOcultas = base.filter(o => esNoDisponible(o.username)).length;
-
-            const lista = base.filter(obj => {
-                const user = obj.username;
-                if (ocultar && esNoDisponible(user)) return false;
-                const matchQuery = user.includes(query);
-                const matchLetter = letter === "" || user.startsWith(letter);
-
-                let matchType = true;
-                const hasNumbers = /\d/.test(user);
-                if (type === 'sin_numeros') matchType = !hasNumbers;
-                if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'largos') matchType = user.length > 15;
-                if (type === 'cortos') matchType = user.length <= 15;
-
-                let matchAge = true;
-                if (obj.timestamp > 0) {
-                    const diffMonths = (ahora - obj.timestamp) / (60 * 60 * 24 * 30);
-                    if (age === 'recientes') matchAge = diffMonths <= 6;
-                    if (age === 'antiguas') matchAge = diffMonths > 12;
-                }
-                return matchQuery && matchLetter && matchType && matchAge;
-            });
-            return { lista, nOcultas };
-        }
-
-        function filtrarResultados() {
-            const { lista, nOcultas } = listaFiltrada();
-            const cnt = document.getElementById('countUnavail');
-            if (cnt) cnt.textContent = nOcultas;
-            const summary = document.getElementById('filterSummary');
-            if (summary) summary.textContent = t('{n} resultado(s) visibles en esta categoría.', { n: lista.length });
-            renderizarResultados(lista);
-        }
-
-        function copiarUsuarios() {
-            trigHaptic(40);
-            const lista = listaFiltrada().lista;
-
-            if (lista.length === 0) {
-                alert(t('No hay registros disponibles para copiar.'));
-                return;
-            }
-            const text = lista.map(u => `@${u.username}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                alert(t('Lista filtrada de perfiles copiada al portapapeles.'));
-            }).catch(err => {
-                console.error('Error al copiar:', err);
-            });
-        }
-
-        function exportarCSV() {
-            trigHaptic(40);
-            const lista = listaFiltrada().lista;
-
-            if (lista.length === 0) {
-                alert(t('No hay registros disponibles para exportar.'));
-                return;
-            }
-            const csvContent = "data:text/csv;charset=utf-8," + t('Usuario,FechaConexion') + "\n" + lista.map(u => `@${u.username},${u.timestamp ? I18n.fecha(u.timestamp) : t('N/D')}`).join("\n");
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `golifiar_${categoriaActual}_2026.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function limpiarFiltros() {
-            const hu = document.getElementById('hideUnavail'); if (hu) hu.checked = true;
-            document.getElementById('searchInput').value = '';
-            document.getElementById('letterFilter').value = '';
-            document.getElementById('typeFilter').value = 'todos';
-            document.getElementById('ageFilter').value = 'todas';
-            renderizarResultadosActuales();
-        }
-
-        function exportarJSON() {
-            const data = {
-                generatedAt: new Date().toISOString(),
-                category: categoriaActual,
-                followers: usuariosFansGlobal,
-                following: usuariosMutuosGlobal.concat(usuariosSinRetornoGlobal)
-            };
-            descargarArchivo(`golifiar-auditoria-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
-        }
-
-        function descargarArchivo(name, content, type) {
-            const blob = new Blob([content], { type });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = name;
-            link.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function premiumActivo() {
-            return localStorage.getItem('golifiar-premium-demo') === 'true';
-        }
-
-        function activarPremiumDemo() {
-            localStorage.setItem('golifiar-premium-demo', 'true');
-            document.getElementById('premiumStatus').textContent = t('Premium de demostración activo en este dispositivo');
-            document.getElementById('historyPanel').classList.remove('hidden');
-            cargarHistorial();
-            mostrarToast(t('Premium de demostración activado. No es una compra real.'));
-        }
-
-        function requerirPremium() {
-            if (premiumActivo()) return true;
-            mostrarToast(t('Esta función pertenece a Golifiar Premium. Pulsa “Probar Premium” para verla.'));
-            return false;
-        }
-
-        function cambiarFiltroPremium(select) {
-            if (!requerirPremium()) {
-                select.value = select.id === 'typeFilter' ? 'todos' : 'todas';
-                return;
-            }
-            filtrarResultados();
-        }
-
-        function guardarAnalisis() {
-            if (!requerirPremium()) return;
-            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
-            history.unshift({
-                id: Date.now(),
-                date: new Date().toISOString(),
-                followers: document.getElementById('valFollowers').textContent,
-                following: document.getElementById('valFollowing').textContent,
-                discrepancy: document.getElementById('valDiscrepancy').textContent,
-                reciprocity: document.getElementById('valReciprocity').textContent
-            });
-            localStorage.setItem('golifiar-history', JSON.stringify(history.slice(0, 10)));
-            document.getElementById('historyPanel').classList.remove('hidden');
-            cargarHistorial();
-            mostrarToast(t('Análisis guardado únicamente en este dispositivo.'));
-        }
-
-        function cargarHistorial() {
-            const list = document.getElementById('historyList');
-            if (!list) return;
-            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
-            list.innerHTML = history.length ? history.map(item => `
-                <div class="history-item">
-                    <span>${new Date(item.date).toLocaleString(I18n.locale)}</span>
-                    <span>${t('{a} seguidores · {b} sin retorno', { a: item.followers, b: item.discrepancy })}</span>
-                </div>
-            `).join('') : `<span class="premium-lock">${t('Todavía no hay análisis guardados.')}</span>`;
-        }
-
-        function borrarHistorial() {
-            if (!requerirPremium()) return;
-            localStorage.removeItem('golifiar-history');
-            cargarHistorial();
-            mostrarToast(t('Historial local eliminado.'));
-        }
-
-        function generarInformePremium() {
-            if (!requerirPremium()) return;
-            const val = id => document.getElementById(id).textContent;
-            const html = `<!doctype html><html lang="${I18n.lang}"><head><meta charset="utf-8"><title>${t('Informe Golifiar')}</title><style>body{font:16px Arial;max-width:760px;margin:40px auto;color:#172033}h1{color:#0b6e99}.metric{display:inline-block;margin:8px;padding:16px;border:1px solid #e5e7eb;border-radius:8px}</style></head><body><h1>${t('Informe de auditoría Golifiar')}</h1><p>${t('Generado el {fecha}', { fecha: new Date().toLocaleString(I18n.locale) })}</p><div class="metric">${t('Seguidores')}: ${val('valFollowers')}</div><div class="metric">${t('Seguidos')}: ${val('valFollowing')}</div><div class="metric">${t('Sin retorno')}: ${val('valDiscrepancy')}</div><div class="metric">${t('Reciprocidad')}: ${val('valReciprocity')}</div><p>${t('Este informe se ha generado localmente. Los datos proceden de la exportación de Instagram y pueden no reflejar el estado actual de los perfiles.')}</p></body></html>`;
-            descargarArchivo(`golifiar-informe-${new Date().toISOString().slice(0, 10)}.html`, html, 'text/html');
-        }
-
-        function compartirResultados() {
-            trigHaptic(40);
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
-            const type = document.getElementById('typeFilter').value;
-            const age = document.getElementById('ageFilter').value;
-            const ahora = Date.now() / 1000;
-
-            const lista = obtenerListaActual().filter(obj => {
-                const user = obj.username;
-                const matchQuery = user.includes(query);
-                const matchLetter = letter === "" || user.startsWith(letter);
-                let matchType = true;
-                const hasNumbers = /\d/.test(user);
-                if (type === 'sin_numeros') matchType = !hasNumbers;
-                if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'largos') matchType = user.length > 15;
-                if (type === 'cortos') matchType = user.length <= 15;
-
-                let matchAge = true;
-                if (obj.timestamp > 0) {
-                    const diffMonths = (ahora - obj.timestamp) / (60 * 60 * 24 * 30);
-                    if (age === 'recientes') matchAge = diffMonths <= 6;
-                    if (age === 'antiguas') matchAge = diffMonths > 12;
-                }
-                return matchQuery && matchLetter && matchType && matchAge;
-            });
-
-            if (lista.length === 0) {
-                alert(t('No hay registros disponibles para compartir.'));
-                return;
-            }
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Golifiar',
-                    text: t('Análisis completado con Golifiar: {n} perfiles en esta categoría.', { n: lista.length }),
-                    url: window.location.href
-                }).catch(console.error);
-            } else {
-                copiarUsuarios();
-            }
-        }
-    </script>
+    <!-- Application modules -->
+    <script src="./app/state.js"></script>
+    <script src="./modules/instagram/importer.js"></script>
+    <script src="./app/results.js"></script>
     <script>
         if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
             window.addEventListener('load', () => {

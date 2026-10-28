@@ -1,0 +1,174 @@
+GOLIFIAR - FUNCIONES NUEVAS PROPUESTAS
+
+Objetivo
+- Mantener la app como suite local, privada y basada en exportaciones del usuario.
+- Añadir funciones que generen curiosidad, interés diario y engagement sin diagnosticar ni inferir relaciones.
+- Priorizar análisis objetivos, métricas y patrones de actividad.
+
+PRINCIPIO GENERAL DE PRIVACIDAD
+- Todo el procesamiento debe hacerse en el navegador o dispositivo del usuario.
+- No se guardan mensajes completos, chats ni contenido sensible.
+- Solo se contabilizan fechas, horas, cantidades, categorías, coincidencias y patrones.
+- El texto de los chats no se muestra ni se guarda.
+
+1) TESTS DE CURIOSIDAD Y COMPATIBILIDAD
+
+1.1 Test de compatibilidad Instagram
+- Coincidencia de seguidores en común.
+- Coincidencia de cuentas mutuas.
+- Proporción de perfiles con seguimiento no recíproco.
+- Intensidad de interacción (likes, comentarios, interacciones o guardados).
+- Nivel de respuesta hacia ciertos perfiles.
+- Resultado: porcentaje de afinidad de red.
+- Se presenta como "grado de coincidencia de red" y no como relación.
+
+1.2 Test de respuesta WhatsApp
+- Quién inicia más conversaciones.
+- Quién escribe más palabras.
+- Velocidad media de respuesta.
+- Horas pico de interacción.
+- Distribución de iniciativa entre participantes.
+- Resultado: intensidad de conversación y equilibrio de iniciativa.
+- Se presenta como "patrón de conversación" y no como diagnóstico personal.
+
+1.3 Test de intereses compartidos TikTok
+- Coincidencia de categorías o temas.
+- Creadores repetidos o presentes en ambos perfiles.
+- Vídeos guardados relevantes o tendencias comunes.
+- Intensidad de consumo por tipo de contenido.
+- Resultado: afinidad cultural o de consumo.
+- Se presenta como "superposición de gustos" y no como compatibilidad emocional.
+
+1.4 Test universal de suite
+- Comparación entre plataformas por actividad.
+- Qué red tiene más continuidad.
+- Qué plataforma genera más interacción.
+- Qué patrón se repite con más constancia.
+- Resultado: índice de actividad general.
+- Debe mostrarse como indicador de hábito y continuidad.
+
+2) RACHAS (STREAKS)
+
+2.1 Racha de actividad Instagram
+- Días consecutivos con interacción.
+- Días consecutivos con likes o comentarios.
+- Máxima racha de actividad.
+- Racha actual y evolución comparada con la última exportación.
+
+2.2 Racha de conversación WhatsApp
+- Días consecutivos con mensajes.
+- Periodos de conversación más activos.
+- Máxima racha de contacto.
+- Días con mayor intensidad de respuesta.
+
+2.3 Racha de intereses TikTok
+- Días consecutivos de consumo o guardado.
+- Repetición de ciertos creadores o categorías.
+- Racha de contenido recurrente.
+
+2.4 Modelo de racha general
+- Racha actual.
+- Racha máxima.
+- Días activos.
+- Variación frente a la última exportación.
+- Frase neutra: "Tu patrón de actividad muestra continuidad durante X días y un ritmo estable en el periodo analizado."
+
+3) MODELO DE PRESENTACIÓN VISUAL
+
+3.1 Tarjetas principales
+- Racha actual
+- Nivel de compatibilidad
+- Intensidad de conversación
+- Afinidad de gustos
+- Días activos
+- Cambio con respecto a la última exportación
+
+3.2 Tipos de métricas
+- Porcentajes: 0-100
+- Contadores: días, mensajes, actores, temas, coincidencias
+- Indicadores: sube, baja, se mantiene
+- Rangos: baja, media, alta
+
+3.3 Frases de apoyo neutras y oscuras
+- "Patrón de actividad observado"
+- "Grado de coincidencia detectado"
+- "Superposición de hábitos y gustos"
+- "Continuidad de interacción durante el periodo"
+- "Consistencia de actividad"
+
+4) FUNCIONES PREMIUM (sin caer en abusos)
+- Historial local por fechas.
+- Comparación entre exportaciones.
+- Resumen HTML/PDF local.
+- Filtros avanzados por fecha, canal y tipo de métrica.
+- Notas de tendencia.
+- Exportación de resumen general.
+
+5) FUNCIONES DE SPOTIFY (SE POSPONEN)
+- Spotify no debe implementarse todavía como funcionalidad plena.
+- Se puede dejar como placeholder o sección conceptual.
+- Si se activa, debe ser un módulo local de análisis de exportaciones del usuario.
+- No depender de API ni de credenciales.
+- Requisitos mínimos:
+  - artistas repetidos
+  - géneros más escuchados
+  - horas pico de escucha
+  - patrones de sesión
+  - comparación de hábitos por fechas
+
+6) QUE EVITAR
+- No diagnosticar personalidad ni relaciones.
+- No hacer afirmaciones de "química" o "compatibilidad emocional".
+- No presentar el análisis como hecho establecido.
+- No inferir conclusiones psicológicas.
+- No pedir credenciales ni conectar cuentas externas.
+- No enviar exportaciones a servidores.
+
+7) MEJORA DE ENGAGEMENT SIN PERDER SERIEDAD
+- Añadir una pestaña "Curiosidad y rachas".
+- Añadir una mini-card "¿Qué está pasando esta semana?"
+- Añadir un resumen de "Patrón dominante del periodo".
+- Añadir alerta de cambio: "subió +12% vs. última exportación".
+- Añadir comparación de racha por plataforma.
+
+8) RECOMENDACIÓN DE PRIORIDAD
+Prioridad 1:
+- Compatibilidad Instagram
+- Rachas por plataforma
+- Comparación histórica local
+- Mini-test de curiosidad por módulo
+
+Prioridad 2:
+- WhatsApp: distribución de iniciativa y rachas
+- TikTok: afinidad cultural y coincidencias de contenido
+
+Prioridad 3:
+- Spotify: placeholder / análisis local futuro
+- Suite cross-platform
+
+9) ESPECIFICACIÓN DE RESULTADO PARA LA UI
+Cada tarjeta debe mostrar:
+- título
+- valor principal
+- subtítulo
+- delta comparativo
+- estado visual (sube / baja / estable)
+- texto breve explicativo
+
+Ejemplo:
+- Título: Racha actual
+- Valor: 12 días consecutivos
+- Subtítulo: actividad estable
+- Delta: +3 días vs última exportación
+- Estado: estable
+
+10) PROPUESTA FINAL
+La mejor versión para mantener interés es combinar:
+- análisis objetivo
+- comparación histórica
+- rachas visibles
+- curiosidad sin diagnosticar
+- diseño serio y premium
+- cero datos en la nube
+
+Esto conserva la esencia de Golifiar sin perder atractivo ni rigor.

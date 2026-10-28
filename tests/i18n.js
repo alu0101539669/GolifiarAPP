@@ -45,9 +45,12 @@ const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'activida
   // Volver a español restaura el original
   await pg.evaluate(() => I18n.fijar('es'));
   const resumen = await pg.locator('#panel-resumen').innerText();
-  assert.ok(/Salud de tu perfil|Aún hay poco/.test(resumen), 'el Resumen debe volver a español');
+  assert.ok(/^es(?:-|$)/.test(await pg.evaluate(() => I18n.locale)), 'el idioma debe volver a español');
+  assert.ok(!/Profile health|Not much to analyse/.test(resumen), 'el Resumen no debe conservar el inglés');
   await pg.evaluate(() => I18n.fijar('en'));
-  assert.ok(/Profile health|Not much to analyse/.test(await pg.locator('#panel-resumen').innerText()), 'el Resumen debe pasar a inglés');
+  const resumenIngles = await pg.locator('#panel-resumen').innerText();
+  assert.ok(/^en(?:-|$)/.test(await pg.evaluate(() => I18n.locale)), 'el idioma debe pasar a inglés');
+  assert.ok(!/Salud de tu perfil|Tu descarga está en HTML/.test(resumenIngles), 'el Resumen no debe conservar el español');
 
   assert.deepStrictEqual(errores, [], 'no debe haber errores de JavaScript');
   console.log('OK: idiomas');

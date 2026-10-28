@@ -1,4 +1,5 @@
-import json, zipfile, random, time
+import json, shutil, zipfile, random, time
+from pathlib import Path
 random.seed(4)
 now=int(time.time())
 def ts(days_ago, hour=None):
@@ -8,6 +9,7 @@ def ts(days_ago, hour=None):
 users=[f"user_{i}" for i in range(1,41)]
 def sld(u,t): return {"title":"","string_list_data":[{"href":f"https://www.instagram.com/{u}","value":u,"timestamp":t}]}
 followers=[sld(u,ts(random.randint(1,900))) for u in users[:25]]
+followers.append({"title":"Instagram","string_list_data":[{"value":"not a username","timestamp":ts(1)}]})
 following=[sld(u,ts(random.randint(1,900))) for u in users[10:38]]
 def tit(u,t): return {"title":u,"string_list_data":[{"href":"https://www.instagram.com/p/x","timestamp":t}]}
 liked=[tit(random.choice(users[:12]),ts(random.randint(1,300),random.choice([21,22,23,13]))) for _ in range(300)]
@@ -32,7 +34,9 @@ def msgs(name, other, n, last_me):
         ms.append({"sender_name":sender,"timestamp_ms":(now-(n-i)*86400*3)*1000,"content":"hola"})
     ms.reverse()
     return {"participants":[{"name":other},{"name":"DoÃ± Se"}],"messages":ms,"title":other}
-with zipfile.ZipFile("insta.zip","w") as z:
+fixture_dir = Path(__file__).parent
+complete_zip = fixture_dir / "completo.zip"
+with zipfile.ZipFile(complete_zip, "w") as z:
     z.writestr("connections/followers_and_following/followers_1.json",json.dumps(followers))
     z.writestr("connections/followers_and_following/following.json",json.dumps({"relationships_following":following}))
     z.writestr("connections/followers_and_following/following_hashtags.json",json.dumps(hasht))
@@ -52,4 +56,44 @@ with zipfile.ZipFile("insta.zip","w") as z:
     z.writestr("ads_information/instagram_ads_and_businesses/advertisers_using_your_activity_or_information.json",json.dumps(adv))
     for i,u in enumerate(users[:12]):
         z.writestr(f"your_instagram_activity/messages/inbox/{u}_123{i}/message_1.json",json.dumps(msgs("x",u,10+i*20,i%2==0)))
+simple_followers = [
+    sld("viejo", ts(3)),
+    sld("reseguido", ts(4)),
+]
+simple_following = [
+    sld("ana_ruiz", ts(2)),
+    sld("nuevo", ts(3)),
+    sld("viejo", ts(4)),
+    sld("reseguido", ts(5)),
+]
+unfollowed = {"relationships_unfollowed_users": [sld("viejo", ts(1))]}
+with zipfile.ZipFile(fixture_dir / "dejados-y-mensajes.zip", "w") as z:
+    z.writestr(
+        "connections/followers_and_following/followers_1.json",
+        json.dumps(simple_followers),
+    )
+    z.writestr(
+        "connections/followers_and_following/following.json",
+        json.dumps({"relationships_following": simple_following}),
+    )
+    z.writestr(
+        "connections/followers_and_following/recently_unfollowed_profiles.json",
+        json.dumps(unfollowed),
+    )
+    z.writestr(
+        "your_instagram_activity/messages/inbox/ana_123/message_1.json",
+        json.dumps(msgs("x", "ana_ruiz", 4, True)),
+    )
+    z.writestr(
+        "your_instagram_activity/messages/inbox/externo_123/message_1.json",
+        json.dumps(msgs("x", "cuenta_externa", 2, True)),
+    )
+
+with zipfile.ZipFile(fixture_dir / "html.zip", "w") as z:
+    z.writestr(
+        "connections/followers_and_following/followers_1.html",
+        """<!doctype html><a href="https://www.instagram.com/ana_ruiz">ana_ruiz</a>""",
+    )
+
+shutil.copyfile(complete_zip, fixture_dir / "insta.zip")
 print("zip ok")

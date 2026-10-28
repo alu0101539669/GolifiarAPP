@@ -3,12 +3,18 @@
 Golifiar analiza el ZIP de datos que descarga el propio usuario de Instagram (y, en el futuro, de WhatsApp, TikTok…). **Todo ocurre en el dispositivo**: no hay servidor, ni cuentas, ni contraseñas, ni peticiones de red con datos del usuario.
 
 ## Estructura
-- `www/index.html` · interfaz, estilos y la lógica de carga y de la pestaña Seguidores (un solo archivo).
+- `www/index.html` · estructura HTML y puntos de montaje de la aplicación.
+- `www/styles/main.css` · estilos generales que antes estaban incrustados en `index.html`.
+- `www/app/state.js` · estado global, navegación, tema y controles generales.
+- `www/app/results.js` · resultados, filtros, historial, Premium e informes.
+- `www/modules/instagram/importer.js` · lectura de ZIP, JSON y HTML, normalización y carga de Instagram.
 - `www/inicio.css` · estilos de la página de Inicio y de las animaciones. `www/motion.js` · entradas al hacer scroll, contadores y cabecera; respetan «reducir movimiento».
 - `www/perfil.js` · análisis del perfil (interacciones, actividad, mensajes, contenido, limpieza, comparar). Expone `window.Perfil`.
 - `www/i18n.js` · idiomas (es/en). `www/lang-en-ui.js` (HTML estático), `lang-en-app.js` (index.html) y `lang-en-perfil.js` (perfil.js) son los diccionarios de inglés.
 - `www/service-worker.js` · caché sin conexión (red primero) y recepción de archivos compartidos. Sube el número de `CACHE_NAME` al publicar.
 - `www/vendor/` · librerías de terceros ya incluidas (zip.js, JSZip). No añadas dependencias de CDN.
+- `www/modules/` · lectores independientes por red social; no mezclar WhatsApp o TikTok con Instagram.
+- `www/modules/whatsapp/` · lector local de conversaciones `.txt`, limitado a métricas de fechas, horas y participantes.
 - `android/` · proyecto de Capacitor. `tests/` · prueba de humo con navegador real y ZIP de ejemplo inventados.
 
 ## Cómo trabajar
