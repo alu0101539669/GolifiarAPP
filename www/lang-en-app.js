@@ -123,6 +123,7 @@ I18n.registrar('en', {
   "No hay registros disponibles para compartir.": "There are no records to share.",
   "Análisis completado con Golifiar: {n} perfiles en esta categoría.": "Analysis completed with Golifiar: {n} profiles in this category.",
   "Spotify": "Spotify",
+  "Próximamente, estamos trabajando en ello": "Coming soon, we are working on it",
   "Legal": "Legal",
   "Procesamiento 100% Local": "100% Local Processing",
   "Ningún texto, historial de chat o archivo subido se envía a servidores externos ni a bases de datos.": "No text, chat history or uploaded file is sent to external servers or databases.",

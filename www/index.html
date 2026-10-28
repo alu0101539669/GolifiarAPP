@@ -79,11 +79,6 @@
         </div>
     </header>
 
-    <div class="global-privacy-banner" role="note">
-        <span class="privacy-pill">Procesamiento 100% Local</span>
-        <span>Ningún texto, historial de chat o archivo subido se envía a servidores externos ni a bases de datos.</span>
-    </div>
-
     <!-- Main Content Wrapper -->
     <main class="main-wrapper" id="contenidoPrincipal" tabindex="-1">
 
@@ -122,64 +117,19 @@
         </div>
 
         <div id="viewTikTok" class="view-container hidden">
-            <section class="upload-section-card">
-                <p class="in-eyebrow">Módulo TikTok</p>
-                <h2 class="in-h">Analiza exportaciones de TikTok</h2>
-                <p class="in-sub">Sube un JSON o un texto con tus métricas. Todo se procesa localmente y no se envía a ningún servidor.</p>
-                <label class="visually-hidden" for="tiktokFile">Exportación de TikTok</label>
-                <input type="file" id="tiktokFile" accept=".json,.txt,text/plain" multiple onchange="cargarTikTok(this)">
-                <p class="privacy-note" role="note">Solo se cuentan métricas, categorías y actividad. No se muestra ni se guarda el contenido de tus vídeos o mensajes.</p>
-                <div id="tiktokResults"></div>
+            <section class="upload-section-card coming-soon-card">
+                <h2 class="coming-soon-message" data-i18n-html>Próximamente, estamos trabajando en ello</h2>
+                <div class="coming-soon-tools visually-hidden">
+                    <label for="tiktokFile">Exportación de TikTok</label>
+                    <input type="file" id="tiktokFile" accept=".json,.txt,text/plain" multiple onchange="cargarTikTok(this)">
+                    <div id="tiktokResults"></div>
+                </div>
             </section>
         </div>
 
         <div id="viewSpotify" class="view-container hidden">
-            <section class="upload-section-card suite-card">
-                <p class="in-eyebrow">Módulo Spotify</p>
-                <h2 class="in-h">Test de compatibilidad musical y afinidad</h2>
-                <p class="in-sub">Procesa tus exportaciones locales para comparar artistas, géneros, sesiones y patrones de escucha sin salir del navegador.</p>
-                <div class="score-grid">
-                    <div class="score-ring">
-                        <svg viewBox="0 0 120 120" aria-hidden="true">
-                            <circle cx="60" cy="60" r="46"></circle>
-                            <circle cx="60" cy="60" r="46" class="score-ring-progress"></circle>
-                        </svg>
-                        <div class="score-content"><strong>82%</strong><span>Afinidad</span></div>
-                    </div>
-                    <div class="suite-metrics">
-                        <div><strong>1,240</strong><span>artistas</span></div>
-                        <div><strong>14</strong><span>géneros</span></div>
-                        <div><strong>6.2h</strong><span>escucha media</span></div>
-                        <div><strong>91%</strong><span>compatibilidad</span></div>
-                    </div>
-                </div>
-                <div class="privacy-note"><strong>Privacidad local:</strong> el análisis de Spotify se procesa en memoria del dispositivo y no se envía a servidores externos.</div>
-                <div class="module-panel-grid">
-                    <article class="mini-panel">
-                        <p class="panel-kicker">Puntos fuertes</p>
-                        <ul>
-                            <li>Géneros coincidentes</li>
-                            <li>Horarios de escucha compatibles</li>
-                            <li>Artistas repetidos</li>
-                        </ul>
-                    </article>
-                    <article class="mini-panel">
-                        <p class="panel-kicker">Temas en común</p>
-                        <ul>
-                            <li>Indie pop</li>
-                            <li>Electrónica</li>
-                            <li>Ambient</li>
-                        </ul>
-                    </article>
-                    <article class="mini-panel">
-                        <p class="panel-kicker">Futuro</p>
-                        <ul>
-                            <li>Comparación de playlists</li>
-                            <li>Estadísticas de escucha</li>
-                            <li>Compatibilidad por género</li>
-                        </ul>
-                    </article>
-                </div>
+            <section class="upload-section-card coming-soon-card">
+                <h2 class="coming-soon-message" data-i18n-html>Próximamente, estamos trabajando en ello</h2>
             </section>
         </div>
         <!-- ================= VIEW 0: INICIO ================= -->
