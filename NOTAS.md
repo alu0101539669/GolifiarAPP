@@ -12,3 +12,7 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 - Plataformas: WhatsApp TXT y exportación ZIP de Instagram con `messages/inbox/**/message_*.json` compatibles.
 - Privacidad: procesamiento local; el análisis de palabras está desactivado por defecto y no guarda ni muestra el texto original.
 - Pruebas: `tests/experiencias.js`; ejecutar `npm test` y `npm run build`.
+
+## Inicio genérico y guía por red
+- Hecho: el Inicio ya no es solo de Instagram: «Elige tu red» (Instagram, WhatsApp, Experiencias, TikTok y Spotify con estado), pasos comunes, privacidad y preguntas genéricas. «Cómo usarlo» pasa a ser una guía por red con navegación interna. Título y meta descriptivos de toda la suite. Inglés completo.
+- Pendiente: cuando TikTok/Spotify estén listos, quitar «Próximamente» en la tarjeta y la guía; revisar las rutas de menú de su guía.
