@@ -23,7 +23,7 @@ Golifiar analiza el ZIP de datos que descarga el propio usuario de Instagram (y,
 - Rama de trabajo propia; `main` se publica sola en GitHub Pages al hacer push.
 
 ## Reglas que no se rompen
-1. Privacidad: nunca enviar datos del usuario fuera del dispositivo; nada de analítica ni servidores. Del contenido de los mensajes solo se cuentan fechas y cantidades.
+1. Privacidad: nunca enviar datos del usuario fuera del dispositivo; nada de analítica ni servidores. Por defecto, las métricas de chat cuentan fechas y cantidades. El módulo de experiencias puede calcular frecuencias agregadas de palabras solo cuando el usuario activa esa función; el texto se procesa en memoria en el dispositivo, nunca se muestra como mensaje ni se guarda o envía fuera del dispositivo.
 2. Sin límite de tamaño del ZIP: se lee por partes (zip.js con `useWebWorkers:false`); no cargar el archivo entero en memoria.
 3. Nombres de usuario siempre en minúsculas; las fechas con `I18n.fecha` / `I18n.locale` (nunca fijar `es-ES`); textos fuente en español y con tuteo.
 4. Las cuentas que el usuario dejó de seguir (`recently_unfollowed_*`) no cuentan como «seguidos»; con varios ZIP, las listas de seguidores/seguidos salen solo del más reciente.

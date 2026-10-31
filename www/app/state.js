@@ -90,13 +90,13 @@
         function cambiarVista(vista) {
             trigHaptic(30);
             document.body.dataset.modulo = vista;
-            const vistas = ['viewInicio', 'viewAuditoria', 'viewWhatsapp', 'viewTikTok', 'viewSpotify', 'viewComoUsar', 'viewQuienSoy', 'viewPrivacidad', 'viewTransparencia', 'viewDocumentacion'];
+            const vistas = ['viewInicio', 'viewAuditoria', 'viewWhatsapp', 'viewExperiencias', 'viewTikTok', 'viewSpotify', 'viewComoUsar', 'viewQuienSoy', 'viewPrivacidad', 'viewTransparencia', 'viewDocumentacion'];
             vistas.forEach(v => {
                 const el = document.getElementById(v);
                 if (el) el.classList.add('hidden');
             });
 
-            ['navInicio', 'navAuditoria', 'navWhatsapp', 'navTikTok', 'navSpotify', 'navComoUsar', 'navQuienSoy'].forEach(n => {
+            ['navInicio', 'navAuditoria', 'navWhatsapp', 'navExperiencias', 'navTikTok', 'navSpotify', 'navComoUsar', 'navQuienSoy'].forEach(n => {
                 const el = document.getElementById(n);
                 if (el) el.classList.remove('active');
             });
@@ -120,6 +120,10 @@
             } else if (vista === 'spotify') {
                 document.getElementById('viewSpotify').classList.remove('hidden');
                 const nav = document.getElementById('navSpotify');
+                if (nav) nav.classList.add('active');
+            } else if (vista === 'experiencias') {
+                document.getElementById('viewExperiencias').classList.remove('hidden');
+                const nav = document.getElementById('navExperiencias');
                 if (nav) nav.classList.add('active');
             } else if (vista === 'comousar') {
                 document.getElementById('viewComoUsar').classList.remove('hidden');

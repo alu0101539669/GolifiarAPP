@@ -21,6 +21,7 @@
     <script src="./i18n.js"></script>
     <script src="./lang-en-ui.js"></script>
     <script src="./lang-en-app.js"></script>
+    <script src="./lang-en-experiencias.js"></script>
     <script src="./lang-en-perfil.js"></script>
     <script src="./agentes.js"></script>
     <script src="./vendor/jszip.min.js"></script>
@@ -29,10 +30,13 @@
     <script src="./modules/whatsapp/app.js"></script>
     <script src="./modules/tiktok/lector.js"></script>
     <script src="./modules/tiktok/app.js"></script>
+    <script src="./modules/experiencias/engine.js"></script>
+    <script src="./modules/experiencias/app.js"></script>
     <script src="./perfil.js" defer></script>
     <script src="./motion.js" defer></script>
     <link rel="stylesheet" href="./styles/main.css">
     <link rel="stylesheet" href="./inicio.css">
+    <link rel="stylesheet" href="./modules/experiencias/experiencias.css">
 </head>
 <body data-modulo="inicio">
 
@@ -58,7 +62,8 @@
                 <button class="nav-tab-btn" id="navWhatsapp" onclick="cambiarVista('whatsapp')">WhatsApp</button>
                 <button class="nav-tab-btn" id="navTikTok" onclick="cambiarVista('tiktok')">TikTok</button>
                 <button class="nav-tab-btn" id="navSpotify" onclick="cambiarVista('spotify')">Spotify</button>
-                <button class="nav-tab-btn" id="navComoUsar" onclick="cambiarVista('comousar')">Cómo usarlo</button>
+                                <button class="nav-tab-btn" id="navExperiencias" onclick="cambiarVista('experiencias')">Experiencias</button>
+<button class="nav-tab-btn" id="navComoUsar" onclick="cambiarVista('comousar')">Cómo usarlo</button>
                 <button class="nav-tab-btn" id="navQuienSoy" onclick="cambiarVista('quiensoy')">Quién soy</button>
             </nav>
             <div class="header-tools">
@@ -116,7 +121,32 @@
             </section>
         </div>
 
-        <div id="viewTikTok" class="view-container hidden">
+                <div id="viewExperiencias" class="view-container hidden">
+          <section class="upload-section-card">
+            <p class="in-eyebrow">Experiencias de chat</p>
+            <h2 class="in-h">Estadísticas, juegos y Wrapped</h2>
+            <p class="in-sub">Importa conversaciones de WhatsApp e Instagram para descubrir estadísticas, comparar periodos y crear tarjetas para compartir.</p>
+            <div class="ex-import-grid">
+              <article class="ex-import-card">
+                <h3>WhatsApp · archivos TXT</h3>
+                <p>Puedes seleccionar varios archivos TXT, uno por conversación.</p>
+                <label for="exWhatsAppFiles">Seleccionar exportaciones de WhatsApp</label>
+                <input id="exWhatsAppFiles" type="file" accept=".txt,text/plain" multiple>
+              </article>
+              <article class="ex-import-card">
+                <h3>Instagram · exportación ZIP</h3>
+                <p>Selecciona el ZIP de datos que has descargado desde Instagram.</p>
+                <label for="exInstagramFiles">Seleccionar ZIP de Instagram</label>
+                <input id="exInstagramFiles" type="file" accept=".zip,application/zip,application/x-zip-compressed" multiple>
+              </article>
+            </div>
+            <p class="privacy-note" role="note">Todo se procesa en este dispositivo. No se suben archivos ni se guarda el texto de los mensajes.</p>
+            <div id="experienciasStatus" aria-live="polite"></div>
+            <div id="experienciasResults"></div>
+          </section>
+        </div>
+
+<div id="viewTikTok" class="view-container hidden">
             <section class="upload-section-card coming-soon-card">
                 <h2 class="coming-soon-message" data-i18n-html>Próximamente, estamos trabajando en ello</h2>
                 <div class="coming-soon-tools visually-hidden">
