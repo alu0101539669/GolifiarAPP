@@ -90,9 +90,11 @@
         <!-- ================= VIEW 1: AUDITORÍA ================= -->
         <div id="viewWhatsapp" class="view-container hidden">
             <section class="upload-section-card">
-                <p class="in-eyebrow">Módulo WhatsApp</p>
-                <h2 class="in-h">Analiza una conversación exportada</h2>
-                <p class="in-sub">Selecciona un archivo .txt exportado desde WhatsApp. Todo se procesa localmente.</p>
+                <div class="ex-view-head">
+                    <p class="module-kicker">MÓDULO WHATSAPP</p>
+                    <h2>Analiza una conversación exportada</h2>
+                    <p>Selecciona un archivo .txt exportado desde WhatsApp. Todo se procesa localmente.</p>
+                </div>
                 <div class="whatsapp-guide">
                     <h3>Cómo exportar una conversación</h3>
                     <div class="whatsapp-guide-grid">
@@ -114,39 +116,64 @@
                     </div>
                     <p class="whatsapp-guide-note">Guarda el archivo .txt en tu dispositivo y selecciónalo aquí. Solo se analizará esta conversación exportada.</p>
                 </div>
-                <label class="visually-hidden" for="whatsappFile">Exportación de conversación de WhatsApp</label>
-                <input type="file" id="whatsappFile" accept=".txt,text/plain" onchange="cargarWhatsApp(this)">
+                <div class="dropzone">
+                    <label class="visually-hidden" for="whatsappFile">Exportación de conversación de WhatsApp</label>
+                    <input type="file" id="whatsappFile" accept=".txt,text/plain" onchange="cargarWhatsApp(this)">
+                    <div class="dropzone-content">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        <span class="dropzone-title">Elige o arrastra tu archivo .TXT de WhatsApp</span>
+                        <span class="dropzone-desc">Se lee en tu dispositivo, sin subirlo a ningún sitio.</span>
+                        <span id="whatsappTag" class="file-status-tag" role="status"></span>
+                    </div>
+                </div>
                 <p class="privacy-note" role="note">No se muestra ni se guarda el texto de tus mensajes. Solo se cuentan fechas, horas y participantes.</p>
                 <div id="whatsappResults"></div>
             </section>
         </div>
 
                 <div id="viewExperiencias" class="view-container hidden">
-          <section class="upload-section-card">
-            <p class="in-eyebrow">Experiencias de chat</p>
-            <h2 class="in-h">Estadísticas, juegos y Wrapped</h2>
-            <p class="in-sub">Importa conversaciones de WhatsApp e Instagram para descubrir estadísticas, comparar periodos y crear tarjetas para compartir.</p>
-            <div class="ex-import-grid">
-              <article class="ex-import-card">
-                <h3>WhatsApp · archivos TXT</h3>
-                <p>Puedes seleccionar varios archivos TXT, uno por conversación.</p>
-                <label for="exWhatsAppFiles">Seleccionar exportaciones de WhatsApp</label>
-                <input id="exWhatsAppFiles" type="file" accept=".txt,text/plain" multiple>
-              </article>
-              <article class="ex-import-card">
-                <h3>Instagram · exportación ZIP</h3>
-                <p>Selecciona el ZIP de datos que has descargado desde Instagram.</p>
-                <label for="exInstagramFiles">Seleccionar ZIP de Instagram</label>
-                <input id="exInstagramFiles" type="file" accept=".zip,application/zip,application/x-zip-compressed" multiple>
-              </article>
-            </div>
-            <p class="privacy-note" role="note">Todo se procesa en este dispositivo. No se suben archivos ni se guarda el texto de los mensajes.</p>
-            <div id="experienciasStatus" aria-live="polite"></div>
+            <section class="hero-section hero-compact">
+                <p class="module-kicker">MÓDULO EXPERIENCIAS</p>
+                <h2>Estadísticas, juegos y Wrapped de tus chats</h2>
+                <p>Importa conversaciones de WhatsApp e Instagram para descubrir estadísticas, comparar periodos y crear tarjetas para compartir. Todo se procesa aquí, en tu dispositivo.</p>
+            </section>
+
+            <ol class="analysis-steps" aria-label="Pasos para usar las experiencias">
+                <li class="is-current"><span>1</span><strong>Importa tus chats</strong><small>WhatsApp (.txt) o ZIP de Instagram</small></li>
+                <li><span>2</span><strong>Procesamiento local</strong><small>Sin servidores ni contraseña</small></li>
+                <li><span>3</span><strong>Explora y comparte</strong><small>Estadísticas, juegos y tarjetas</small></li>
+            </ol>
+
+            <section class="upload-section-card ex-upload">
+                <div class="upload-grid">
+                    <div class="dropzone">
+                        <label class="visually-hidden" for="exWhatsAppFiles">Exportaciones de conversaciones de WhatsApp</label>
+                        <input type="file" id="exWhatsAppFiles" accept=".txt,text/plain" multiple>
+                        <div class="dropzone-content">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span class="dropzone-title">WhatsApp · elige o arrastra tus archivos .TXT</span>
+                            <span class="dropzone-desc">Un archivo por conversación, exportado sin archivos multimedia. Puedes elegir varios a la vez.</span>
+                            <span id="exTagWhatsApp" class="file-status-tag" role="status"></span>
+                        </div>
+                    </div>
+                    <div class="dropzone">
+                        <label class="visually-hidden" for="exInstagramFiles">Archivo ZIP de datos de Instagram</label>
+                        <input type="file" id="exInstagramFiles" accept=".zip,application/zip,application/x-zip-compressed,application/octet-stream" multiple>
+                        <div class="dropzone-content">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span class="dropzone-title">Instagram · elige o arrastra tu .ZIP (sin descomprimir)</span>
+                            <span class="dropzone-desc">Se leen tus conversaciones directas del ZIP de datos, por partes y sin subirlo a ningún sitio.</span>
+                            <span id="exTagInstagram" class="file-status-tag" role="status"></span>
+                        </div>
+                    </div>
+                </div>
+                <p class="privacy-note" role="note">Todo se procesa en este dispositivo. No se suben archivos ni se guarda el texto de los mensajes.</p>
+                <div id="experienciasStatus" aria-live="polite"></div>
+            </section>
             <div id="experienciasResults"></div>
-          </section>
         </div>
 
-<div id="viewTikTok" class="view-container hidden">
+        <div id="viewTikTok" class="view-container hidden">
             <section class="upload-section-card coming-soon-card">
                 <h2 class="coming-soon-message" data-i18n-html>Próximamente, estamos trabajando en ello</h2>
                 <div class="coming-soon-tools visually-hidden">

@@ -68,18 +68,23 @@
     return normalizeMessages(messages, { platform: 'whatsapp', chat: chatName || 'WhatsApp' });
   }
 
+  // Meta exporta el UTF-8 leído como latin-1 («JosÃ©»): se corrige solo si el texto lo parece.
+  function fixText(v) {
+    if (typeof v !== 'string' || !/[ÃÂ]/.test(v)) return v;
+    try { return decodeURIComponent(escape(v)); } catch (e) { return v; }
+  }
   function parseInstagramThread(json, chatName) {
     const obj = typeof json === 'string' ? JSON.parse(json) : json;
     const messages = Array.isArray(obj && obj.messages) ? obj.messages : [];
     return normalizeMessages(messages.map(m => ({
       timestamp: m.timestamp_ms ?? m.timestamp,
-      sender: m.sender_name || m.sender || 'Desconocido',
-      text: typeof m.content === 'string' ? m.content : '',
-      platform: 'instagram', chat: chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram'),
+      sender: fixText(m.sender_name || m.sender || 'Desconocido'),
+      text: typeof m.content === 'string' ? fixText(m.content) : '',
+      platform: 'instagram', chat: fixText(chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram')),
       reactions: m.reactions,
       attachmentsCount: ['photos','videos','audio_files','files','share'].reduce((n, key) => n + (m[key] ? (Array.isArray(m[key]) ? m[key].length : 1) : 0), 0),
       isStoryReply: /story|historia/i.test(JSON.stringify(m.share || {})) || /replied to your story|respondio a tu historia|respondió a tu historia/i.test(String(m.content || ''))
-    })), { platform: 'instagram', chat: chatName || obj.title || 'Instagram' });
+    })), { platform: 'instagram', chat: fixText(chatName || obj.title || 'Instagram') });
   }
 
   async function parseInstagramZip(file) {

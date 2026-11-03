@@ -18,7 +18,7 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
     .in-title span { color: #0b6e99 !important; background: none !important; }
   ` });
 
-  const vistas = ['#viewInicio', '#viewAuditoria', '#viewWhatsapp'];
+  const vistas = ['#viewInicio', '#viewAuditoria', '#viewWhatsapp', '#viewExperiencias', '#viewComoUsar'];
   for (const vista of vistas) {
     if (vista === '#viewAuditoria') await page.evaluate(() => cambiarVista('auditoria'));
     if (vista === '#viewWhatsapp') {
@@ -30,16 +30,26 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
       });
       await page.waitForTimeout(100);
     }
+    if (vista === '#viewComoUsar') await page.evaluate(() => cambiarVista('comousar'));
+    if (vista === '#viewExperiencias') {
+      await page.evaluate(() => cambiarVista('experiencias'));
+      const lineas = Array.from({ length: 40 }, (_, i) => `[${String(1 + (i % 28)).padStart(2, '0')}/${i < 20 ? '09' : '10'}/2026, 1${i % 10}:00:00] ${i % 2 ? 'Ana' : 'Luis'}: hola ${i}`).join('\n');
+      await page.setInputFiles('#exWhatsAppFiles', [{ name: 'a.txt', mimeType: 'text/plain', buffer: Buffer.from(lineas) }, { name: 'b.txt', mimeType: 'text/plain', buffer: Buffer.from(lineas) }]);
+      await page.waitForTimeout(400);
+    }
+    for (const pestana of (vista === '#viewExperiencias' ? ['resumen', 'actividad', 'juegos', 'records', 'wrapped'] : [null])) {
+    if (pestana) await page.click('#extab-' + pestana);
     const relevantes = await page.evaluate(async () => {
       const resultado = await window.axe.run(document, {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] }
       });
       return resultado.violations.filter(issue => !issue.nodes.every(node => {
         const elemento = document.querySelector(node.target.join(','));
-        return elemento && elemento.closest('.hidden');
+        return elemento && elemento.closest('.hidden, [hidden]');
       }));
     });
-    assert.deepStrictEqual(relevantes, [], `${vista}: problemas de accesibilidad detectados`);
+    assert.deepStrictEqual(relevantes, [], `${vista} ${pestana || ''}: problemas de accesibilidad detectados ` + JSON.stringify(relevantes.map(r => [r.id, r.nodes.slice(0, 2).map(n => n.html.slice(0, 100))])));
+    }
   }
 
   console.log('OK: accesibilidad WCAG 2A/2AA');

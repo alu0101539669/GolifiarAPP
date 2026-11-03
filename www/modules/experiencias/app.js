@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => root.I18n && I18n.num ? I18n.num(n) : new Intl.NumberFormat().format(n);
@@ -21,7 +21,13 @@
         state.chats.push({ name: file.name.replace(/\.txt$/i,''), platform: 'WhatsApp', messages });
       } catch (err) { showStatus(`${file.name}: ${err.message || tr('No se pudo importar el archivo.')}`, true); }
     }
-    input.value = ''; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); render();
+    input.value = ''; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) { showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); setTag('exTagWhatsApp', state.chats.filter(c => c.platform === 'WhatsApp').length); } render();
+  }
+  function setTag(id, n) {
+    const el = node(id); if (!el) return;
+    el.dataset.n = String(n);
+    el.textContent = n ? tr('{n} conversaciones importadas', { n: num(n) }) : '';
+    el.classList.toggle('active', n > 0);
   }
   async function importInstagram(input) {
     const files = [...(input.files || [])]; if (!files.length) return;
@@ -36,16 +42,33 @@
         for (const [name, threadMessages] of threads) state.chats.push({ name, platform: 'Instagram', messages: threadMessages });
       } catch (err) { showStatus(`${file.name}: ${err.message || tr('No se pudo importar el ZIP.')}`, true); }
     }
-    input.value = ''; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); render();
+    input.value = ''; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) { showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); setTag('exTagInstagram', state.chats.filter(c => c.platform === 'Instagram').length); } render();
+  }
+  function clearAll() {
+    state.chats = []; state.selected = 0; state.tab = 'resumen'; state.quiz = [];
+    setTag('exTagWhatsApp', 0); setTag('exTagInstagram', 0); showStatus(tr('Se han borrado los chats importados de la memoria.'), false); render();
   }
   function showStatus(text, error) {
     const el = node('experienciasStatus'); if (!el) return;
-    el.innerHTML = `<p class="ex-status ${error ? 'error' : ''}" role="status">${esc(text)}</p>`;
+    el.innerHTML = `<p class="ex-status ${error ? 'error' : ''}" role="${error ? 'alert' : 'status'}">${esc(text)}</p>`;
   }
 
   function metric(title, value, note) {
     return `<article class="ex-metric"><span>${esc(tr(title))}</span><strong>${esc(value)}</strong>${note ? `<small>${esc(note)}</small>` : ''}</article>`;
   }
+  const monthLabel = m => { const [y, mo] = String(m).split('-').map(Number); return new Date(y, (mo || 1) - 1, 1).toLocaleDateString(root.I18n ? I18n.locale : undefined, { month: 'short', year: '2-digit' }).replace('.', ''); };
+  const meter = v => `<div class="ex-meter" role="img" aria-label="${num(v)}/100"><i style="width:${Math.max(0, Math.min(100, Number(v) || 0))}%"></i></div>`;
+  const dias = n => tr(Number(n) === 1 ? '{n} día' : '{n} días', { n: num(n) });
+  function kpi(title, value, note) {
+    return `<article class="ex-kpi"><strong>${esc(value)}</strong><span>${esc(tr(title))}</span>${note ? `<small>${esc(note)}</small>` : ''}</article>`;
+  }
+  function colChart(values, labels, title, step) {
+    const max = Math.max(1, ...values);
+    const cols = values.map((v, i) => `<div class="ex-col" title="${esc(labels[i])}: ${num(v)}"><i style="height:${v ? Math.max(4, Math.round(v / max * 100)) : 0}%"></i></div>`).join('');
+    const labs = labels.map((l, i) => `<span>${i % step === 0 ? esc(l) : ''}</span>`).join('');
+    return `<div role="img" aria-label="${esc(title)}"><div class="ex-cols">${cols}</div><div class="ex-col-labels">${labs}</div></div>`;
+  }
+  const TABS = [['resumen', 'Resumen'], ['actividad', 'Actividad'], ['juegos', 'Juegos'], ['records', 'Récords y torneo'], ['wrapped', 'Wrapped']];
   function renderEmpty() {
     node('experienciasResults').innerHTML = '<section class="ex-card ex-empty"><h3>Empieza importando una conversación</h3><p>Elige un TXT exportado desde WhatsApp o un ZIP de datos de Instagram. Los archivos se procesan localmente y no se guardan en el dispositivo.</p></section>';
   }
@@ -58,7 +81,7 @@
     const periodA = months.includes(state.compareA) ? state.compareA : (months[0] || '');
     const periodB = months.includes(state.compareB) ? state.compareB : (months[months.length-1] || '');
     state.compareA = periodA; state.compareB = periodB;
-    const monthOptions = months.map(m => `<option value="${m}">${m}</option>`).join('');
+    const monthOptions = months.map(m => `<option value="${m}">${esc(monthLabel(m))}</option>`).join('');
     const comparison = months.length > 1 ? E().comparePeriods(messages, periodA, periodB) : null;
     const peopleOptions = s.participants.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
     const chemistryA = s.participants.some(p => p.name === state.chemistryA) ? state.chemistryA : (s.participants[0]?.name || '');
@@ -73,19 +96,28 @@
     const recordsHtml = rec.map(r => `<article class="ex-record"><span>🏆</span><div><small>${esc(tr(r.title))}</small><strong>${esc(r.value)}</strong></div></article>`).join('');
     const achievementsHtml = achievements.length ? `<div class="ex-achievements">${achievements.map(a => `<article class="ex-achievement"><span aria-hidden="true">${a.icon}</span><div><strong>${esc(tr(a.title))}</strong><small>${esc(tr(a.description))}</small></div></article>`).join('')}</div>` : `<p>${esc(tr('Sigue usando el análisis para desbloquear tus primeros trofeos.'))}</p>`;
     const daysHtml = cal.slice(-14).map(d => `<div class="ex-mini-day"><span>${esc(d.date.slice(5))}</span><i class="level-${d.level}" title="${num(d.count)}"></i></div>`).join('');
-    results.innerHTML = `
-      <section class="ex-card"><div class="ex-chat-picker"><label for="exChatSelect">${esc(tr('Conversación seleccionada'))}</label><select id="exChatSelect">${options}</select><span class="ex-platform">${esc(chat.platform)}</span></div><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-metrics">${metric('Mensajes analizados',num(s.totalMessages))}${metric('Participantes',num(s.participantCount))}${metric('Días activos',num(s.activeDays))}${metric('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}${metric('Racha actual',`${st.current} ${tr('días')}`)}${metric('Racha más larga',`${st.longest} ${tr('días')}`)}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ol>${s.participants.slice(0,5).map(p => `<li><span>${esc(p.name)}</span><strong>${num(p.count)}</strong></li>`).join('')}</ol></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
-      ${compareHtml}
+    const topCount = Math.max(1, ...s.participants.map(p => p.count));
+    const hourLabels = s.hours.map((_, i) => String(i));
+    const chartsHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Ritmo'))}</p><h3>${esc(tr('Cuándo se escribe en este chat'))}</h3></div></div><h4 class="ex-chart-title">${esc(tr('Mensajes por hora del día'))}</h4>${colChart(s.hours, hourLabels, tr('Mensajes por hora del día'), 3)}${months.length > 1 ? `<h4 class="ex-chart-title">${esc(tr('Mensajes por mes'))}</h4>${colChart(months.map(m => s.months[m]), months.map(monthLabel), tr('Mensajes por mes'), Math.max(1, Math.ceil(months.length / 6)))}` : ''}</section>`;
+    const all = `
+      <!--pane:resumen--><section class="ex-card ex-profile"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-kpis">${kpi('Mensajes analizados',num(s.totalMessages))}${kpi('Participantes',num(s.participantCount))}${kpi('Días activos',num(s.activeDays))}${kpi('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}</div><details class="ex-more" open><summary>${esc(tr('Más datos del chat'))}</summary><div class="ex-metrics">${metric('Racha actual',dias(st.current))}${metric('Racha más larga',dias(st.longest))}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div></details><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ul class="ex-bars">${s.participants.slice(0,6).map(p => `<li><span class="ex-bar-name">${esc(p.name)}</span><span class="ex-bar"><i style="width:${Math.max(3, Math.round(p.count / topCount * 100))}%"></i></span><strong>${num(p.count)}</strong></li>`).join('')}</ul></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
+      <!--pane:actividad-->${chartsHtml}${compareHtml}
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Calendario'))}</p><h3>${esc(tr('Actividad día a día'))}</h3></div></div>${calendarHtml}<div class="ex-mini-calendar">${daysHtml}</div></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tests de curiosidad'))}</p><h3>${esc(tr('¿Quién es más...?'))}</h3></div></div><div class="ex-records">${funHtml}</div><p class="ex-note">${esc(tr('Son aproximaciones estadísticas y no describen la personalidad.'))}</p></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Chemistry Score'))}</p><h3>${esc(tr('Compatibilidad de horarios'))}</h3><p>${esc(tr('Resultado lúdico y orientativo, no científico.'))}</p></div></div><div class="ex-compare-controls"><label>${esc(tr('Persona A'))}<select id="exChemA">${peopleOptions}</select></label><label>${esc(tr('Persona B'))}<select id="exChemB">${peopleOptions}</select></label></div><p class="ex-discovery">${chemistryResult.available ? `${num(chemistryResult.score)}/100 · ${esc(chemistryResult.explanation)}` : esc(tr('Datos insuficientes para calcularlo.'))}</p><p class="ex-note">${esc(tr('La fórmula usa 60% de equilibrio de mensajes y 40% de solapamiento horario.'))}</p></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Índice de equilibrio'))}</p><h3>${esc(tr('Reparto de participación'))}</h3></div></div><p class="ex-discovery">${balance.available ? `${num(balance.score)}/100` : esc(tr('Datos insuficientes'))}</p><p class="ex-note">${esc(balance.explanation || tr('Se necesitan al menos dos participantes.'))}</p></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Temas del chat'))}</p><h3>${esc(tr('Palabras más frecuentes'))}</h3><p>${esc(tr('Se calculan localmente en memoria; no se conserva el texto de los mensajes.'))}</p><label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics" ${state.topicsEnabled ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label></div></div>${topicHtml}</section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Galería de récords'))}</p><h3>${esc(tr('Trofeos y logros'))}</h3></div></div><div class="ex-achievements">${achievementsHtml}</div><h4>${esc(tr('Récords del chat'))}</h4><div class="ex-records">${recordsHtml}</div></section>
-      <section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Modo fiesta'))}</p><h3>${esc(tr('Pon a prueba al grupo'))}</h3><p>${esc(tr('Preguntas generadas con estadísticas, sin revelar mensajes privados.'))}</p></div></div><div id="exPartyArea">${renderQuizIntro()}</div></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Torneo entre chats'))}</p><h3>${esc(tr('¿Qué chat tiene más actividad relativa?'))}</h3><p>${esc(tr('La puntuación combina mensajes por participante y por día activo para reducir la ventaja de los grupos grandes.'))}</p></div></div>${renderTournament()}</section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Descubrimiento diario'))}</p><h3>${esc(tr('Una curiosidad de hoy'))}</h3></div></div><p class="ex-discovery">${esc(dailyDiscoveryText(messages))}</p></section>`;
+      <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tests de curiosidad'))}</p><h3>${esc(tr('¿Quién es más...?'))}</h3></div></div><div class="ex-records">${funHtml}</div><p class="ex-note">${esc(tr('Son aproximaciones estadísticas y no describen la personalidad.'))}</p></section>
+      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Chemistry Score'))}</p><h3>${esc(tr('Compatibilidad de horarios'))}</h3><p>${esc(tr('Resultado lúdico y orientativo, no científico.'))}</p></div></div><div class="ex-compare-controls"><label>${esc(tr('Persona A'))}<select id="exChemA">${peopleOptions}</select></label><label>${esc(tr('Persona B'))}<select id="exChemB">${peopleOptions}</select></label></div><p class="ex-discovery">${chemistryResult.available ? `<strong class="ex-score">${num(chemistryResult.score)}/100</strong> · ${esc(chemistryResult.explanation)}` : esc(tr('Datos insuficientes para calcularlo.'))}</p>${chemistryResult.available ? meter(chemistryResult.score) : ''}<p class="ex-note">${esc(tr('La fórmula usa 60% de equilibrio de mensajes y 40% de solapamiento horario.'))}</p></section>
+      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Índice de equilibrio'))}</p><h3>${esc(tr('Reparto de participación'))}</h3></div></div><p class="ex-discovery">${balance.available ? `<strong class="ex-score">${num(balance.score)}/100</strong>` : esc(tr('Datos insuficientes'))}</p>${balance.available ? meter(balance.score) : ''}<p class="ex-note">${esc(balance.explanation || tr('Se necesitan al menos dos participantes.'))}</p></section>
+      <!--pane:actividad--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Temas del chat'))}</p><h3>${esc(tr('Palabras más frecuentes'))}</h3><p>${esc(tr('Se calculan localmente en memoria; no se conserva el texto de los mensajes.'))}</p><label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics" ${state.topicsEnabled ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label></div></div>${topicHtml}</section>
+      <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Galería de récords'))}</p><h3>${esc(tr('Trofeos y logros'))}</h3></div></div><div class="ex-achievements">${achievementsHtml}</div><h4>${esc(tr('Récords del chat'))}</h4><div class="ex-records">${recordsHtml}</div></section>
+      <!--pane:wrapped--><section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
+      <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Modo fiesta'))}</p><h3>${esc(tr('Pon a prueba al grupo'))}</h3><p>${esc(tr('Preguntas generadas con estadísticas, sin revelar mensajes privados.'))}</p></div></div><div id="exPartyArea">${renderQuizIntro()}</div></section>
+      <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Torneo entre chats'))}</p><h3>${esc(tr('¿Qué chat tiene más actividad relativa?'))}</h3><p>${esc(tr('La puntuación combina mensajes por participante y por día activo para reducir la ventaja de los grupos grandes.'))}</p></div></div>${renderTournament()}</section>
+      <!--pane:resumen--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Descubrimiento diario'))}</p><h3>${esc(tr('Una curiosidad de hoy'))}</h3></div></div><p class="ex-discovery">${esc(dailyDiscoveryText(messages))}</p></section>`;
+    const panes = {}; const parts = all.split(/<!--pane:(\w+)-->/);
+    for (let i = 1; i < parts.length; i += 2) panes[parts[i]] = (panes[parts[i]] || '') + parts[i + 1];
+    if (!TABS.some(t => t[0] === state.tab)) state.tab = 'resumen';
+    const tabsHtml = `<div class="category-tabs ex-tabs" role="tablist" aria-label="${esc(tr('Secciones de Experiencias'))}">${TABS.map(([k, l]) => `<button type="button" role="tab" class="cat-tab${k === state.tab ? ' active' : ''}" id="extab-${k}" data-extab="${k}" aria-controls="expane-${k}" aria-selected="${k === state.tab}" tabindex="${k === state.tab ? 0 : -1}">${esc(tr(l))}</button>`).join('')}</div>`;
+    const panesHtml = TABS.map(([k]) => `<div role="tabpanel" class="ex-pane" id="expane-${k}" aria-labelledby="extab-${k}"${k === state.tab ? '' : ' hidden'}>${panes[k] || ''}</div>`).join('');
+    results.innerHTML = `<section class="ex-toolbar"><div class="ex-chat-picker"><label for="exChatSelect">${esc(tr('Conversación seleccionada'))}</label><select id="exChatSelect">${options}</select><span class="ex-platform">${esc(chat.platform)}</span></div><button type="button" class="btn-sub" id="exClear">${esc(tr('Borrar chats importados'))}</button></section>${tabsHtml}${panesHtml}`;
     const pa = node('exPeriodA'); if (pa) pa.value = periodA;
     const pb = node('exPeriodB'); if (pb) pb.value = periodB;
     const theme = node('exCardTheme'); if (theme) theme.value = state.cardTheme;
@@ -171,11 +203,26 @@
   document.addEventListener('click', e => {
     const button = e.target.closest('button'); if (!button) return;
     if (button.id === 'exCompareBtn') render();
+    if (button.id === 'exClear') clearAll();
+    if (button.dataset.extab) selectTab(button.dataset.extab);
     if (button.id === 'exExportCard' || button.id === 'exExportCard2') exportCard();
     if (button.id === 'exStartQuiz') startQuiz();
     if (button.classList.contains('ex-answer')) answerQuiz(button.dataset.answer || '');
   });
+  function selectTab(key) {
+    state.tab = key;
+    document.querySelectorAll('[data-extab]').forEach(b => { const on = b.dataset.extab === key; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    document.querySelectorAll('.ex-pane').forEach(p => { p.hidden = p.id !== 'expane-' + key; });
+  }
+  document.addEventListener('keydown', e => {
+    const tab = e.target && e.target.closest && e.target.closest('[data-extab]');
+    if (!tab || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const list = [...document.querySelectorAll('[data-extab]')]; let i = list.indexOf(tab);
+    if (e.key === 'ArrowRight') i = (i + 1) % list.length; else if (e.key === 'ArrowLeft') i = (i - 1 + list.length) % list.length; else if (e.key === 'Home') i = 0; else i = list.length - 1;
+    e.preventDefault(); list[i].focus(); selectTab(list[i].dataset.extab);
+  });
   if (root.I18n && I18n.alAplicar) I18n.alAplicar(function () {
+    ['exTagWhatsApp', 'exTagInstagram'].forEach(id => { const el = node(id); if (el && Number(el.dataset.n)) setTag(id, Number(el.dataset.n)); });
     render();
     if (I18n.lang !== 'es' && node('experienciasResults')) I18n.aplicar(node('experienciasResults'));
   });

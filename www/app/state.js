@@ -143,6 +143,10 @@
             const visible = document.querySelector('.view-container:not(.hidden)');
             if (visible) { visible.classList.remove('view-enter'); void visible.offsetWidth; visible.classList.add('view-enter'); }
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            // En móvil el menú se desplaza: deja a la vista la pestaña activa (solo en horizontal, sin mover la página).
+            const activa = document.querySelector('.nav-menu .nav-tab-btn.active');
+            const menu = activa && activa.parentElement;
+            if (menu && menu.scrollWidth > menu.clientWidth) menu.scrollLeft = Math.max(0, activa.offsetLeft - (menu.clientWidth - activa.offsetWidth) / 2);
         }
 
         function abrirLegal() {

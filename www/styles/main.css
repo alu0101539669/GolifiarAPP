@@ -1401,3 +1401,48 @@
         .pf-limpbtns { display: flex; flex-wrap: wrap; gap: 0.6rem; width: 100%; }
         .pf-limpbtns .btn-sub, .pf-limpbtns .btn-minimal { flex: 1 1 130px; justify-content: center; min-height: 48px; width: auto; }
         .pf-dejar { margin: 0; }
+
+
+/* ===== Móvil: el menú nunca ensancha la página; se desplaza dentro de su caja ===== */
+.nav-menu { max-width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.nav-menu::-webkit-scrollbar { display: none; }
+.nav-tab-btn { flex: 0 0 auto; }
+@media (max-width: 760px) { .nav-menu { width: 100%; } }
+@media (max-width: 520px) { .nav-tab-btn { flex: 0 0 auto; } }
+.header-container { flex-wrap: wrap; }
+html, body { overflow-x: clip; }
+
+/* ===== Vistas con cabecera y subida como Instagram ===== */
+#viewExperiencias .hero-section, #viewExperiencias .analysis-steps, #viewExperiencias .upload-section-card, #viewExperiencias #experienciasResults,
+#viewWhatsapp .upload-section-card { width: min(100%, 1000px); margin-inline: auto; }
+#viewExperiencias .upload-section-card, #viewWhatsapp .upload-section-card { max-width: 900px; }
+#viewExperiencias .hero-section { text-align: center; }
+#viewExperiencias .hero-section h2, #viewExperiencias .hero-section p { text-align: center; margin-inline: auto; }
+.ex-view-head { text-align: center; }
+.ex-view-head h2 { margin: 0 0 0.5rem; }
+.ex-view-head p:not(.module-kicker) { margin: 0 auto; max-width: 60ch; color: var(--text-secondary); }
+.dropzone:focus-within { outline: 3px solid var(--accent-blue); outline-offset: 2px; }
+.dropzone-content .dropzone-title, .dropzone-content .dropzone-desc { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .dropzone { padding: 1.4rem 1rem; min-height: 0; } }
+
+/* ===== Cabecera compacta en móvil ===== */
+@media (max-width: 640px) {
+    .header-minimal { padding: 0.55rem 0.9rem; }
+    .header-container { gap: 0.5rem; justify-content: space-between; }
+    .brand-minimal { margin-right: 0; gap: 0.6rem; }
+    .brand-text span { display: none; }
+    .header-tools { order: 2; gap: 0.4rem; margin-left: auto; }
+    .tool-btn { width: 36px; height: 36px; }
+    .tool-btn-ghost { width: auto; padding: 0 0.6rem; }
+    .lang-switch button { min-width: 34px; height: 30px; padding: 0 0.45rem; }
+    .nav-menu { order: 3; }
+    .nav-tab-btn { min-height: 38px; }
+}
+/* Listas y tarjetas más limpias */
+.wa-ranking { list-style: none; padding: 0.25rem 0.9rem; max-width: none; }
+.upload-section-card > :empty { display: none; }
+@media (max-width: 640px) {
+    .content-view { padding: 1.4rem 1.1rem; }
+    .content-view h2 { font-size: 1.5rem; }
+    .main-wrapper { padding-inline: 0.75rem; }
+}

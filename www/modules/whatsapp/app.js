@@ -30,6 +30,8 @@
   async function cargar(input) {
     const archivo = input.files && input.files[0];
     if (!archivo) return;
+    const etiqueta = document.getElementById('whatsappTag');
+    if (etiqueta) { etiqueta.textContent = archivo.name; etiqueta.classList.add('active'); }
     if (!/\.txt$/i.test(archivo.name)) {
       ultimoResultado = { mensajes: 0 };
       mostrar(ultimoResultado);

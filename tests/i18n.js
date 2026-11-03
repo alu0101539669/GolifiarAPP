@@ -38,6 +38,37 @@ const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'activida
   await pg.waitForTimeout(1200);
   for (const p of PANELES) await pg.evaluate(n => Perfil.cambiarPanel(n), p);
 
+  // WhatsApp y Experiencias (chat de ejemplo generado al vuelo, con varios meses para ver todas las secciones)
+  const lineas = [];
+  for (let i = 0; i < 120; i++) {
+    const d = new Date(2026, 6 + Math.floor(i / 40), 1 + (i % 28), 8 + (i % 14), (i * 7) % 60);
+    const dd = String(d.getDate()).padStart(2, '0'), mm = String(d.getMonth() + 1).padStart(2, '0'), hh = String(d.getHours()).padStart(2, '0'), mi = String(d.getMinutes()).padStart(2, '0');
+    lineas.push(`[${dd}/${mm}/${d.getFullYear()}, ${hh}:${mi}:00] ${['Ana', 'Luis', 'Marta'][i % 3]}: mensaje ${i} fútbol`);
+  }
+  const chat = (n) => ({ name: n, mimeType: 'text/plain', buffer: Buffer.from(lineas.join('\n'), 'utf-8') });
+  await pg.evaluate(() => cambiarVista('whatsapp'));
+  await pg.setInputFiles('#whatsappFile', chat('chat1.txt'));
+  await pg.waitForTimeout(500);
+  await pg.evaluate(() => cambiarVista('experiencias'));
+  await pg.setInputFiles('#exWhatsAppFiles', [chat('chat1.txt'), chat('chat2.txt')]);
+  await pg.waitForTimeout(700);
+  await pg.setInputFiles('#exInstagramFiles', fx('completo.zip'));
+  await pg.waitForTimeout(1500);
+  for (const t of ['resumen', 'actividad', 'juegos', 'records', 'wrapped']) {
+    await pg.click('#extab-' + t);
+    if (t === 'actividad') await pg.check('#exEnableTopics');
+    if (t === 'juegos') { await pg.click('#exStartQuiz'); await pg.waitForTimeout(150); }
+  }
+  assert.ok((await pg.locator('#exTagWhatsApp').innerText()).length > 0, 'la zona de WhatsApp debe mostrar cuántos chats se importaron');
+  // Sin desbordes horizontales en móvil
+  await pg.setViewportSize({ width: 390, height: 844 });
+  for (const v of ['inicio', 'auditoria', 'whatsapp', 'experiencias', 'comousar']) {
+    await pg.evaluate(x => cambiarVista(x), v);
+    const ancho = await pg.evaluate(() => document.documentElement.scrollWidth);
+    assert.ok(ancho <= 391, `la vista ${v} no debe desbordar en móvil (ancho ${ancho})`);
+  }
+  await pg.setViewportSize({ width: 1200, height: 900 });
+
   const faltan = await pg.evaluate(() => [...I18n.faltan]);
   if (process.env.DUMP) fs.writeFileSync(process.env.DUMP, JSON.stringify(faltan, null, 1));
   assert.deepStrictEqual(faltan, [], 'textos sin traducir: ' + JSON.stringify(faltan.slice(0, 15)));

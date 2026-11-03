@@ -165,3 +165,37 @@ I18n.registrar('en', {
   "Seleccionar exportaciones de WhatsApp": "Select WhatsApp exports",
   "Seleccionar ZIP de Instagram": "Select Instagram ZIP"
 });
+
+/* Importar y pestañas de Experiencias */
+window.I18n.registrar('en', {
+  "MÓDULO WHATSAPP": "WHATSAPP MODULE",
+  "Elige o arrastra tu archivo .TXT de WhatsApp": "Choose or drag your WhatsApp .TXT file",
+  "Se lee en tu dispositivo, sin subirlo a ningún sitio.": "It's read on your device, without uploading it anywhere.",
+  "MÓDULO EXPERIENCIAS": "EXPERIENCES MODULE",
+  "Estadísticas, juegos y Wrapped de tus chats": "Stats, games and Wrapped for your chats",
+  "Importa conversaciones de WhatsApp e Instagram para descubrir estadísticas, comparar periodos y crear tarjetas para compartir. Todo se procesa aquí, en tu dispositivo.": "Import WhatsApp and Instagram conversations to discover stats, compare periods and create cards to share. Everything is processed here, on your device.",
+  "Importa tus chats": "Import your chats",
+  "WhatsApp (.txt) o ZIP de Instagram": "WhatsApp (.txt) or Instagram ZIP",
+  "Explora y comparte": "Explore and share",
+  "Estadísticas, juegos y tarjetas": "Stats, games and cards",
+  "Exportaciones de conversaciones de WhatsApp": "WhatsApp conversation exports",
+  "WhatsApp · elige o arrastra tus archivos .TXT": "WhatsApp · choose or drag your .TXT files",
+  "Un archivo por conversación, exportado sin archivos multimedia. Puedes elegir varios a la vez.": "One file per conversation, exported without media. You can choose several at once.",
+  "Instagram · elige o arrastra tu .ZIP (sin descomprimir)": "Instagram · choose or drag your .ZIP (don't unzip it)",
+  "Se leen tus conversaciones directas del ZIP de datos, por partes y sin subirlo a ningún sitio.": "Your direct conversations are read from the data ZIP, in parts and without uploading it anywhere.",
+  "Pasos para usar las experiencias": "Steps to use the experiences",
+  "{n} conversaciones importadas": "{n} conversations imported",
+  "Ritmo": "Rhythm",
+  "Cuándo se escribe en este chat": "When people write in this chat",
+  "Mensajes por hora del día": "Messages by hour of the day",
+  "Mensajes por mes": "Messages by month",
+  "Más datos del chat": "More chat data",
+  "{n} días": "{n} days",
+  "{n} día": "{n} day",
+  "Secciones de Experiencias": "Experiences sections",
+  "Juegos": "Games",
+  "Récords y torneo": "Records and tournament",
+  "Wrapped": "Wrapped",
+  "Borrar chats importados": "Delete imported chats",
+  "Se han borrado los chats importados de la memoria.": "The imported chats have been cleared from memory."
+});
