@@ -67,4 +67,16 @@ assert.ok(dp.ghosts.some(m => m.name === 'Pepe'), 'Pepe entró y no escribió');
 assert.ok(dp.words > 0 && dp.chars > 0 && dp.topSlot, 'Debe contar palabras, caracteres y franja');
 assert.ok(Array.isArray(E.whoIsMore(messages)), 'whoIsMore devuelve lista');
 assert.equal(E.hourHeat(messages).length, 7);
+
+// Labs
+const lab = E.parseWhatsApp(['[01/10/2026, 10:00:00] Ana: te quiero 😀 viaje','[01/10/2026, 10:01:00] Luis: perdón 😀 viaje','[01/10/2026, 10:02:00] Ana: <Multimedia omitido>','[01/10/2026, 10:03:00] Luis: jajaja 😂','[02/10/2026, 11:00:00] Ana: gracias viaje'].join('\n'),'L');
+assert.equal(E.firstMoments(lab)[0].sender, 'Ana', 'Primer «te quiero»');
+assert.ok(!('text' in E.firstMoments(lab)[0]), 'No devuelve texto');
+assert.equal(E.emojiDna(lab, true).emojis[0].emoji, '😀');
+assert.deepEqual(E.emojiDna(lab, false).emojis, [], 'Sin opt-in no se leen emojis');
+assert.equal(E.burst(lab).count, 4); assert.equal(E.longestRun(lab).count, 4);
+assert.ok(E.mostLikely(lab, true).some(x => x.key === 'trip'), 'Viaje con opt-in');
+assert.ok(!E.mostLikely(lab, false).some(x => x.key === 'trip'), 'Sin opt-in no hay palabras clave');
+assert.ok(E.soulmates(lab).length >= 1);
+assert.ok(E.topicCompat(lab, 'Ana', 'Luis').available);
 console.log('experiencias: OK');

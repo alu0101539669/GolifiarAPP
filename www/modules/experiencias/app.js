@@ -2,11 +2,13 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario' };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0 };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => root.I18n && I18n.num ? I18n.num(n) : new Intl.NumberFormat().format(n);
   const fmtDate = ts => new Date(ts).toLocaleDateString(root.I18n ? I18n.locale : undefined);
+  // Rol de desarrollo: con #dev o ?dev se activa el Premium de demostración en este dispositivo (solo cliente, sin valor de seguridad).
+  try { if (/(^|[#&?])dev($|[=&])/.test(root.location.hash + root.location.search)) localStorage.setItem('golifiar-premium-demo', 'true'); } catch (e) { /* sin almacenamiento */ }
   function node(id) { return document.getElementById(id); }
   function selectedChat() { return state.chats[state.selected] || null; }
   function rangeMessages(chat) {
@@ -111,7 +113,7 @@
     const labs = labels.map((l, i) => `<span>${i % step === 0 ? esc(l) : ''}</span>`).join('');
     return `<div role="img" aria-label="${esc(title)}"><div class="ex-cols">${cols}</div><div class="ex-col-labels">${labs}</div></div>`;
   }
-  const TABS = [['resumen', 'Resumen'], ['actividad', 'Actividad'], ['juegos', 'Juegos'], ['records', 'Récords y torneo'], ['wrapped', 'Wrapped']];
+  const TABS = [['resumen', 'Resumen'], ['actividad', 'Actividad'], ['juegos', 'Juegos'], ['records', 'Récords y torneo'], ['curiosidad', 'Full Curiosidad'], ['wrapped', 'Wrapped']];
   function renderEmpty() {
     node('experienciasResults').innerHTML = '<section class="ex-card ex-empty"><h3>Empieza importando una conversación</h3><p>Elige un TXT exportado desde WhatsApp o un ZIP de datos de Instagram. Los archivos se procesan localmente y no se guardan en el dispositivo.</p></section>';
   }
@@ -157,6 +159,31 @@
     const heatHtml = `<div class="ex-heat" role="img" aria-label="${esc(tr('Mapa de calor: día de la semana por hora'))}">${heat.map((row, d) => `<div class="ex-heat-row"><span>${esc(wd(d).slice(0, 2))}</span>${row.map((v, h) => `<i style="--a:${(v / heatMax).toFixed(2)}" title="${esc(wd(d))} ${h}:00 · ${num(v)}"></i>`).join('')}</div>`).join('')}</div>`;
     const rangeHtml = `<div class="ex-range"><label>${esc(tr('Periodo a analizar'))}<select id="exRange"><option value="all">${esc(tr('Todo el chat'))}</option><option value="year">${esc(tr('Último año'))}</option><option value="summer">${esc(tr('Último verano'))}</option><option value="custom">${esc(tr('Personalizado'))}</option></select></label>${state.range === 'custom' ? `<label>${esc(tr('Desde'))}<input type="date" id="exFrom" value="${esc(state.from)}"></label><label>${esc(tr('Hasta'))}<input type="date" id="exTo" value="${esc(state.to)}"></label>` : ''}</div>`;
     const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
+    const ta = state.topicsEnabled, dna = E().emojiDna(messages, ta), moments = ta ? E().firstMoments(messages) : [], bur = E().burst(messages), run = E().longestRun(messages), likely = E().mostLikely(messages, ta), soul = E().soulmates(messages), compat = ta && chemistryResult !== undefined ? E().topicCompat(messages, chemistryA, chemistryB) : { available: false };
+    const fdt = ts => new Date(ts).toLocaleString(root.I18n ? I18n.locale : undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    const optin = `<label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics2" ${ta ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label>`;
+    const diplomaBtns = who.map(w => `<button type="button" class="btn-sub" data-card="diploma:${w.key}">🎓 ${esc(tr(w.title))}</button>`).join('');
+    const curioHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">Golifiar Labs</p><h3>${esc(tr('Full Curiosidad'))}</h3><p>${esc(tr('Algunas curiosidades leen el texto en memoria, solo si activas el análisis de palabras. Nunca se muestra ni se guarda.'))}</p>${optin}</div></div>
+      <div class="ex-records">
+      ${bur ? `<article class="ex-record"><span>💥</span><div><small>${esc(tr('Momento de más drama (1 hora)'))}</small><strong>${num(bur.count)} ${esc(tr('mensajes'))} · ${esc(fdt(bur.start))}</strong></div></article>` : ''}
+      ${run ? `<article class="ex-record"><span>⚡</span><div><small>${esc(tr('Conversación más larga sin pausas'))}</small><strong>${num(run.count)} ${esc(tr('mensajes'))} · ${esc(E().formatDuration(run.end - run.start))}</strong></div></article>` : ''}
+      ${soul.map(x => `<article class="ex-record"><span>💞</span><div><small>${esc(tr('Mejor encaje'))}</small><strong>${esc(x.a)} + ${esc(x.b)} · ${x.percent}%</strong></div></article>`).join('')}
+      </div></section>
+      <section class="ex-card"><h3>${esc(tr('¿Con quién es más probable que…?'))}</h3>${likely.length ? `<div class="ex-records">${likely.map(x => `<article class="ex-record"><div><strong>${esc(tr(x.title))}</strong><span>${esc(x.name)} · ${esc(x.value)}</span></div></article>`).join('')}</div>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}</section>
+      <section class="ex-card"><h3>${esc(tr('ADN de la conversación'))}</h3>${ta ? `<p class="ex-discovery">${dna.emojis.map(e => `${e.emoji} ×${num(e.count)}`).join('  ') || '—'}</p><p>${esc(tr('Palabra mágica'))}: <strong>${esc(dna.magicWord || '—')}</strong></p>` : `<p>${esc(tr('Activa el análisis de palabras para verlo.'))}</p>`}
+        <h4>${esc(tr('Primeras veces'))}</h4>${ta ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
+        <h4>${esc(tr('Compatibilidad de temas'))}</h4>${compat.available ? `<p class="ex-discovery"><strong class="ex-score">${num(compat.percent)}%</strong> · ${esc(compat.shared.join(' · '))}</p>${meter(compat.percent)}` : `<p>${esc(tr('Necesita el análisis de palabras y dos personas con mensajes.'))}</p>`}</section>
+      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tarjetas virales'))}</p><h3>${esc(tr('Comparte en tus Stories'))}</h3></div></div><div class="ex-share-actions"><button type="button" class="btn-sub" data-card="adn">🧬 ${esc(tr('ADN de la conversación'))}</button><button type="button" class="btn-sub" data-card="vs">⚔️ Vs</button><button type="button" class="btn-sub" data-card="turno">👉 ${esc(tr('Tu turno'))}</button><button type="button" class="btn-sub" data-card="adivina">🎯 ${esc(tr('Adivina tu resultado'))}</button><button type="button" class="btn-sub" data-card="peligro">⚠️ ${esc(tr('Peligro de racha'))}</button></div><h4>${esc(tr('Diplomas'))}</h4><div class="ex-share-actions">${diplomaBtns || `<span>${esc(tr('Datos insuficientes'))}</span>`}</div></section>`;
+    const slides = [
+      ['📅', `${num(dp.totalMessages)} ${tr('mensajes')}`, tr('en {n} días activos', { n: num(s.activeDays) })],
+      ['🔥', dias(st.longest), tr('Racha más larga')],
+      ['⏰', s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00`, tr('Hora con más actividad')],
+      ['🏆', dp.members[0] ? dp.members[0].name : '—', tr('Más mensajes')],
+      ['🎭', who[0] ? who[0].name : '—', who[0] ? tr(who[0].title) : ''],
+      ['💬', `${num(dp.words)} ${tr('palabras')}`, tr('Gracias por hablar tanto')]
+    ];
+    state.slide = Math.min(state.slide, slides.length - 1);
+    const storyHtml = `<section class="ex-card ex-story" aria-roledescription="carousel" aria-label="${esc(tr('Golifiar Wrapped'))}">${slides.map((x, i) => `<div class="ex-slide" ${i === state.slide ? '' : 'hidden'}><span class="ex-slide-ico" aria-hidden="true">${x[0]}</span><strong>${esc(x[1])}</strong><span>${esc(x[2])}</span></div>`).join('')}<div class="ex-share-actions"><button type="button" class="btn-sub" id="exPrev">${esc(tr('Anterior'))}</button><span aria-live="polite">${state.slide + 1}/${slides.length}</span><button type="button" class="btn-minimal" id="exNext">${esc(tr('Siguiente'))}</button></div></section>`;
     const all = `
       <!--pane:resumen--><section class="ex-card ex-profile"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-kpis">${kpi('Mensajes analizados',num(s.totalMessages))}${kpi('Participantes',num(s.participantCount))}${kpi('Días activos',num(s.activeDays))}${kpi('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}</div><details class="ex-more" open><summary>${esc(tr('Más datos del chat'))}</summary><div class="ex-metrics">${metric('Racha actual',dias(st.current))}${metric('Racha más larga',dias(st.longest))}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div></details><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ul class="ex-bars">${s.participants.slice(0,6).map(p => `<li><span class="ex-bar-name">${esc(p.name)}</span><span class="ex-bar"><i style="width:${Math.max(3, Math.round(p.count / topCount * 100))}%"></i></span><strong>${num(p.count)}</strong></li>`).join('')}</ul></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
       <!--pane:resumen-->${dangerHtml}${deepHtml}
@@ -167,7 +194,8 @@
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Índice de equilibrio'))}</p><h3>${esc(tr('Reparto de participación'))}</h3></div></div><p class="ex-discovery">${balance.available ? `<strong class="ex-score">${num(balance.score)}/100</strong>` : esc(tr('Datos insuficientes'))}</p>${balance.available ? meter(balance.score) : ''}<p class="ex-note">${esc(balance.explanation || tr('Se necesitan al menos dos participantes.'))}</p></section>
       <!--pane:actividad--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Temas del chat'))}</p><h3>${esc(tr('Palabras más frecuentes'))}</h3><p>${esc(tr('Se calculan localmente en memoria; no se conserva el texto de los mensajes.'))}</p><label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics" ${state.topicsEnabled ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label></div></div>${topicHtml}</section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Galería de récords'))}</p><h3>${esc(tr('Trofeos y logros'))}</h3></div></div><div class="ex-achievements">${achievementsHtml}</div><h4>${esc(tr('Récords del chat'))}</h4><div class="ex-records">${recordsHtml}</div></section>
-      <!--pane:wrapped-->${shareHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
+      <!--pane:curiosidad-->${curioHtml}
+      <!--pane:wrapped-->${storyHtml}${shareHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
       <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Modo fiesta'))}</p><h3>${esc(tr('Pon a prueba al grupo'))}</h3><p>${esc(tr('Preguntas generadas con estadísticas, sin revelar mensajes privados.'))}</p></div></div><div id="exPartyArea">${renderQuizIntro()}</div></section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Torneo entre chats'))}</p><h3>${esc(tr('¿Qué chat tiene más actividad relativa?'))}</h3><p>${esc(tr('La puntuación combina mensajes por participante y por día activo para reducir la ventaja de los grupos grandes.'))}</p></div></div>${renderTournament()}</section>
       <!--pane:resumen--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Descubrimiento diario'))}</p><h3>${esc(tr('Una curiosidad de hoy'))}</h3></div></div><p class="ex-discovery">${esc(dailyDiscoveryText(messages))}</p></section>`;
@@ -276,6 +304,43 @@
     reader.onload = () => showModal(tr('Mantén pulsada la imagen y elige «Guardar imagen».'), reader.result);
     reader.readAsDataURL(blob);
   }
+
+  function simpleCard(o) {
+    let look = state.cardLook; if (look !== 'canario' && !(root.premiumActivo && root.premiumActivo())) look = 'canario';
+    const L = LOOKS[look] || LOOKS.canario;
+    const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920; const ctx = canvas.getContext('2d');
+    const g = ctx.createLinearGradient(0, 0, 0, 1920); g.addColorStop(0, L.bg[0]); g.addColorStop(1, L.bg[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
+    ctx.textAlign = 'center'; ctx.fillStyle = L.sub; ctx.font = '600 44px system-ui, sans-serif'; ctx.fillText(o.kicker, 540, 260);
+    ctx.fillStyle = L.accent; ctx.font = `bold ${o.bigSize || 150}px system-ui, sans-serif`; ctx.fillText(truncate(ctx, o.big, 960, o.bigSize || 150), 540, 760);
+    ctx.fillStyle = L.text; ctx.font = 'bold 60px system-ui, sans-serif'; (o.lines || []).forEach((l, i) => ctx.fillText(truncate(ctx, l, 960, 60), 540, 940 + i * 100));
+    ctx.fillStyle = L.accent; ctx.font = 'bold 76px system-ui, sans-serif'; ctx.fillText('Golifiar', 540, 1700);
+    ctx.fillStyle = L.sub; ctx.font = '34px system-ui, sans-serif'; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770);
+    return canvas;
+  }
+  function viralCard(kind) {
+    const chat = selectedChat(); if (!chat) return;
+    const messages = rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages), who = E().whoIsMore(messages);
+    const nm = (n, i) => state.anon ? tr('Persona {n}', { n: i + 1 }) : n;
+    let o;
+    if (kind.startsWith('diploma:')) {
+      const w = who.find(x => x.key === kind.slice(8)); if (!w) return;
+      o = { kicker: tr('DIPLOMA OFICIAL'), big: '🎓', lines: [nm(w.name, 0), tr(E().DIPLOMAS[w.key]), `${tr(w.title)} · ${w.value}`, tr('(Documento satírico sin validez)')], bigSize: 220 };
+    } else if (kind === 'adn') {
+      if (!state.topicsEnabled) return showModal(tr('Activa el análisis de palabras para crear esta tarjeta.'));
+      const d = E().emojiDna(messages, true); o = { kicker: tr('ADN DE LA CONVERSACIÓN'), big: d.emojis.map(e => e.emoji).join(' ') || '💬', lines: [`${tr('Palabra mágica')}: ${d.magicWord || '—'}`], bigSize: 190 };
+    } else if (kind === 'vs') {
+      const a = dp.members.find(m => m.name === state.chemistryA) || dp.members[0], b = dp.members.find(m => m.name === state.chemistryB && m !== a) || dp.members[1]; if (!a || !b) return showModal(tr('Datos insuficientes'));
+      o = { kicker: tr('DUELO DE CHAT'), big: `${num(a.messages)} ⚔️ ${num(b.messages)}`, lines: [nm(a.name, 0) + ' vs ' + nm(b.name, 1), `${Math.round(a.share)}% – ${Math.round(b.share)}%`], bigSize: 130 };
+    } else if (kind === 'turno') {
+      o = { kicker: tr('TU TURNO'), big: `🔥 ${st.current || st.longest}`, lines: [tr('Mi racha de días hablando'), tr('¿Y la tuya? Súbela con Golifiar')] };
+    } else if (kind === 'adivina') {
+      o = { kicker: tr('ADIVINA EL RESULTADO'), big: '🤔', lines: [tr('¿Cuántos mensajes crees que llevamos?'), tr('A) menos de 1.000   B) 1.000–10.000'), tr('C) más de 10.000')], bigSize: 220 };
+    } else if (kind === 'peligro') {
+      o = { kicker: tr('PELIGRO DE RACHA'), big: `⚠️ ${st.current || st.longest}`, lines: [tr('Tu racha de {n} días vence hoy a las 23:59', { n: num(st.current || st.longest) })] };
+    } else return;
+    const c = simpleCard(o);
+    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-${kind.replace(':', '-')}.png`); }, 'image/png');
+  }
   function downloadStreak(chatArg) {
     const c = streakCanvas(chatArg); if (!c) return;
     c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); sound('ok'); saveBlob(blob, `golifiar-racha-${safeFile((chatArg || selectedChat()).name)}.png`); }, 'image/png');
@@ -321,7 +386,7 @@
     if (e.target.id === 'exChatSelect') { state.selected = Number(e.target.value) || 0; render(); }
     if (e.target.id === 'exPeriodA') state.compareA = e.target.value;
     if (e.target.id === 'exPeriodB') state.compareB = e.target.value;
-    if (e.target.id === 'exEnableTopics') { state.topicsEnabled = e.target.checked; render(); }
+    if (e.target.id === 'exEnableTopics' || e.target.id === 'exEnableTopics2') { state.topicsEnabled = e.target.checked; render(); }
     if (e.target.id === 'exCardTheme') state.cardTheme = e.target.value;
     if (e.target.id === 'exCardShowWords') state.cardShowWords = e.target.checked;
     if (e.target.id === 'exCardShowStreak') state.cardShowStreak = e.target.checked;
@@ -337,6 +402,8 @@
     const button = e.target.closest('button'); if (!button) return;
     if (button.id === 'exCompareBtn') render();
     if (button.id === 'exClear') clearAll();
+    if (button.dataset.card) viralCard(button.dataset.card);
+    if (button.id === 'exNext' || button.id === 'exPrev') { state.slide = Math.max(0, state.slide + (button.id === 'exNext' ? 1 : -1)); render(); sound('ok'); }
     if (button.id === 'exStreakDl') downloadStreak();
     if (button.id === 'exStreakCopy') copyStreak();
     if (button.id === 'exCopyText') copyText();

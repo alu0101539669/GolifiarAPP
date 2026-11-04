@@ -421,6 +421,65 @@
     return grid;
   }
 
+
+  // ---- Labs / Full Curiosidad ----
+  const norm = t => String(t || '').toLocaleLowerCase('es').normalize('NFD').replace(/[̀-ͯ]/g, '');
+  function emojiDna(messages, textAllowed) {
+    if (!textAllowed) return { emojis: [], magicWord: null };
+    const ems = new Map();
+    for (const m of normalizeMessages(messages)) for (const e of (m.text.match(/\p{Extended_Pictographic}/gu) || [])) ems.set(e, (ems.get(e) || 0) + 1);
+    const top = [...ems.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([emoji, count]) => ({ emoji, count }));
+    const w = topics(messages, 1)[0];
+    return { emojis: top, magicWord: w ? w.word : null };
+  }
+  // Solo devuelve fecha y autor de la primera aparición, nunca el texto.
+  function firstMoments(messages, terms) {
+    const list = terms || ['te quiero', 'perdon', 'gracias', 'jajaja', 'te amo'];
+    return list.map(term => { const m = normalizeMessages(messages).find(x => norm(x.text).includes(term)); return m ? { term, timestamp: m.timestamp, sender: m.sender } : { term, timestamp: null, sender: null }; });
+  }
+  function burst(messages) {
+    const ms = normalizeMessages(messages); let best = { count: 0, start: null }, j = 0;
+    for (let i = 0; i < ms.length; i++) { while (ms[i].timestamp - ms[j].timestamp > 3600000) j++; if (i - j + 1 > best.count) best = { count: i - j + 1, start: ms[j].timestamp }; }
+    return best.count ? best : null;
+  }
+  function longestRun(messages) {
+    const ms = normalizeMessages(messages); if (!ms.length) return null;
+    let best = { count: 1, start: ms[0].timestamp, end: ms[0].timestamp }, cur = { count: 1, start: ms[0].timestamp, end: ms[0].timestamp };
+    for (let i = 1; i < ms.length; i++) {
+      if (ms[i].timestamp - ms[i - 1].timestamp <= 1800000) { cur.count++; cur.end = ms[i].timestamp; } else cur = { count: 1, start: ms[i].timestamp, end: ms[i].timestamp };
+      if (cur.count > best.count) best = { ...cur };
+    }
+    return best;
+  }
+  function mostLikely(messages, textAllowed) {
+    const d = deep(messages), people = d.members.filter(m => m.messages > 0 && m.state !== 'ex'); if (people.length < 2) return [];
+    const out = [];
+    const top = (fn) => people.map(p => ({ p, v: fn(p) })).sort((a, b) => b.v - a.v)[0];
+    const meme = top(p => p.media); if (meme.v > 0) out.push({ key: 'memes', title: 'Mandar más memes y multimedia', name: meme.p.name, value: String(meme.v) });
+    const run = longestRun(messages); if (run && run.count > 3) { const ms = normalizeMessages(messages).filter(m => m.timestamp >= run.start && m.timestamp <= run.end); const c = new Map(); ms.forEach(m => c.set(m.sender, (c.get(m.sender) || 0) + 1)); const w = [...c.entries()].sort((a, b) => b[1] - a[1])[0]; out.push({ key: 'run', title: 'Protagonizar el récord de conversación sin pausas', name: w[0], value: String(run.count) }); }
+    if (textAllowed) {
+      const kw = { trip: ['viaje', 'playa', 'fiesta', 'cumple', 'vacaciones', 'plan'], biz: ['reunion', 'trabajo', 'proyecto', 'dinero', 'cliente', 'negocio'] };
+      for (const [k, title] of [['trip', 'Organizar un viaje o una fiesta'], ['biz', 'Montar un negocio']]) {
+        const c = new Map(); normalizeMessages(messages).forEach(m => { const t = norm(m.text); const n = kw[k].filter(w => t.includes(w)).length; if (n) c.set(m.sender, (c.get(m.sender) || 0) + n); });
+        const w = [...c.entries()].sort((a, b) => b[1] - a[1])[0]; if (w) out.push({ key: k, title, name: w[0], value: String(w[1]) });
+      }
+    }
+    return out;
+  }
+  function soulmates(messages) {
+    const ms = normalizeMessages(messages), pair = new Map();
+    for (let i = 1; i < ms.length; i++) { const a = ms[i - 1], b = ms[i]; if (a.sender === b.sender || b.timestamp - a.timestamp > 600000) continue; const k = [a.sender, b.sender].sort().join('\u0000'); pair.set(k, (pair.get(k) || 0) + 1); }
+    const total = [...pair.values()].reduce((x, y) => x + y, 0) || 1;
+    return [...pair.entries()].map(([k, v]) => { const [a, b] = k.split('\u0000'); return { a, b, count: v, percent: Math.round(v / total * 100) }; }).sort((x, y) => y.count - x.count).slice(0, 5);
+  }
+  function topicCompat(messages, nameA, nameB) {
+    const words = n => new Set(topics(normalizeMessages(messages).filter(m => m.sender === n), 60).map(x => x.word));
+    const A = words(nameA), B = words(nameB); if (!A.size || !B.size) return { available: false };
+    const shared = [...A].filter(w => B.has(w)); const uni = new Set([...A, ...B]);
+    return { available: true, percent: Math.round(shared.length / uni.size * 100), shared: shared.slice(0, 8) };
+  }
+  const DIPLOMAS = { leftOnRead: 'Máster en Visto Eterno', nocturnal: 'Doctor honoris causa en Madrugones', voice: 'Podcaster oficial del grupo', stickers: 'Embajador mundial del sticker', initiator: 'Rompehielos certificado', dramatic: 'Premio Goya al mejor drama' };
+
   function summaryText(messages, name, system) {
     const s = stats(messages), st = streaks(messages), d = deep(messages, system);
     const top = d.members[0];
@@ -429,5 +488,5 @@
 
   function toCardData(messages, name) { return wrapped(messages, name); }
 
-  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind });
+  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind, emojiDna, firstMoments, burst, longestRun, mostLikely, soulmates, topicCompat, DIPLOMAS });
 }(typeof window !== 'undefined' ? window : globalThis));
