@@ -49,10 +49,10 @@
     } catch (err) { showModal(`${file.name}: ${err.message || tr('No se pudo importar el archivo.')}`); }
     setProgress(null); input.value = '';
   }
-  function showModal(text) {
+  function showModal(text, img) {
     let m = node('exModal');
     if (!m) { m = document.createElement('div'); m.id = 'exModal'; m.className = 'ex-modal'; m.setAttribute('role', 'alertdialog'); m.setAttribute('aria-modal', 'true'); document.body.appendChild(m); }
-    m.innerHTML = `<div class="ex-modal-box"><p>${esc(text)}</p><button type="button" class="btn-minimal" id="exModalClose">${esc(tr('Entendido'))}</button></div>`;
+    m.innerHTML = `<div class="ex-modal-box">${img ? `<img class="ex-modal-img" src="${img}" alt="${esc(tr('Tarjeta generada'))}">` : ''}<p>${esc(text)}</p><button type="button" class="btn-minimal" id="exModalClose">${esc(tr('Entendido'))}</button></div>`;
     m.hidden = false; const b = node('exModalClose'); if (b) b.focus();
   }
   // Sonidos sintetizados en el dispositivo; desactivados salvo que el usuario los active.
@@ -260,9 +260,25 @@
     ctx.fillStyle = L.sub; ctx.font = '34px system-ui, sans-serif'; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770);
     return canvas;
   }
+
+  // Guarda un PNG: compartir en móvil, descarga clásica en escritorio y, si nada funciona, vista previa para guardar a mano.
+  async function saveBlob(blob, filename) {
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (mobile && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Golifiar' }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const url = URL.createObjectURL(blob);
+    let ok = false;
+    try { const a = document.createElement('a'); a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click(); a.remove(); ok = !mobile || /Chrome/.test(navigator.userAgent) && !/wv\)/.test(navigator.userAgent); } catch (e) { ok = false; }
+    if (ok) { showStatus(tr('Tarjeta descargada: {f}', { f: filename }), false); setTimeout(() => URL.revokeObjectURL(url), 30000); return; }
+    const reader = new FileReader();
+    reader.onload = () => showModal(tr('Mantén pulsada la imagen y elige «Guardar imagen».'), reader.result);
+    reader.readAsDataURL(blob);
+  }
   function downloadStreak(chatArg) {
     const c = streakCanvas(chatArg); if (!c) return;
-    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `golifiar-racha-${safeFile((chatArg || selectedChat()).name)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); sound('ok'); }, 'image/png');
+    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); sound('ok'); saveBlob(blob, `golifiar-racha-${safeFile((chatArg || selectedChat()).name)}.png`); }, 'image/png');
   }
   function copyStreak(chatArg) {
     const c = streakCanvas(chatArg); if (!c) return;
@@ -294,7 +310,7 @@
     if (state.cardShowWords && state.topicsEnabled) { ctx.font = 'bold 34px system-ui'; ctx.fillText(tr('Palabras destacadas'), 100, 980); ctx.font = '32px system-ui'; ctx.fillText(truncate(ctx, data.topWords.join(' · ') || '—', 820, 32), 100, 1040); }
     if (state.cardShowStreak) { ctx.font = '32px system-ui'; ctx.fillText(`${tr('Racha más larga')}: ${data.longestStreak} ${tr('días')}`, 100, 920); }
     ctx.font = '28px system-ui'; ctx.fillText(tr('Generado localmente por Golifiar'), 100, 1200);
-    canvas.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `golifiar-wrapped-${safeFile(chat.name)}.png`; a.click(); window.setTimeout(() => URL.revokeObjectURL(url), 1000); }, 'image/png');
+    canvas.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-wrapped-${safeFile(chat.name)}.png`); }, 'image/png');
   }
   function truncate(ctx, text, maxWidth, fontSize) { let value = String(text || ''); ctx.font = `bold ${fontSize}px system-ui`; while (value.length && ctx.measureText(value).width > maxWidth) value = value.slice(0,-2); return value === text ? value : `${value}…`; }
   function safeFile(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,60) || 'chat'; }

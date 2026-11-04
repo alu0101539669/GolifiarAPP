@@ -273,5 +273,8 @@ window.I18n.registrar('en', {
   "No se pudo copiar el texto.": "The text could not be copied.",
   "Mi chat": "My chat",
   "Podio y miembros": "Podium and members",
-  "Un solo chat por sesión. Se lee en tu dispositivo, sin subirlo a ningún sitio.": "One chat per session. It is read on your device and never uploaded."
+  "Un solo chat por sesión. Se lee en tu dispositivo, sin subirlo a ningún sitio.": "One chat per session. It is read on your device and never uploaded.",
+  "Tarjeta generada": "Generated card",
+  "Tarjeta descargada: {f}": "Card downloaded: {f}",
+  "Mantén pulsada la imagen y elige «Guardar imagen».": "Press and hold the image and choose “Save image”."
 });
