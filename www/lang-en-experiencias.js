@@ -271,5 +271,7 @@ window.I18n.registrar('en', {
   "Tu navegador no permite copiar imágenes. Usa «Descargar para Story».": "Your browser can't copy images. Use “Download for Story”.",
   "Resumen copiado.": "Summary copied.",
   "No se pudo copiar el texto.": "The text could not be copied.",
-  "Mi chat": "My chat"
+  "Mi chat": "My chat",
+  "Podio y miembros": "Podium and members",
+  "Un solo chat por sesión. Se lee en tu dispositivo, sin subirlo a ningún sitio.": "One chat per session. It is read on your device and never uploaded."
 });

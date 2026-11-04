@@ -235,9 +235,9 @@
     mini: { bg: ['#fafafa', '#e9e9ee'], accent: '#111111', text: '#111111', sub: '#555555' }
   };
   const AV = ['#FFD21F', '#ff7a59', '#4cc9f0', '#9b5de5', '#43aa8b', '#f15bb5'];
-  function streakCanvas() {
-    const chat = selectedChat(); if (!chat) return null;
-    const messages = rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages);
+  function streakCanvas(chatArg) {
+    const chat = chatArg || selectedChat(); if (!chat) return null;
+    const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages);
     let look = state.cardLook;
     if (look !== 'canario' && !(root.premiumActivo && root.premiumActivo())) look = 'canario';
     const L = LOOKS[look] || LOOKS.canario;
@@ -260,20 +260,20 @@
     ctx.fillStyle = L.sub; ctx.font = '34px system-ui, sans-serif'; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770);
     return canvas;
   }
-  function downloadStreak() {
-    const c = streakCanvas(); if (!c) return;
-    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `golifiar-racha-${safeFile(selectedChat().name)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); sound('ok'); }, 'image/png');
+  function downloadStreak(chatArg) {
+    const c = streakCanvas(chatArg); if (!c) return;
+    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `golifiar-racha-${safeFile((chatArg || selectedChat()).name)}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); sound('ok'); }, 'image/png');
   }
-  function copyStreak() {
-    const c = streakCanvas(); if (!c) return;
+  function copyStreak(chatArg) {
+    const c = streakCanvas(chatArg); if (!c) return;
     c.toBlob(async blob => {
       try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); showStatus(tr('Imagen copiada al portapapeles.'), false); }
       catch (e) { showModal(tr('Tu navegador no permite copiar imágenes. Usa «Descargar para Story».')); }
     }, 'image/png');
   }
-  async function copyText() {
-    const chat = selectedChat(); if (!chat) return;
-    const msgs = rangeMessages(chat); const name = state.anon ? tr('Mi chat') : chat.name;
+  async function copyText(chatArg) {
+    const chat = chatArg || selectedChat(); if (!chat) return;
+    const msgs = chatArg ? chatArg.messages : rangeMessages(chat); const name = state.anon ? tr('Mi chat') : chat.name;
     try { await navigator.clipboard.writeText(E().summaryText(msgs, name)); showStatus(tr('Resumen copiado.'), false); } catch (e) { showModal(tr('No se pudo copiar el texto.')); }
   }
 
@@ -349,5 +349,5 @@
     render();
     if (I18n.lang !== 'es' && node('experienciasResults')) I18n.aplicar(node('experienciasResults'));
   });
-  root.GolifiarExperiencias = Object.freeze({ importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
+  root.GolifiarExperiencias = Object.freeze({ share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
 }(typeof window !== 'undefined' ? window : globalThis));

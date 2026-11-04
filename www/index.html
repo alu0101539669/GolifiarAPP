@@ -121,8 +121,10 @@
                     <input type="file" id="whatsappFile" accept=".txt,text/plain" onchange="cargarWhatsApp(this)">
                     <div class="dropzone-content">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="margin-bottom: 0.25rem;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        <span class="dropzone-title">Elige o arrastra tu archivo .TXT de WhatsApp</span>
-                        <span class="dropzone-desc">Se lee en tu dispositivo, sin subirlo a ningún sitio.</span>
+                        <span class="dropzone-title">Arrastra tu archivo .txt aquí o haz clic para explorar</span>
+                        <span class="dropzone-desc">Un solo chat por sesión. Se lee en tu dispositivo, sin subirlo a ningún sitio.</span>
+                        <span class="btn-minimal dz-btn" aria-hidden="true">Seleccionar chat</span>
+                        <span class="dz-progress" hidden><i></i></span>
                         <span id="whatsappTag" class="file-status-tag" role="status"></span>
                     </div>
                 </div>
