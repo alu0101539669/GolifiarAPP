@@ -208,3 +208,10 @@
 .guide-state { display: inline-block; margin-left: 0.5rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; color: var(--gold-ink); background: var(--gold-bg); border: 1px solid var(--gold-border); }
 .guide-state.soon { color: var(--text-secondary); background: var(--surface-3); border-color: var(--border-color); }
 .guide-callout + p { margin-top: 1rem; }
+
+/* Botonera de plataformas */
+.in-plat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; width: 100%; max-width: 520px; }
+.in-plat .in-btn { padding-inline: 1rem; flex-direction: column; gap: 0.1rem; }
+.in-plat-soon { opacity: 0.65; cursor: not-allowed; }
+.in-plat-soon small { font-size: 0.7rem; font-weight: 500; color: var(--text-muted); }
+@media (min-width: 700px) { .in-plat { grid-template-columns: repeat(4, auto); max-width: none; width: auto; } }

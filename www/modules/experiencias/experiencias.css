@@ -151,3 +151,15 @@
 .ex-slide-ico { font-size: 3.5rem; }
 @keyframes ex-pop { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .ex-slide { animation: none; } }
+.dev-role { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; color: var(--text-secondary); }
+.dev-role[hidden] { display: none; }
+.js-premium-state.on { color: var(--accent-green); }
+.ex-editor { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 1rem; align-items: start; }
+.ex-editor-controls { display: flex; flex-direction: column; gap: .6rem; font-size: .9rem; }
+.ex-editor-controls label { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.ex-editor-controls input[type="color"] { width: 44px; height: 30px; padding: 0; border: 1px solid var(--border-color); border-radius: 6px; background: none; }
+.ex-preview { width: 270px; height: 480px; max-width: 100%; border: 1px solid var(--border-color); border-radius: 14px; background: var(--surface-2); }
+.ex-emoji-cloud { display: flex; flex-wrap: wrap; gap: .4rem .8rem; align-items: center; justify-content: center; line-height: 1.1; padding: .5rem 0; }
+.ex-file-btn { display: inline-flex; cursor: pointer; margin: .5rem 0; }
+.ex-file-btn:focus-within { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+@media (max-width: 700px) { .ex-editor { grid-template-columns: minmax(0, 1fr); } .ex-preview { justify-self: center; } }

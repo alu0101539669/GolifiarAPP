@@ -2,13 +2,13 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0 };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0, hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => root.I18n && I18n.num ? I18n.num(n) : new Intl.NumberFormat().format(n);
   const fmtDate = ts => new Date(ts).toLocaleDateString(root.I18n ? I18n.locale : undefined);
   // Rol de desarrollo: con #dev o ?dev se activa el Premium de demostración en este dispositivo (solo cliente, sin valor de seguridad).
-  try { if (/(^|[#&?])dev($|[=&])/.test(root.location.hash + root.location.search)) localStorage.setItem('golifiar-premium-demo', 'true'); } catch (e) { /* sin almacenamiento */ }
+  try { if (/(^|[#&?])dev($|[=&])/.test(root.location.hash + root.location.search)) localStorage.setItem('golifiar-dev', '1'); } catch (e) { /* sin almacenamiento */ }
   function node(id) { return document.getElementById(id); }
   function selectedChat() { return state.chats[state.selected] || null; }
   function rangeMessages(chat) {
@@ -151,7 +151,7 @@
     const chemistryA = s.participants.some(p => p.name === state.chemistryA) ? state.chemistryA : (s.participants[0]?.name || '');
     const chemistryB = s.participants.some(p => p.name === state.chemistryB) ? state.chemistryB : (s.participants[1]?.name || '');
     state.chemistryA = chemistryA; state.chemistryB = chemistryB;
-    const chemistryResult = s.participants.length > 1 ? E().chemistry(messages, chemistryA, chemistryB) : { available: false };
+    const chemistryResult = s.participants.length > 1 ? E().chemistryFull(messages, chemistryA, chemistryB, state.topicsEnabled) : { available: false };
     const funHtml = fun.map(test => `<article class="ex-record"><div><strong>${esc(tr(test.title))}</strong><span>${test.name ? esc(test.name) : esc(tr('Datos insuficientes'))} · ${test.value == null ? '—' : esc(test.value)}</span><small>${esc(test.explanation)}</small></div></article>`).join('');
     const compareHtml = comparison ? `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Evolución'))}</p><h3>${esc(tr('Compara dos periodos del mismo chat'))}</h3></div></div><div class="ex-compare-controls"><label>${esc(tr('Periodo A'))}<select id="exPeriodA">${monthOptions}</select></label><label>${esc(tr('Periodo B'))}<select id="exPeriodB">${monthOptions}</select></label><button type="button" class="btn-minimal" id="exCompareBtn">${esc(tr('Comparar'))}</button></div><div class="ex-metrics">${metric('Mensajes · periodo A', num(comparison.metrics.totalMessages.a))}${metric('Mensajes · periodo B', num(comparison.metrics.totalMessages.b), comparison.metrics.totalMessages.percent === null ? tr('Sin base para porcentaje') : `${comparison.metrics.totalMessages.percent >= 0 ? '+' : ''}${comparison.metrics.totalMessages.percent.toFixed(1)}%`)}${metric('Días activos · A', num(comparison.metrics.activeDays.a))}${metric('Días activos · B', num(comparison.metrics.activeDays.b))}</div></section>` : `<section class="ex-card"><h3>${esc(tr('Comparador de periodos'))}</h3><p>${esc(tr('Necesitas al menos dos meses con actividad para comparar periodos.'))}</p></section>`;
     const calendarHtml = cal.length ? `<div class="ex-calendar" role="list" aria-label="${esc(tr('Calendario de actividad'))}">${cal.map(d => `<div role="listitem" class="ex-day level-${d.level}" title="${esc(d.date)} · ${num(d.count)}" aria-label="${esc(d.date)}: ${num(d.count)} ${esc(tr('mensajes'))}"><span>${Number(d.date.slice(-2))}</span></div>`).join('')}</div><p class="ex-note">${esc(tr('Cada cuadro representa un día; la intensidad indica cuántos mensajes hubo.'))}</p>` : `<p>${esc(tr('No hay datos de actividad.'))}</p>`;
@@ -202,18 +202,37 @@
     ];
     state.slide = Math.min(state.slide, slides.length - 1);
     const storyHtml = `<section class="ex-card ex-story" aria-roledescription="carousel" aria-label="${esc(tr('Golifiar Wrapped'))}">${slides.map((x, i) => `<div class="ex-slide" ${i === state.slide ? '' : 'hidden'}><span class="ex-slide-ico" aria-hidden="true">${x[0]}</span><strong>${esc(x[1])}</strong><span>${esc(x[2])}</span></div>`).join('')}<div class="ex-share-actions"><button type="button" class="btn-sub" id="exPrev">${esc(tr('Anterior'))}</button><span aria-live="polite">${state.slide + 1}/${slides.length}</span><button type="button" class="btn-minimal" id="exNext">${esc(tr('Siguiente'))}</button></div></section>`;
+    const jokes = state.topicsEnabled ? E().insideJokes(messages, 10) : [], cloud = state.topicsEnabled ? E().emojiCloud(messages, 18) : [], cmax = Math.max(1, ...cloud.map(x => x.count));
+    const jokesHtml = state.topicsEnabled ? `<section class="ex-card"><h3>${esc(tr('Diccionario del chat'))}</h3>${jokes.length ? `<div class="ex-word-cloud">${jokes.map(j => `<span class="ex-word ex-word-${j.count % 5}">${esc(j.word)} <small>${num(j.count)}</small></span>`).join('')}</div>` : `<p>${esc(tr('Aún no hay palabras que se repitan lo bastante entre varias personas.'))}</p>`}<h3>${esc(tr('Nube de emojis'))}</h3>${cloud.length ? `<div class="ex-emoji-cloud" role="img" aria-label="${esc(tr('Nube de emojis'))}">${cloud.map(x => `<span style="font-size:${(1 + 2.4 * x.count / cmax).toFixed(2)}rem" title="${num(x.count)}">${x.emoji}</span>`).join('')}</div>` : `<p>—</p>`}</section>` : '';
+    const premiumOn = isPremium(), unlocked = premiumOn || (() => { try { return localStorage.getItem('golifiar-compare-ok') === '1'; } catch (e) { return false; } })();
+    let compareChatsHtml;
+    if (!unlocked) compareChatsHtml = `<section class="ex-card"><h3>🔒 ${esc(tr('Comparar 2 chats'))}</h3><p>${esc(tr('Se desbloquea al compartir una tarjeta de racha en tus Stories mencionando a Golifiar. Este desbloqueo es de confianza: se activa al crear o compartir la tarjeta en este dispositivo.'))}</p><button type="button" class="btn-minimal" id="exStreakDl2">${esc(tr('Crear y compartir tarjeta de racha'))}</button></section>`;
+    else {
+      let tbl = '';
+      if (state.compare) {
+        const A = { name: chat.name, m: messages }, B = { name: state.compare.name, m: state.compare.messages };
+        const cols = X => { const sx = E().stats(X.m), stk = E().streaks(X.m), dd = E().deep(X.m); return { name: X.name, v: [sx.totalMessages, dd.words, sx.activeDays, stk.longest, stk.current, sx.participantCount, sx.messagesPerActiveDay] }; };
+        const ca = cols(A), cb = cols(B), labels = ['Mensajes', 'Palabras', 'Días activos', 'Racha más larga', 'Racha actual', 'Participantes', 'Mensajes por día activo'];
+        const winner = ca.v[6] >= cb.v[6] ? ca.name : cb.name;
+        tbl = `<div class="ex-table-wrap"><table class="ex-table"><thead><tr><th></th><th>${esc(ca.name)}</th><th>${esc(cb.name)}</th></tr></thead><tbody>${labels.map((l, i) => `<tr><td>${esc(tr(l))}</td><td>${num(Math.round(ca.v[i] * 10) / 10)}</td><td>${num(Math.round(cb.v[i] * 10) / 10)}</td></tr>`).join('')}</tbody></table></div><p class="ex-discovery">🏆 ${esc(tr('Conversación más activa'))}: <strong>${esc(winner)}</strong></p>`;
+      }
+      compareChatsHtml = `<section class="ex-card"><h3>${esc(tr('Comparar 2 chats'))}</h3><p>${esc(tr('Sube un segundo .txt solo para compararlo. No se guarda ni se mezcla con el primero.'))}</p><label class="btn-sub ex-file-btn">${esc(tr('Elegir segundo chat'))}<input type="file" id="exCompareFile" accept=".txt,text/plain" class="visually-hidden"></label>${tbl}</section>`;
+    }
+    const edit = state.edit;
+    const lockTxt = premiumOn ? '' : ' 🔒';
+    const editorHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Personaliza'))}</p><h3>${esc(tr('Editor de tarjeta en vivo'))}</h3></div></div><div class="ex-editor"><div class="ex-editor-controls"><label><input type="checkbox" id="edOn" ${edit.on ? 'checked' : ''}> ${esc(tr('Usar colores y tipografía propios'))}</label><label>${esc(tr('Fondo'))} 1<input type="color" id="edBg1" value="${edit.bg1}"></label><label>${esc(tr('Fondo'))} 2<input type="color" id="edBg2" value="${edit.bg2}"></label><label>${esc(tr('Acento'))}<input type="color" id="edAccent" value="${edit.accent}"></label><label>${esc(tr('Texto'))}<input type="color" id="edText" value="${edit.text}"></label><label>${esc(tr('Tipografía'))}<select id="edFont"><option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option></select></label><label>${esc(tr('Posición del contador'))}<input type="range" id="edNumY" min="760" max="1300" value="${edit.numY}"></label><label><input type="checkbox" id="exHd" ${state.hd && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Exportación HD (2160×3840)'))}${lockTxt}</label><label><input type="checkbox" id="exNoMark" ${state.noMark && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Sin marca de agua'))}${lockTxt}</label></div><canvas id="exPreview" class="ex-preview" width="270" height="480" role="img" aria-label="${esc(tr('Vista previa de la tarjeta'))}"></canvas></div></section>`;
     const all = `
       <!--pane:resumen--><section class="ex-card ex-profile"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-kpis">${kpi('Mensajes analizados',num(s.totalMessages))}${kpi('Participantes',num(s.participantCount))}${kpi('Días activos',num(s.activeDays))}${kpi('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}</div><details class="ex-more" open><summary>${esc(tr('Más datos del chat'))}</summary><div class="ex-metrics">${metric('Racha actual',dias(st.current))}${metric('Racha más larga',dias(st.longest))}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div></details><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ul class="ex-bars">${s.participants.slice(0,6).map(p => `<li><span class="ex-bar-name">${esc(p.name)}</span><span class="ex-bar"><i style="width:${Math.max(3, Math.round(p.count / topCount * 100))}%"></i></span><strong>${num(p.count)}</strong></li>`).join('')}</ul></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
       <!--pane:resumen-->${dangerHtml}${deepHtml}
       <!--pane:actividad--><section class="ex-card"><h3>${esc(tr('Reloj de actividad'))}</h3>${heatHtml}</section>${chartsHtml}${compareHtml}
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Calendario'))}</p><h3>${esc(tr('Actividad día a día'))}</h3></div></div>${calendarHtml}<div class="ex-mini-calendar">${daysHtml}</div></section>
       <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tests de curiosidad'))}</p><h3>${esc(tr('¿Quién es más...?'))}</h3></div></div>${whoHtml}<div class="ex-records">${ghostHtml}${funHtml}</div><p class="ex-note">${esc(tr('Son aproximaciones estadísticas y no describen la personalidad.'))}</p></section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Chemistry Score'))}</p><h3>${esc(tr('Compatibilidad de horarios'))}</h3><p>${esc(tr('Resultado lúdico y orientativo, no científico.'))}</p></div></div><div class="ex-compare-controls"><label>${esc(tr('Persona A'))}<select id="exChemA">${peopleOptions}</select></label><label>${esc(tr('Persona B'))}<select id="exChemB">${peopleOptions}</select></label></div><p class="ex-discovery">${chemistryResult.available ? `<strong class="ex-score">${num(chemistryResult.score)}/100</strong> · ${esc(chemistryResult.explanation)}` : esc(tr('Datos insuficientes para calcularlo.'))}</p>${chemistryResult.available ? meter(chemistryResult.score) : ''}<p class="ex-note">${esc(tr('La fórmula usa 60% de equilibrio de mensajes y 40% de solapamiento horario.'))}</p></section>
+      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Chemistry Score'))}</p><h3>${esc(tr('Compatibilidad de horarios'))}</h3><p>${esc(tr('Resultado lúdico y orientativo, no científico.'))}</p></div></div><div class="ex-compare-controls"><label>${esc(tr('Persona A'))}<select id="exChemA">${peopleOptions}</select></label><label>${esc(tr('Persona B'))}<select id="exChemB">${peopleOptions}</select></label></div><p class="ex-discovery">${chemistryResult.available ? `<strong class="ex-score">${num(chemistryResult.score)}/100</strong> · ${esc(tr(chemistryResult.explanation))}` : esc(tr('Datos insuficientes para calcularlo.'))}</p>${chemistryResult.available ? meter(chemistryResult.score) : ''}${chemistryResult.available ? `<ul class="ex-bars">${chemistryResult.parts.map(x => `<li><span class="ex-bar-name">${esc(tr(x.key))}</span><span class="ex-bar"><i style="width:${x.percent}%"></i></span><strong>${x.percent}%</strong></li>`).join('')}</ul>` : ''}<p class="ex-note">${esc(tr('Resultado orientativo y lúdico.'))}</p></section>
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Índice de equilibrio'))}</p><h3>${esc(tr('Reparto de participación'))}</h3></div></div><p class="ex-discovery">${balance.available ? `<strong class="ex-score">${num(balance.score)}/100</strong>` : esc(tr('Datos insuficientes'))}</p>${balance.available ? meter(balance.score) : ''}<p class="ex-note">${esc(balance.explanation || tr('Se necesitan al menos dos participantes.'))}</p></section>
       <!--pane:actividad--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Temas del chat'))}</p><h3>${esc(tr('Palabras más frecuentes'))}</h3><p>${esc(tr('Se calculan localmente en memoria; no se conserva el texto de los mensajes.'))}</p><label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics" ${state.topicsEnabled ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label></div></div>${topicHtml}</section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Galería de récords'))}</p><h3>${esc(tr('Trofeos y logros'))}</h3></div></div><div class="ex-achievements">${achievementsHtml}</div><h4>${esc(tr('Récords del chat'))}</h4><div class="ex-records">${recordsHtml}</div></section>
-      <!--pane:curiosidad-->${curioHtml}
-      <!--pane:wrapped-->${storyHtml}${shareHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
+      <!--pane:curiosidad-->${curioHtml}${jokesHtml}${compareChatsHtml}
+      <!--pane:wrapped-->${storyHtml}${shareHtml}${editorHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
       <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Modo fiesta'))}</p><h3>${esc(tr('Pon a prueba al grupo'))}</h3><p>${esc(tr('Preguntas generadas con estadísticas, sin revelar mensajes privados.'))}</p></div></div><div id="exPartyArea">${renderQuizIntro()}</div></section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Torneo entre chats'))}</p><h3>${esc(tr('¿Qué chat tiene más actividad relativa?'))}</h3><p>${esc(tr('La puntuación combina mensajes por participante y por día activo para reducir la ventaja de los grupos grandes.'))}</p></div></div>${renderTournament()}</section>
       <!--pane:resumen--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Descubrimiento diario'))}</p><h3>${esc(tr('Una curiosidad de hoy'))}</h3></div></div><p class="ex-discovery">${esc(dailyDiscoveryText(messages))}</p></section>`;
@@ -223,6 +242,8 @@
     const tabsHtml = `<div class="category-tabs ex-tabs" role="tablist" aria-label="${esc(tr('Secciones de Experiencias'))}">${TABS.map(([k, l]) => `<button type="button" role="tab" class="cat-tab${k === state.tab ? ' active' : ''}" id="extab-${k}" data-extab="${k}" aria-controls="expane-${k}" aria-selected="${k === state.tab}" tabindex="${k === state.tab ? 0 : -1}">${esc(tr(l))}</button>`).join('')}</div>`;
     const panesHtml = TABS.map(([k]) => `<div role="tabpanel" class="ex-pane" id="expane-${k}" aria-labelledby="extab-${k}"${k === state.tab ? '' : ' hidden'}>${panes[k] || ''}</div>`).join('');
     results.innerHTML = `<section class="ex-toolbar"><div class="ex-chat-picker"><label for="exChatSelect">${esc(tr('Conversación seleccionada'))}</label><select id="exChatSelect">${options}</select><span class="ex-platform">${esc(chat.platform)}</span></div><button type="button" class="btn-sub" id="exClear">${esc(tr('Borrar chats importados'))}</button></section>${rangeHtml}${tabsHtml}${panesHtml}`;
+    const ef = node('edFont'); if (ef) ef.value = state.edit.font;
+    updatePreview();
     const rg = node('exRange'); if (rg) rg.value = state.range;
     const lk = node('exLook'); if (lk) lk.value = state.cardLook;
     const pa = node('exPeriodA'); if (pa) pa.value = periodA;
@@ -281,60 +302,78 @@
     mini: { bg: ['#fafafa', '#e9e9ee'], accent: '#111111', text: '#111111', sub: '#555555' }
   };
   const AV = ['#FFD21F', '#ff7a59', '#4cc9f0', '#9b5de5', '#43aa8b', '#f15bb5'];
+  const isPremium = () => Boolean(root.premiumActivo && root.premiumActivo()) || (() => { try { return localStorage.getItem('golifiar-rol') === 'dev'; } catch (e) { return false; } })();
+  const FONTS = { sans: 'system-ui, sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace' };
+  function cardStyle() {
+    const ed = state.edit; let look = state.cardLook; if (look !== 'canario' && !isPremium()) look = 'canario';
+    const L = ed.on ? { bg: [ed.bg1, ed.bg2], accent: ed.accent, text: ed.text, sub: ed.text } : (LOOKS[look] || LOOKS.canario);
+    const hd = isPremium() && state.hd;
+    return { L, F: FONTS[ed.on ? ed.font : 'sans'] || FONTS.sans, k: hd ? 2 : 1, mark: !(isPremium() && state.noMark), numY: ed.on ? ed.numY : 1000 };
+  }
+  function baseCanvas(S) {
+    const canvas = document.createElement('canvas'); canvas.width = 1080 * S.k; canvas.height = 1920 * S.k; const ctx = canvas.getContext('2d'); ctx.scale(S.k, S.k);
+    const g = ctx.createLinearGradient(0, 0, 0, 1920); g.addColorStop(0, S.L.bg[0]); g.addColorStop(1, S.L.bg[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
+    ctx.textAlign = 'center'; return { canvas, ctx };
+  }
+  function brand(ctx, S) {
+    ctx.fillStyle = S.L.accent; ctx.font = `bold 76px ${S.F}`; ctx.fillText('Golifiar', 540, 1700);
+    if (S.mark) { ctx.fillStyle = S.L.sub; ctx.font = `34px ${S.F}`; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770); }
+  }
   function streakCanvas(chatArg) {
     const chat = chatArg || selectedChat(); if (!chat) return null;
-    const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages);
-    let look = state.cardLook;
-    if (look !== 'canario' && !(root.premiumActivo && root.premiumActivo())) look = 'canario';
-    const L = LOOKS[look] || LOOKS.canario;
-    const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920; const ctx = canvas.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 0, 1920); g.addColorStop(0, L.bg[0]); g.addColorStop(1, L.bg[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
-    const glow = ctx.createRadialGradient(540, 820, 40, 540, 820, 620); glow.addColorStop(0, L.accent + '55'); glow.addColorStop(1, 'transparent'); ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, 1920);
-    ctx.textAlign = 'center'; ctx.fillStyle = L.sub; ctx.font = '600 38px system-ui, sans-serif';
+    const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages), heatDays = E().calendar(messages).slice(-28);
+    const S = cardStyle(), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    const glow = ctx.createRadialGradient(540, S.numY - 180, 40, 540, S.numY - 180, 620); glow.addColorStop(0, L.accent + '55'); glow.addColorStop(1, 'transparent'); ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, 1920);
+    ctx.fillStyle = L.sub; ctx.font = `600 38px ${F}`;
     const plat = chat.platform || 'WhatsApp';
     ctx.fillText(tr('Días hablando en {plat}', { plat }), 540, 250);
     const people = (dp.isGroup ? dp.podium : dp.members.slice(0, 2)).map((m, i) => ({ name: state.anon ? tr('Persona {n}', { n: i + 1 }) : m.name, i }));
-    const n = Math.max(1, people.length), gap = 230, x0 = 540 - (n - 1) * gap / 2;
-    people.forEach((p, k) => { const x = x0 + k * gap; ctx.fillStyle = AV[p.i % 6]; ctx.beginPath(); ctx.arc(x, 420, 90, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111'; ctx.font = 'bold 64px system-ui, sans-serif'; ctx.fillText(state.anon ? String(p.i + 1) : initials(p.name), x, 442); ctx.fillStyle = L.text; ctx.font = '600 34px system-ui, sans-serif'; ctx.fillText(truncate(ctx, '@' + p.name.toLowerCase().replace(/\s+/g, ''), 210, 34), x, 570); });
-    const days = st.current || st.longest;
-    ctx.fillStyle = L.accent; ctx.font = 'bold 340px system-ui, sans-serif'; ctx.fillText(`🔥 ${days}`, 540, 1000);
-    ctx.fillStyle = L.text; ctx.font = 'bold 56px system-ui, sans-serif'; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, 1100);
-    const heat = Math.min(7, Math.max(1, Math.round(days / 5)));
-    ctx.font = '70px system-ui, sans-serif'; ctx.fillText('🔥'.repeat(heat), 540, 1230);
-    ctx.fillStyle = L.sub; ctx.font = '40px system-ui, sans-serif'; ctx.fillText(`${num(dp.totalMessages)} ${tr('mensajes')} · ${num(dp.words)} ${tr('palabras')}`, 540, 1380);
-    ctx.fillStyle = L.accent; ctx.font = 'bold 76px system-ui, sans-serif'; ctx.fillText('Golifiar', 540, 1700);
-    ctx.fillStyle = L.sub; ctx.font = '34px system-ui, sans-serif'; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770);
+    const n = Math.max(1, people.length), gap = people.length === 2 ? 150 : 230, x0 = 540 - (n - 1) * gap / 2;
+    people.forEach((p, k) => { const x = x0 + k * gap; ctx.fillStyle = AV[p.i % 6]; ctx.beginPath(); ctx.arc(x, 420, 90, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111'; ctx.font = `bold 64px ${F}`; ctx.fillText(state.anon ? String(p.i + 1) : initials(p.name), x, 442); });
+    if (people.length === 2) { ctx.font = `90px ${F}`; ctx.fillText('🔥', 540, 440); }
+    ctx.fillStyle = L.text; ctx.font = `600 34px ${F}`;
+    people.forEach((p, k) => ctx.fillText(truncate(ctx, '@' + p.name.toLowerCase().replace(/\s+/g, ''), 210, 34), x0 + k * gap, 570));
+    const days = st.current || st.longest, y = S.numY;
+    ctx.fillStyle = L.accent; ctx.font = `bold 340px ${F}`; ctx.fillText(`🔥 ${days}`, 540, y);
+    ctx.fillStyle = L.text; ctx.font = `bold 56px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 100);
+    // Línea de racha: últimos 28 días con actividad.
+    const lastDay = heatDays.length ? new Date(heatDays[heatDays.length - 1].date + 'T12:00:00').getTime() : Date.now(), have = new Map(heatDays.map(d => [d.date, d.level]));
+    for (let i = 0; i < 28; i++) { const dt = new Date(lastDay - (27 - i) * 86400000), key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`, lv = have.get(key) || 0; ctx.globalAlpha = lv ? 0.35 + lv * 0.16 : 0.12; ctx.fillStyle = lv ? L.accent : L.text; ctx.beginPath(); ctx.arc(150 + i * 29.5, y + 190, 11, 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = L.sub; ctx.font = `40px ${F}`; ctx.fillText(`${num(dp.totalMessages)} ${tr('mensajes')} · ${num(dp.words)} ${tr('palabras')}`, 540, y + 330);
+    brand(ctx, S);
     return canvas;
   }
-
-  // Guarda un PNG: compartir en móvil, descarga clásica en escritorio y, si nada funciona, vista previa para guardar a mano.
-  async function saveBlob(blob, filename) {
-    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
-    try {
-      const file = new File([blob], filename, { type: 'image/png' });
-      if (mobile && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Golifiar' }); return; }
-    } catch (e) { if (e && e.name === 'AbortError') return; }
-    const url = URL.createObjectURL(blob);
-    let ok = false;
-    try { const a = document.createElement('a'); a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click(); a.remove(); ok = !mobile || /Chrome/.test(navigator.userAgent) && !/wv\)/.test(navigator.userAgent); } catch (e) { ok = false; }
-    if (ok) { showStatus(tr('Tarjeta descargada: {f}', { f: filename }), false); setTimeout(() => URL.revokeObjectURL(url), 30000); return; }
-    const reader = new FileReader();
-    reader.onload = () => showModal(tr('Mantén pulsada la imagen y elige «Guardar imagen».'), reader.result);
-    reader.readAsDataURL(blob);
-  }
-
   function simpleCard(o) {
-    let look = state.cardLook; if (look !== 'canario' && !(root.premiumActivo && root.premiumActivo())) look = 'canario';
-    const L = LOOKS[look] || LOOKS.canario;
-    const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920; const ctx = canvas.getContext('2d');
-    const g = ctx.createLinearGradient(0, 0, 0, 1920); g.addColorStop(0, L.bg[0]); g.addColorStop(1, L.bg[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
-    ctx.textAlign = 'center'; ctx.fillStyle = L.sub; ctx.font = '600 44px system-ui, sans-serif'; ctx.fillText(o.kicker, 540, 260);
-    ctx.fillStyle = L.accent; ctx.font = `bold ${o.bigSize || 150}px system-ui, sans-serif`; ctx.fillText(truncate(ctx, o.big, 960, o.bigSize || 150), 540, 760);
-    ctx.fillStyle = L.text; ctx.font = 'bold 60px system-ui, sans-serif'; (o.lines || []).forEach((l, i) => ctx.fillText(truncate(ctx, l, 960, 60), 540, 940 + i * 100));
-    ctx.fillStyle = L.accent; ctx.font = 'bold 76px system-ui, sans-serif'; ctx.fillText('Golifiar', 540, 1700);
-    ctx.fillStyle = L.sub; ctx.font = '34px system-ui, sans-serif'; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770);
+    const S = cardStyle(), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    ctx.fillStyle = L.sub; ctx.font = `600 44px ${F}`; ctx.fillText(o.kicker, 540, 260);
+    ctx.fillStyle = L.accent; ctx.font = `bold ${o.bigSize || 150}px ${F}`; ctx.fillText(truncate(ctx, o.big, 960, o.bigSize || 150), 540, 760);
+    ctx.fillStyle = L.text; ctx.font = `bold 60px ${F}`; (o.lines || []).forEach((l, i) => ctx.fillText(truncate(ctx, l, 960, 60), 540, 940 + i * 100));
+    brand(ctx, S);
     return canvas;
   }
+
+  function updatePreview() {
+    const cv = node('exPreview'); if (!cv || !selectedChat()) return;
+    const big = streakCanvas(); if (!big) return; const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(big, 0, 0, cv.width, cv.height);
+  }
+  async function importCompare(input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    try {
+      const messages = await parseAsync(await readChunks(file, () => {}), file.name.replace(/\.txt$/i, ''), file.size);
+      if (!messages.length) throw new Error(tr('No se encontraron mensajes con un formato compatible.'));
+      state.compare = { name: file.name.replace(/\.txt$/i, ''), messages }; render(); selectTab('curiosidad');
+    } catch (err) { showModal(`${file.name}: ${err.message}`); }
+    input.value = '';
+  }
+  function refreshPremiumUI() {
+    let dev = false, rol = ''; try { dev = localStorage.getItem('golifiar-dev') === '1'; rol = localStorage.getItem('golifiar-rol') || ''; } catch (e) { /* sin almacenamiento */ }
+    document.querySelectorAll('.dev-role').forEach(el => { el.hidden = !dev; const sel = el.querySelector('select'); if (sel) sel.value = rol === 'dev' ? 'dev' : 'user'; });
+    const on = isPremium();
+    document.querySelectorAll('.js-premium-state').forEach(el => { el.textContent = tr(on ? 'Premium activo en este dispositivo' : 'Funciones bloqueadas en la versión gratuita'); el.classList.toggle('on', on); });
+  }
+  document.addEventListener('DOMContentLoaded', () => refreshPremiumUI());
+  function premiumDemo() { try { localStorage.setItem('golifiar-premium-demo', 'true'); } catch (e) { /* sin almacenamiento */ } refreshPremiumUI(); if (selectedChat()) render(); }
   function viralCard(kind) {
     const chat = selectedChat(); if (!chat) return;
     const messages = rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages), who = E().whoIsMore(messages);
@@ -358,6 +397,22 @@
     } else return;
     const c = simpleCard(o);
     c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-${kind.replace(':', '-')}.png`); }, 'image/png');
+  }
+  // Guarda un PNG: compartir en móvil, descarga clásica en escritorio y, si nada funciona, vista previa para guardar a mano.
+  async function saveBlob(blob, filename) {
+    try { const was = localStorage.getItem('golifiar-compare-ok') === '1'; localStorage.setItem('golifiar-compare-ok', '1'); if (!was && selectedChat()) setTimeout(render, 0); } catch (e) { /* sin almacenamiento */ }
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform));
+    try {
+      const file = new File([blob], filename, { type: 'image/png' });
+      if (mobile && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'Golifiar' }); return; }
+    } catch (e) { if (e && e.name === 'AbortError') return; }
+    const url = URL.createObjectURL(blob);
+    let ok = false;
+    try { const a = document.createElement('a'); a.href = url; a.download = filename; a.rel = 'noopener'; a.style.display = 'none'; document.body.appendChild(a); a.click(); a.remove(); ok = !mobile || /Chrome/.test(navigator.userAgent) && !/wv\)/.test(navigator.userAgent); } catch (e) { ok = false; }
+    if (ok) { showStatus(tr('Tarjeta descargada: {f}', { f: filename }), false); setTimeout(() => URL.revokeObjectURL(url), 30000); return; }
+    const reader = new FileReader();
+    reader.onload = () => showModal(tr('Mantén pulsada la imagen y elige «Guardar imagen».'), reader.result);
+    reader.readAsDataURL(blob);
   }
   function downloadStreak(chatArg) {
     const c = streakCanvas(chatArg); if (!c) return;
@@ -413,8 +468,17 @@
     if (e.target.id === 'exTo') { state.to = e.target.value; render(); }
     if (e.target.id === 'exLook') { state.cardLook = e.target.value; if (state.cardLook !== 'canario' && !(root.premiumActivo && root.premiumActivo())) { showStatus(tr('Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará Amarillo Canario.'), false); } }
     if (e.target.id === 'exAnon') state.anon = e.target.checked;
+    if (e.target.id === 'exCompareFile') importCompare(e.target);
+    if (e.target.id === 'exHd') { state.hd = e.target.checked; updatePreview(); }
+    if (e.target.id === 'exNoMark') { state.noMark = e.target.checked; updatePreview(); }
+    if (e.target.id === 'edOn') { state.edit.on = e.target.checked; updatePreview(); }
+    if (e.target.classList && e.target.classList.contains('js-dev-sel')) { try { localStorage.setItem('golifiar-rol', e.target.value === 'dev' ? 'dev' : ''); } catch (err) { /* sin almacenamiento */ } refreshPremiumUI(); if (selectedChat()) render(); }
     if (e.target.id === 'exChemA') { state.chemistryA = e.target.value; render(); }
     if (e.target.id === 'exChemB') { state.chemistryB = e.target.value; render(); }
+  });
+  document.addEventListener('input', e => {
+    const m = { edBg1: 'bg1', edBg2: 'bg2', edAccent: 'accent', edText: 'text', edFont: 'font', edNumY: 'numY' }[e.target.id]; if (!m) return;
+    state.edit[m] = m === 'numY' ? Number(e.target.value) : e.target.value; state.edit.on = true; const on = node('edOn'); if (on) on.checked = true; updatePreview();
   });
   document.addEventListener('click', e => {
     const button = e.target.closest('button'); if (!button) return;
@@ -422,7 +486,7 @@
     if (button.id === 'exClear') clearAll();
     if (button.dataset.card) viralCard(button.dataset.card);
     if (button.id === 'exNext' || button.id === 'exPrev') { state.slide = Math.max(0, state.slide + (button.id === 'exNext' ? 1 : -1)); render(); sound('ok'); }
-    if (button.id === 'exStreakDl') downloadStreak();
+    if (button.id === 'exStreakDl' || button.id === 'exStreakDl2') downloadStreak();
     if (button.id === 'exStreakCopy') copyStreak();
     if (button.id === 'exCopyText') copyText();
     if (button.id === 'exModalClose') node('exModal').hidden = true;
@@ -446,9 +510,10 @@
   ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => { const z = e.target.closest && e.target.closest('.dropzone'); if (z) z.classList.add('dragover'); }));
   ['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => { const z = e.target.closest && e.target.closest('.dropzone'); if (z) z.classList.remove('dragover'); }));
   if (root.I18n && I18n.alAplicar) I18n.alAplicar(function () {
+    refreshPremiumUI();
     ['exTagWhatsApp', 'exTagInstagram'].forEach(id => { const el = node(id); if (el && Number(el.dataset.n)) setTag(id, Number(el.dataset.n)); });
     render();
     if (I18n.lang !== 'es' && node('experienciasResults')) I18n.aplicar(node('experienciasResults'));
   });
-  root.GolifiarExperiencias = Object.freeze({ parseAsync, share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
+  root.GolifiarExperiencias = Object.freeze({ parseAsync, premium: { demo: premiumDemo, refresh: refreshPremiumUI }, share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
 }(typeof window !== 'undefined' ? window : globalThis));

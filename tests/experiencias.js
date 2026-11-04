@@ -79,4 +79,11 @@ assert.ok(E.mostLikely(lab, true).some(x => x.key === 'trip'), 'Viaje con opt-in
 assert.ok(!E.mostLikely(lab, false).some(x => x.key === 'trip'), 'Sin opt-in no hay palabras clave');
 assert.ok(E.soulmates(lab).length >= 1);
 assert.ok(E.topicCompat(lab, 'Ana', 'Luis').available);
+
+const jk = E.parseWhatsApp(Array.from({length: 12}, (_, i) => `[0${1 + i % 9}/10/2026, 10:${10 + i}:00] ${i % 2 ? 'Ana' : 'Luis'}: el chiringuito mola 🍻`).join('\n'), 'J');
+assert.ok(E.insideJokes(jk).some(x => x.word === 'chiringuito'), 'Detecta jerga recurrente');
+assert.equal(E.emojiCloud(jk)[0].emoji, '🍻');
+const cf = E.chemistryFull(jk, 'Ana', 'Luis', true);
+assert.ok(cf.available && cf.score >= 0 && cf.score <= 100 && cf.parts.length === 4, 'Química con 4 factores');
+assert.equal(E.chemistryFull(jk, 'Ana', 'Luis', false).parts.length, 2, 'Sin opt-in solo factores de metadatos');
 console.log('experiencias: OK');

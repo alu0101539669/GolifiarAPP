@@ -480,6 +480,38 @@
   }
   const DIPLOMAS = { leftOnRead: 'Máster en Visto Eterno', nocturnal: 'Doctor honoris causa en Madrugones', voice: 'Podcaster oficial del grupo', stickers: 'Embajador mundial del sticker', initiator: 'Rompehielos certificado', dramatic: 'Premio Goya al mejor drama' };
 
+
+  function insideJokes(messages, limit) {
+    const info = new Map();
+    for (const m of normalizeMessages(messages)) {
+      const words = norm(m.text).match(/[a-zñ]{4,}/g) || [];
+      for (const w of new Set(words)) { if (STOP.has(w)) continue; const r = info.get(w) || { count: 0, senders: new Set() }; r.count++; r.senders.add(m.sender); info.set(w, r); }
+    }
+    return [...info.entries()].filter(([, r]) => r.count >= 5 && r.senders.size >= 2).map(([word, r]) => ({ word, count: r.count, people: r.senders.size })).sort((a, b) => b.count * b.people - a.count * a.people).slice(0, limit || 10);
+  }
+  function emojiCloud(messages, limit) {
+    const c = new Map();
+    for (const m of normalizeMessages(messages)) for (const e of (m.text.match(/\p{Extended_Pictographic}/gu) || [])) c.set(e, (c.get(e) || 0) + 1);
+    return [...c.entries()].map(([emoji, count]) => ({ emoji, count })).sort((a, b) => b.count - a.count).slice(0, limit || 18);
+  }
+  // Química completa: equilibrio, horarios y velocidad de respuesta; con content=true añade emojis y vocabulario.
+  function chemistryFull(messages, nameA, nameB, content) {
+    const base = chemistry(messages, nameA, nameB); if (!base.available) return base;
+    const d = deep(messages), A = d.members.find(m => m.name === nameA), B = d.members.find(m => m.name === nameB);
+    const ms = normalizeMessages(messages);
+    const speed = (A.avgResponseMs && B.avgResponseMs) ? Math.min(A.avgResponseMs, B.avgResponseMs) / Math.max(A.avgResponseMs, B.avgResponseMs) : 0.5;
+    const parts = [{ w: 0.3, v: base.score / 100, k: 'equilibrio y horarios' }, { w: 0.3, v: speed, k: 'velocidad de respuesta' }];
+    if (content) {
+      const emo = n => new Set(ms.filter(m => m.sender === n).flatMap(m => m.text.match(/\p{Extended_Pictographic}/gu) || []));
+      const eA = emo(nameA), eB = emo(nameB), eu = new Set([...eA, ...eB]);
+      const emojiScore = eu.size ? [...eA].filter(e => eB.has(e)).length / eu.size : 0.5;
+      const tc = topicCompat(messages, nameA, nameB);
+      parts.push({ w: 0.2, v: emojiScore, k: 'emojis' }, { w: 0.2, v: tc.available ? tc.percent / 100 : 0.5, k: 'vocabulario' });
+    } else parts[0].w = 0.5, parts[1].w = 0.5;
+    const score = Math.round(parts.reduce((a, p) => a + p.w * p.v, 0) * 100);
+    return { available: true, score, parts: parts.map(p => ({ key: p.k, percent: Math.round(p.v * 100) })), explanation: 'Mezcla orientativa de equilibrio y horarios, velocidad de respuesta' + (content ? ', emojis y vocabulario.' : '. Activa el análisis de palabras para añadir emojis y vocabulario.') };
+  }
+
   function summaryText(messages, name, system) {
     const s = stats(messages), st = streaks(messages), d = deep(messages, system);
     const top = d.members[0];
@@ -488,5 +520,5 @@
 
   function toCardData(messages, name) { return wrapped(messages, name); }
 
-  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind, emojiDna, firstMoments, burst, longestRun, mostLikely, soulmates, topicCompat, DIPLOMAS });
+  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind, emojiDna, firstMoments, burst, longestRun, mostLikely, soulmates, topicCompat, DIPLOMAS, insideJokes, emojiCloud, chemistryFull });
 }(typeof window !== 'undefined' ? window : globalThis));

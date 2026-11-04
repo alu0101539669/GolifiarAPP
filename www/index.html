@@ -130,6 +130,20 @@
                 </div>
                 <p class="privacy-note" role="note">No se muestra ni se guarda el texto de tus mensajes. Solo se cuentan fechas, horas y participantes.</p>
                 <div id="whatsappResults"></div>
+                <section class="premium-panel" aria-labelledby="waPremiumTitle">
+                    <h3 id="waPremiumTitle">🔒 Funciones Premium</h3>
+                    <p>Estilos Neón, Cyberpunk y Minimalista, exportación HD sin marca de agua y comparación avanzada.</p>
+                    <div class="premium-features">
+                        <div class="premium-feature">Buscador de primeras veces</div>
+                        <div class="premium-feature">Detector de dramas</div>
+                        <div class="premium-feature">Tarjetas HD / 4K</div>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="btn-sub" type="button" onclick="GolifiarExperiencias.premium.demo()">Probar Premium</button>
+                        <span class="premium-lock js-premium-state" data-i18n-no>Funciones bloqueadas en la versión gratuita</span>
+                        <label class="dev-role" hidden>Rol <select class="btn-sub js-dev-sel"><option value="user">Usuario estándar</option><option value="dev">Desarrollador (acceso total)</option></select></label>
+                    </div>
+                </section>
             </section>
         </div>
 
@@ -201,7 +215,12 @@
                     <h2 class="in-title rv" style="--d:1" translate="no">Goli<span>fiar</span></h2>
                     <p class="in-lead rv" style="--d:2">Entiende tus datos de Instagram, WhatsApp, TikTok y Spotify. Pides tu descarga a cada red, la subes aquí y se analiza en tu dispositivo: sin servidores, sin contraseñas y sin enviar nada.</p>
                     <div class="in-cta rv" style="--d:3">
-                        <button class="btn-minimal in-btn" type="button" onclick="document.getElementById('inRedes').scrollIntoView({ block: 'start' })">Elegir una red <svg class="in-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14m0 0l-5-5m5 5l5-5"/></svg></button>
+                        <div class="in-plat" role="group" aria-label="Elige tu red">
+                            <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('auditoria')" translate="no">Instagram</button>
+                            <button class="btn-minimal in-btn" type="button" onclick="cambiarVista('whatsapp')" translate="no">WhatsApp</button>
+                            <button class="btn-sub in-btn in-plat-soon" type="button" disabled aria-disabled="true" translate="no">TikTok <small>Próximamente</small></button>
+                            <button class="btn-sub in-btn in-plat-soon" type="button" disabled aria-disabled="true" translate="no">Spotify <small>Próximamente</small></button>
+                        </div>
                         <button class="btn-sub in-btn" type="button" onclick="cambiarVista('comousar')">Cómo funciona cada red</button>
                     </div>
                     <ul class="in-facts rv" style="--d:4" aria-label="Garantías">
@@ -554,7 +573,8 @@
                 </div>
                 <div class="panel-actions">
                     <button class="btn-sub" type="button" onclick="activarPremiumDemo()">Probar Premium</button>
-                    <span class="premium-lock" id="premiumStatus">Funciones bloqueadas en la versión gratuita</span>
+                    <span class="premium-lock js-premium-state" data-i18n-no id="premiumStatus">Funciones bloqueadas en la versión gratuita</span>
+                    <label class="dev-role" hidden>Rol <select class="btn-sub js-dev-sel"><option value="user">Usuario estándar</option><option value="dev">Desarrollador (acceso total)</option></select></label>
                 </div>
             </section>
             <section class="history-panel hidden" id="historyPanel" aria-labelledby="historyTitle">
