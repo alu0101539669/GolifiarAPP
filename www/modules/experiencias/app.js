@@ -35,6 +35,24 @@
   function setProgress(v) {
     document.querySelectorAll('.dropzone .dz-progress').forEach(el => { if (!el.closest('.dropzone').contains(node('exWhatsAppFiles'))) return; el.hidden = v === null; const i = el.firstElementChild; if (i) i.style.width = `${Math.round((v || 0) * 100)}%`; });
   }
+  // Chats grandes (más de ~5 MB, unos 100.000 mensajes) se analizan en un Worker; si no se puede crear, se usa el hilo principal.
+  function parseAsync(text, name, size) {
+    const sync = () => E().parseWhatsApp(text, name);
+    if (!root.Worker || (size || text.length) < 5 * 1024 * 1024) return Promise.resolve(sync());
+    return new Promise(resolve => {
+      let w; try { w = new Worker('./modules/experiencias/worker.js'); } catch (e) { resolve(sync()); return; }
+      const fin = v => { try { w.terminate(); } catch (e) { /* ya cerrado */ } resolve(v); };
+      w.onmessage = ev => {
+        if (!ev.data.ok) return fin(sync());
+        const arr = ev.data.messages;
+        Object.defineProperty(arr, 'system', { value: ev.data.system, enumerable: false });
+        Object.defineProperty(arr, 'dateOrder', { value: ev.data.dateOrder, enumerable: false });
+        fin(arr);
+      };
+      w.onerror = () => fin(sync());
+      w.postMessage({ text, name });
+    });
+  }
   async function importWhatsApp(input) {
     const files = [...(input.files || [])]; if (!files.length) return;
     const file = files[0];
@@ -42,7 +60,7 @@
     if (!/\.txt$/i.test(file.name) && file.type !== 'text/plain') { showModal(tr('Este archivo no es un .txt de WhatsApp. Exporta el chat desde WhatsApp → Más → Exportar chat → Sin multimedia.')); input.value = ''; return; }
     try {
       setProgress(0);
-      const messages = E().parseWhatsApp(await readChunks(file, setProgress), file.name.replace(/\.txt$/i, ''));
+      const messages = await parseAsync(await readChunks(file, setProgress), file.name.replace(/\.txt$/i, ''), file.size);
       if (!messages.length) throw new Error(tr('No se encontraron mensajes con un formato compatible.'));
       state.chats = state.chats.filter(c => c.platform !== 'WhatsApp');
       state.chats.unshift({ name: file.name.replace(/\.txt$/i, ''), platform: 'WhatsApp', messages });
@@ -432,5 +450,5 @@
     render();
     if (I18n.lang !== 'es' && node('experienciasResults')) I18n.aplicar(node('experienciasResults'));
   });
-  root.GolifiarExperiencias = Object.freeze({ share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
+  root.GolifiarExperiencias = Object.freeze({ parseAsync, share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
 }(typeof window !== 'undefined' ? window : globalThis));

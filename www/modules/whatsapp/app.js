@@ -43,10 +43,11 @@
 
   function iniciales(n) { return String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => Array.from(w)[0] || '').join('').toUpperCase(); }
   // Estadísticas ampliadas: reutilizan el motor local de Experiencias; nada sale del dispositivo.
-  function extra() {
+  async function extra() {
     const sitio = document.getElementById('waExtra'), E = window.GolifiarExperienciasEngine;
     if (!sitio || !E || !ultimoTexto) return;
-    const msgs = E.parseWhatsApp(ultimoTexto, ultimoNombre);
+    const X0 = window.GolifiarExperiencias;
+    const msgs = X0 && X0.parseAsync ? await X0.parseAsync(ultimoTexto, ultimoNombre, ultimoTexto.length) : E.parseWhatsApp(ultimoTexto, ultimoNombre);
     if (!msgs.length) return;
     ultimoChat = { name: ultimoNombre, platform: 'WhatsApp', messages: msgs };
     const d = E.deep(msgs), quien = E.whoIsMore(msgs), fantasma = E.ghostOfWeek(msgs), peligro = E.dangerStreak(msgs), n = I18n.num;

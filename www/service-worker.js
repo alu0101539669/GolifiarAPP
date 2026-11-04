@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v27';
+const CACHE_NAME = 'golifiar-v28';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
@@ -12,6 +12,7 @@ const APP_SHELL = [
   './modules/whatsapp/lector.js',
   './modules/whatsapp/app.js',
   './modules/experiencias/engine.js',
+  './modules/experiencias/worker.js',
   './modules/experiencias/app.js',
   './modules/experiencias/experiencias.css',
   './lang-en-experiencias.js',
