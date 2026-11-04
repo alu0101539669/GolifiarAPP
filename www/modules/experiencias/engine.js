@@ -18,54 +18,83 @@
       const timestamp = safeDate(m.timestamp ?? m.timestamp_ms ?? m.date);
       const sender = String(m.sender ?? m.sender_name ?? m.participante ?? '').trim();
       if (timestamp === null || !sender) return null;
-      return { timestamp, sender, text: typeof m.text === 'string' ? m.text : (typeof m.content === 'string' ? m.content : ''), platform: m.platform || cfg.platform || 'unknown', chat: m.chat || cfg.chat || 'Chat', reactions: Array.isArray(m.reactions) ? m.reactions.length : Number(m.reactions || 0), attachmentsCount: Number(m.attachmentsCount || 0), isStoryReply: Boolean(m.isStoryReply) };
+      return { timestamp, sender, text: typeof m.text === 'string' ? m.text : (typeof m.content === 'string' ? m.content : ''), platform: m.platform || cfg.platform || 'unknown', chat: m.chat || cfg.chat || 'Chat', reactions: Array.isArray(m.reactions) ? m.reactions.length : Number(m.reactions || 0), attachmentsCount: Number(m.attachmentsCount || 0), isStoryReply: Boolean(m.isStoryReply), media: m.media || null };
     }).filter(Boolean).sort((a,b) => a.timestamp - b.timestamp);
   }
 
-  function parseDateParts(d, m, y, h, min, ampm) {
-    let day = Number(d), month = Number(m), year = Number(y);
-    if (year < 100) year += 2000;
-    // Exportes en español suelen usar dd/mm/yyyy; cambia a mm/dd si el primer campo no puede ser mes.
-    if (month > 12 && day <= 12) [day, month] = [month, day];
-    let hour = Number(h);
-    if (ampm) {
-      const a = ampm.toLowerCase().startsWith('p');
-      if (hour === 12) hour = a ? 12 : 0; else if (a) hour += 12;
+  // ---- WhatsApp: fechas en varios formatos, mensajes de sistema y medios omitidos ----
+  const HEAD = /^[\u200e\u200f\u202a-\u202e]*\[?(\d{1,4})[\/.\-](\d{1,2})[\/.\-](\d{1,4}),?\s+(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\s*(?:([ap])\.?\s*m\.?)?\]?\s*(?:[-–]\s*)?(.*)$/i;
+  function mediaKind(text) {
+    const t = String(text || '').toLowerCase().replace(/[\u200e\u200f]/g, '');
+    if (/<(?:attached|adjunto):\s*[^>]*>/.test(t)) {
+      if (/audio|ptt|\.opus|\.m4a/.test(t)) return 'audio';
+      if (/sticker|\.webp/.test(t)) return 'sticker';
+      if (/video|\.mp4/.test(t)) return 'video';
+      if (/photo|img|\.jpe?g|\.png/.test(t)) return 'image';
+      return 'other';
     }
-    const dt = new Date(year, month - 1, day, hour, Number(min), 0, 0);
-    if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day || dt.getHours() !== hour || dt.getMinutes() !== Number(min)) return null;
+    if (/^<?\s*(?:media omitted|multimedia omitido)\s*>?$/.test(t.trim())) return 'other';
+    const m = t.trim().match(/^<?\s*(audio|imagen|image|foto|photo|v[ií]deo|sticker|gif|documento|document)\s+(?:omitid[oa]|omitted)\s*>?$/);
+    if (!m) return null;
+    return { audio: 'audio', imagen: 'image', image: 'image', foto: 'image', photo: 'image', video: 'video', 'vídeo': 'video', sticker: 'sticker', gif: 'video' }[m[1]] || 'other';
+  }
+  function systemEvent(rest) {
+    const s = rest.replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim();
+    let m;
+    if ((m = s.match(/^(.+?) (?:se salió|salió|left)(?: del grupo)?\.?$/i))) return { type: 'leave', name: m[1].trim() };
+    if ((m = s.match(/^(.+?) (?:eliminó a|removed) (.+?)\.?$/i))) return { type: 'remove', name: m[2].trim(), actor: m[1].trim() };
+    if ((m = s.match(/^(.+?) (?:añadió a|added) (.+?)\.?$/i))) return { type: 'join', name: m[2].trim(), actor: m[1].trim() };
+    if ((m = s.match(/^(.+?) (?:se unió|joined)(?: usando| using|\.|$)/i))) return { type: 'join', name: m[1].trim() };
+    return null;
+  }
+  function detectOrder(heads) {
+    for (const h of heads) { if (String(h[1]).length === 4) return 'ymd'; }
+    for (const h of heads) { if (Number(h[1]) > 12) return 'dmy'; }
+    for (const h of heads) { if (Number(h[2]) > 12) return 'mdy'; }
+    return 'dmy';
+  }
+  function buildTs(h, order) {
+    let a = Number(h[1]), b = Number(h[2]), c = Number(h[3]), day, month, year;
+    if (order === 'ymd') { year = a; month = b; day = c; }
+    else { year = c; if (order === 'mdy') { month = a; day = b; } else { day = a; month = b; } }
+    if (year < 100) year += 2000;
+    let hour = Number(h[4]); const min = Number(h[5]);
+    if (h[6]) { const pm = h[6].toLowerCase() === 'p'; if (hour === 12) hour = pm ? 12 : 0; else if (pm) hour += 12; }
+    const dt = new Date(year, month - 1, day, hour, min, 0, 0);
+    if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day || dt.getHours() !== hour) return null;
     return dt.getTime();
   }
-
   function parseWhatsApp(text, chatName) {
     const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/);
-    const patterns = [
-      /^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap])?\.?m?\.?\]\s*(.+?):\s?(.*)$/i,
-      /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap])?\.?m?\.?\s*-\s*(.+?):\s?(.*)$/i,
-      /^(\d{4})-(\d{1,2})-(\d{1,2}),?\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*-\s*(.+?):\s?(.*)$/i
-    ];
-    const messages = [];
-    for (const line of lines) {
-      let match, patternIndex = -1;
-      for (let i = 0; i < patterns.length; i++) { match = line.match(patterns[i]); if (match) { patternIndex = i; break; } }
-      if (match) {
-        let timestamp, sender, body;
-        if (patternIndex === 2) {
-          const year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
-          const dt = new Date(year, month - 1, day, Number(match[4]), Number(match[5]));
-          timestamp = dt.getFullYear() === year && dt.getMonth() === month - 1 && dt.getDate() === day ? dt.getTime() : null;
-          sender = match[6]; body = match[7];
+    const parsed = lines.map(l => l.match(HEAD));
+    const order = detectOrder(parsed.filter(Boolean));
+    const messages = [], system = [];
+    let last = null;
+    lines.forEach((line, i) => {
+      const h = parsed[i];
+      const ts = h ? buildTs(h, order) : null;
+      if (h && ts !== null) {
+        const rest = h[7];
+        const sm = rest.match(/^(.+?): ([\s\S]*)$/);
+        if (sm && !/^[^:]*\d:\d/.test(sm[1])) {
+          const sender = sm[1].replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim();
+          const body = sm[2];
+          last = { timestamp: ts, sender, text: body, platform: 'whatsapp', chat: chatName || 'WhatsApp', media: mediaKind(body) };
+          messages.push(last);
         } else {
-          timestamp = parseDateParts(match[1], match[2], match[3], match[4], match[5], match[6]);
-          sender = match[7]; body = match[8];
+          const ev = systemEvent(rest);
+          if (ev) system.push({ ...ev, timestamp: ts });
+          last = null;
         }
-        if (timestamp !== null && sender && !/^\s*$/.test(sender)) messages.push({ timestamp, sender: sender.replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim(), text: body || '', platform: 'whatsapp', chat: chatName || 'WhatsApp' });
-      } else if (messages.length && line.trim()) {
-        // Las líneas continuadas se mantienen solo en memoria para el análisis local de palabras.
-        messages[messages.length - 1].text += ` ${line.trim()}`;
+      } else if (last && line.trim()) {
+        last.text += ` ${line.trim()}`;
+        if (!last.media) last.media = mediaKind(last.text);
       }
-    }
-    return normalizeMessages(messages, { platform: 'whatsapp', chat: chatName || 'WhatsApp' });
+    });
+    const out = normalizeMessages(messages, { platform: 'whatsapp', chat: chatName || 'WhatsApp' });
+    Object.defineProperty(out, 'system', { value: system, enumerable: false });
+    Object.defineProperty(out, 'dateOrder', { value: order, enumerable: false });
+    return out;
   }
 
   // Meta exporta el UTF-8 leído como latin-1 («JosÃ©»): se corrige solo si el texto lo parece.
@@ -82,6 +111,7 @@
       text: typeof m.content === 'string' ? fixText(m.content) : '',
       platform: 'instagram', chat: fixText(chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram')),
       reactions: m.reactions,
+      media: m.audio_files ? 'audio' : m.videos ? 'video' : m.photos ? 'image' : m.sticker ? 'sticker' : null,
       attachmentsCount: ['photos','videos','audio_files','files','share'].reduce((n, key) => n + (m[key] ? (Array.isArray(m[key]) ? m[key].length : 1) : 0), 0),
       isStoryReply: /story|historia/i.test(JSON.stringify(m.share || {})) || /replied to your story|respondio a tu historia|respondió a tu historia/i.test(String(m.content || ''))
     })), { platform: 'instagram', chat: fixText(chatName || obj.title || 'Instagram') });
@@ -310,7 +340,94 @@
     }).sort((a,b) => b.score-a.score || b.totalMessages-a.totalMessages);
   }
 
+
+  // ---- Análisis ampliado (Fase 1): totales, medios, franjas, miembros y tests ----
+  const SLOTS = [['madrugada', 0, 6], ['mañana', 6, 12], ['tarde', 12, 20], ['noche', 20, 24]];
+  function slotOf(h) { return SLOTS.find(([, a, b]) => h >= a && h < b)[0]; }
+  function wordCount(t) { return (String(t || '').match(/[\p{L}\p{N}]+/gu) || []).length; }
+
+  function deep(messages, system) {
+    const ms = normalizeMessages(messages), ev = Array.isArray(system) ? system : (messages && messages.system) || [];
+    const media = { audio: 0, image: 0, video: 0, sticker: 0, other: 0 }, slots = { madrugada: 0, 'mañana': 0, tarde: 0, noche: 0 };
+    const weekdays = Array(7).fill(0), per = new Map();
+    let words = 0, chars = 0;
+    const row = n => { if (!per.has(n)) per.set(n, { name: n, messages: 0, words: 0, chars: 0, media: 0, audio: 0, stickers: 0, night: 0, caps: 0, excl: 0, emojis: 0, first: null, last: null, responseMs: [], starts: 0 }); return per.get(n); };
+    ms.forEach((m, i) => {
+      const r = row(m.sender), d = new Date(m.timestamp), isMedia = Boolean(m.media);
+      r.messages++; if (r.first === null) r.first = m.timestamp; r.last = m.timestamp;
+      if (isMedia) { media[m.media] = (media[m.media] || 0) + 1; r.media++; if (m.media === 'audio') r.audio++; if (m.media === 'sticker') r.stickers++; }
+      else { const w = wordCount(m.text); words += w; chars += m.text.length; r.words += w; r.chars += m.text.length; }
+      slots[slotOf(d.getHours())]++; weekdays[(d.getDay() + 6) % 7]++;
+      if (d.getHours() < 6) r.night++;
+      r.caps += (m.text.match(/\b\p{Lu}{3,}\b/gu) || []).length; r.excl += (m.text.match(/[!¡]/g) || []).length; r.emojis += (m.text.match(/\p{Extended_Pictographic}/gu) || []).length;
+      const prev = ms[i - 1];
+      if (!prev || m.timestamp - prev.timestamp > 6 * 3600000) r.starts++;
+      else if (prev.sender !== m.sender && m.timestamp - prev.timestamp < 24 * 3600000) r.responseMs.push(m.timestamp - prev.timestamp);
+    });
+    const lastTs = ms.length ? ms[ms.length - 1].timestamp : 0, DAY = 86400000;
+    const status = new Map();
+    for (const e of [...ev].sort((a, b) => a.timestamp - b.timestamp)) {
+      if (e.type === 'join') { status.set(e.name, 'in'); row(e.name); } else status.set(e.name, 'out');
+    }
+    const members = [...per.values()].map(r => {
+      const out = status.get(r.name) === 'out' && (r.last === null || true);
+      let state = 'active';
+      if (out) state = 'ex';
+      else if (r.messages === 0 || lastTs - r.last > 60 * DAY) state = 'ghost';
+      const avgResp = r.responseMs.length ? r.responseMs.reduce((a, b) => a + b, 0) / r.responseMs.length : null;
+      return { ...r, state, avgResponseMs: avgResp, share: ms.length ? r.messages / ms.length * 100 : 0, responseMs: undefined };
+    }).sort((a, b) => b.messages - a.messages || a.name.localeCompare(b.name));
+    const topSlot = Object.entries(slots).sort((a, b) => b[1] - a[1])[0];
+    const topDay = weekdays.indexOf(Math.max(...weekdays));
+    return { totalMessages: ms.length, words, chars, media, slots, topSlot: ms.length ? topSlot[0] : null, weekdays, topWeekday: ms.length ? topDay : null, members, podium: members.slice(0, 3), rest: members.slice(3), ghosts: members.filter(m => m.state === 'ghost'), exMembers: members.filter(m => m.state === 'ex'), isGroup: members.filter(m => m.state !== 'ex').length > 2 };
+  }
+
+  function whoIsMore(messages, system) {
+    const d = deep(messages, system), people = d.members.filter(m => m.messages > 0 && m.state !== 'ex');
+    if (people.length < 2) return [];
+    const best = (fn, min) => { const c = people.filter(p => (min ? p.messages >= min : true)); return (c.length ? c : people).map(p => ({ p, v: fn(p) })).filter(x => x.v !== null && Number.isFinite(x.v)).sort((a, b) => b.v - a.v)[0]; };
+    const pct = v => `${Math.round(v * 100)}%`;
+    const defs = [
+      { key: 'leftOnRead', title: 'Más de dejar en visto', fn: p => p.avgResponseMs, fmt: v => formatDuration(v), explanation: 'Tiempo medio que tarda en responder a otra persona (máx. 24 h).' },
+      { key: 'nocturnal', title: 'Más nocturno', fn: p => p.night / p.messages, fmt: pct, explanation: 'Porcentaje de sus mensajes entre las 00:00 y las 06:00.' },
+      { key: 'voice', title: 'Más notas de voz', fn: p => p.audio, fmt: v => String(v), explanation: 'Notas de voz enviadas. El .txt no incluye su duración, solo cuántas hay.' },
+      { key: 'stickers', title: 'Rey o reina de los stickers', fn: p => p.stickers, fmt: v => String(v), explanation: 'Stickers enviados.' },
+      { key: 'initiator', title: 'Quien rompe el hielo', fn: p => p.starts, fmt: v => String(v), explanation: 'Veces que escribe el primer mensaje tras una pausa de más de 6 horas.' },
+      { key: 'dramatic', title: 'Más dramático', fn: p => (p.caps * 2 + p.excl + p.emojis * 0.5) / p.messages, fmt: v => (Math.round(v * 10) / 10).toString(), explanation: 'Mayúsculas, exclamaciones y emojis por mensaje.' }
+    ];
+    return defs.map(df => { const b = best(df.fn, 3); return b && b.v > 0 ? { key: df.key, title: df.title, name: b.p.name, value: df.fmt(b.v), explanation: df.explanation } : null; }).filter(Boolean);
+  }
+
+  function ghostOfWeek(messages, system) {
+    const d = deep(messages, system), ms = normalizeMessages(messages);
+    if (!ms.length) return null;
+    const lastTs = ms[ms.length - 1].timestamp, weekAgo = lastTs - 7 * 86400000;
+    const recent = new Set(ms.filter(m => m.timestamp >= weekAgo).map(m => m.sender));
+    const c = d.members.filter(m => m.state !== 'ex' && m.messages > 0 && !recent.has(m.name)).sort((a, b) => a.last - b.last)[0];
+    return c ? { name: c.name, daysSilent: Math.floor((lastTs - c.last) / 86400000) } : null;
+  }
+
+  function dangerStreak(messages, now) {
+    const st = streaks(messages), t = now || Date.now();
+    const ms = normalizeMessages(messages);
+    if (!ms.length || !st.current) return { danger: false, days: st.current };
+    const wroteToday = dayKey(ms[ms.length - 1].timestamp) === dayKey(t);
+    return { danger: !wroteToday, days: st.current };
+  }
+
+  function hourHeat(messages) {
+    const grid = Array.from({ length: 7 }, () => Array(24).fill(0));
+    for (const m of normalizeMessages(messages)) { const d = new Date(m.timestamp); grid[(d.getDay() + 6) % 7][d.getHours()]++; }
+    return grid;
+  }
+
+  function summaryText(messages, name, system) {
+    const s = stats(messages), st = streaks(messages), d = deep(messages, system);
+    const top = d.members[0];
+    return [`📊 ${name || 'Mi chat'} · Golifiar`, `💬 ${s.totalMessages} mensajes · ${d.words} palabras`, `🔥 Racha más larga: ${st.longest} días`, top ? `🏆 Más activo: ${top.name} (${Math.round(top.share)}%)` : '', 'Analizado en mi dispositivo con Golifiar'].filter(Boolean).join('\n');
+  }
+
   function toCardData(messages, name) { return wrapped(messages, name); }
 
-  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey });
+  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind });
 }(typeof window !== 'undefined' ? window : globalThis));

@@ -34,7 +34,7 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
     if (vista === '#viewExperiencias') {
       await page.evaluate(() => cambiarVista('experiencias'));
       const lineas = Array.from({ length: 40 }, (_, i) => `[${String(1 + (i % 28)).padStart(2, '0')}/${i < 20 ? '09' : '10'}/2026, 1${i % 10}:00:00] ${i % 2 ? 'Ana' : 'Luis'}: hola ${i}`).join('\n');
-      await page.setInputFiles('#exWhatsAppFiles', [{ name: 'a.txt', mimeType: 'text/plain', buffer: Buffer.from(lineas) }, { name: 'b.txt', mimeType: 'text/plain', buffer: Buffer.from(lineas) }]);
+      await page.setInputFiles('#exWhatsAppFiles', [{ name: 'a.txt', mimeType: 'text/plain', buffer: Buffer.from(lineas) }]);
       await page.waitForTimeout(400);
     }
     for (const pestana of (vista === '#viewExperiencias' ? ['resumen', 'actividad', 'juegos', 'records', 'wrapped'] : [null])) {

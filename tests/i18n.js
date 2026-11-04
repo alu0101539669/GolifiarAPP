@@ -50,7 +50,7 @@ const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'activida
   await pg.setInputFiles('#whatsappFile', chat('chat1.txt'));
   await pg.waitForTimeout(500);
   await pg.evaluate(() => cambiarVista('experiencias'));
-  await pg.setInputFiles('#exWhatsAppFiles', [chat('chat1.txt'), chat('chat2.txt')]);
+  await pg.setInputFiles('#exWhatsAppFiles', chat('chat1.txt'));
   await pg.waitForTimeout(700);
   await pg.setInputFiles('#exInstagramFiles', fx('completo.zip'));
   await pg.waitForTimeout(1500);

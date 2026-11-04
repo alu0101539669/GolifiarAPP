@@ -117,3 +117,28 @@
 .ex-score { font-size: 1.8rem; letter-spacing: -0.02em; color: var(--accent-blue); }
 .ex-meter { height: 12px; border-radius: 999px; background: var(--surface-3); overflow: hidden; margin: 0.4rem 0 0.2rem; }
 .ex-meter i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--accent-blue), #6542a6); }
+
+/* Fase 2: podio, insignias, calor, tarjeta de racha, aviso y modal */
+.ex-podium { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: .5rem 0 1rem; padding: 0; align-items: end; }
+.ex-podium li { display: flex; flex-direction: column; align-items: center; gap: .25rem; text-align: center; background: var(--surface-2); border: 1px solid var(--border-color); border-radius: 14px; padding: .8rem .4rem; overflow-wrap: anywhere; }
+.ex-podium li.p1 { padding-top: 1.4rem; border-color: var(--gold-border); background: var(--gold-bg); color: var(--gold-ink); }
+.ex-avatar { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; color: #111; background: #FFD21F; }
+.ex-avatar.c1 { background: #ff7a59; } .ex-avatar.c2 { background: #4cc9f0; } .ex-avatar.c3 { background: #9b5de5; color: #fff; } .ex-avatar.c4 { background: #43aa8b; } .ex-avatar.c5 { background: #f15bb5; }
+.ex-badge { display: inline-block; font-size: .7rem; font-weight: 600; padding: .1rem .45rem; border-radius: 999px; border: 1px solid var(--border-color); background: var(--surface-3); color: var(--text-secondary); }
+.ex-badge.ex { border-color: var(--gold-border); }
+.ex-danger { display: flex; flex-direction: column; gap: .2rem; border-color: var(--gold-border); background: var(--gold-bg); color: var(--gold-ink); }
+.ex-heat { display: grid; gap: 2px; }
+.ex-heat-row { display: grid; grid-template-columns: 1.6rem repeat(24, minmax(0, 1fr)); gap: 2px; align-items: center; font-size: .7rem; color: var(--text-muted); }
+.ex-heat-row i { aspect-ratio: 1; border-radius: 3px; background: var(--accent-blue); opacity: calc(.08 + var(--a) * .92); }
+.ex-range { display: flex; flex-wrap: wrap; gap: .75rem; margin: .5rem 0; }
+.ex-range label { display: flex; flex-direction: column; gap: .2rem; font-size: .85rem; color: var(--text-secondary); }
+.ex-share-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .75rem; }
+.ex-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 1000; }
+.ex-modal[hidden] { display: none; }
+.ex-modal-box { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 14px; padding: 1.25rem; max-width: 420px; display: flex; flex-direction: column; gap: 1rem; }
+.dropzone .dz-btn { margin-top: .5rem; pointer-events: none; }
+.dropzone .dz-progress { display: block; width: min(260px, 80%); height: 6px; border-radius: 6px; background: var(--surface-3); overflow: hidden; margin-top: .5rem; }
+.dropzone .dz-progress[hidden] { display: none; }
+.dropzone .dz-progress i { display: block; height: 100%; width: 0; background: var(--accent-blue); transition: width .2s linear; }
+.dropzone.dragover { border-color: var(--accent-blue); background: var(--surface-2); }
+@media (prefers-reduced-motion: reduce) { .dropzone .dz-progress i { transition: none; } }

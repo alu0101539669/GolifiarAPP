@@ -20,3 +20,8 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 ## Móvil y Experiencias
 - Hecho: la cabecera ya no ensancha la página en móvil (menú deslizable que centra la pestaña activa, cabecera compacta); WhatsApp y Experiencias usan la misma zona de arrastrar que Instagram; Experiencias reorganizada en pestañas (Resumen, Actividad, Juegos, Récords y torneo, Wrapped) con gráficos de horas/meses, barras de participantes, medidores, tema claro/oscuro real y botón para borrar los chats de la memoria; nombres de Instagram con acentos corregidos; plurales; pruebas de desborde en móvil y accesibilidad ampliadas (`tests/i18n.js`, `tests/accessibility.js`).
 - Pendiente: revisar en un móvil real; torneo con tabla ancha (se desplaza dentro de su tarjeta).
+
+## Especificación de diseño (fase 1-2)
+- Hecho: parser WhatsApp multiformato (DD/MM, MM/DD, AM/PM), mensajes de sistema (salidas/entradas), medios, palabras/caracteres, franjas, miembros activos/ex/fantasma con insignias, podio, «¿Quién es más…?», fantasma de la semana, peligro de racha, reloj de actividad, filtro de periodo, tarjeta 9:16 (descargar/copiar), resumen para WhatsApp, anonimizar, modal de errores, zona de subida de un solo .txt con botón/progreso/hover.
+- Decisiones: un solo chat por sesión; avatares = iniciales; estilos Neón/Cyberpunk/Minimalista tras Premium demo; sonido sintetizado y apagado por defecto (`golifiar-sonido`).
+- Pendiente: Web Worker >100k mensajes, Wrapped animado, Labs/«Full Curiosidad», Vs/diplomas/Tu turno/ADN, editor en vivo de tarjetas, momentos «te quiero» (con opt-in), botonera de plataformas y bypass de desarrollador, comparar 2 chats.

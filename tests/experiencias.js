@@ -41,4 +41,30 @@ assert.equal(ig.length, 1, 'Debe normalizar un hilo JSON de Instagram');
 assert.equal(E.stats(ig).totalReactions, 1, 'Debe contar reacciones si aparecen en el ZIP');
 assert.equal(E.stats(ig).sharedContentMessages, 1, 'Debe detectar adjuntos cuando existen metadatos');
 assert.equal(E.stats(ig).storyReplies, 1, 'Debe identificar respuestas a historias cuando los metadatos las señalan');
+
+// Fase 1: formatos de fecha, sistema, medios y miembros
+const us = E.parseWhatsApp('1/13/26, 9:05 PM - Ana: hi\n1/14/26, 12:10 AM - Bob: <Media omitted>\n1/14/26, 12:11 AM - Bob: ok', 'US');
+assert.equal(us.length, 3, 'Debe leer formato MM/DD/YY con AM/PM');
+assert.equal(us.dateOrder, 'mdy', 'Debe detectar MM/DD');
+assert.equal(new Date(us[0].timestamp).getHours(), 21, '9:05 PM son las 21 h');
+assert.equal(new Date(us[1].timestamp).getHours(), 0, '12:10 AM son las 0 h');
+const grp = E.parseWhatsApp([
+  '[05/01/2026, 10:00:00] Ana: hola',
+  '[05/01/2026, 10:01:00] Luis: <Multimedia omitido>',
+  '[05/01/2026, 10:02:00] Luis: audio omitido',
+  '[05/01/2026, 10:03:00] Eva: sticker omitido',
+  '05/01/2026, 10:04 - Eva salió',
+  '[06/01/2026, 01:00:00] Ana: ¡HOLA! 😀',
+  '[06/01/2026, 01:05:00] Pepe se unió usando el enlace',
+  '[01/04/2026, 12:00:00] Ana: otra vez'
+].join('\n'), 'G');
+assert.equal(grp.length, 6, 'Los mensajes de sistema no son mensajes');
+assert.equal(grp.system.length, 2, 'Debe leer salidas y entradas');
+const dp = E.deep(grp);
+assert.equal(dp.media.audio, 1); assert.equal(dp.media.sticker, 1);
+assert.equal(dp.exMembers.map(m => m.name).join(), 'Eva', 'Eva salió');
+assert.ok(dp.ghosts.some(m => m.name === 'Pepe'), 'Pepe entró y no escribió');
+assert.ok(dp.words > 0 && dp.chars > 0 && dp.topSlot, 'Debe contar palabras, caracteres y franja');
+assert.ok(Array.isArray(E.whoIsMore(messages)), 'whoIsMore devuelve lista');
+assert.equal(E.hourHeat(messages).length, 7);
 console.log('experiencias: OK');
