@@ -32,6 +32,7 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
     mimeType: 'text/plain',
     buffer: Buffer.from('[28/10/2026, 12:30] Ana: Hola')
   });
+  await page.waitForSelector('#whatsappResults .wa-summary', { state: 'attached' });
   await page.evaluate(() => I18n.fijar('en'));
   assert.match(await page.locator('#whatsappResults').innerText(), /Messages analysed/);
   assert.match(await page.locator('#whatsappResults').innerText(), /People with the most messages/);
