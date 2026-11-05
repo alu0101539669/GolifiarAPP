@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'glass', avatars: [null, null], slide: 0, mount: 'experienciasResults', hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'glass', avatars: [null, null], slide: 0, mount: 'experienciasResults', hd: false, noMark: false, findTerm: '', edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => new Intl.NumberFormat(root.I18n ? I18n.locale : undefined, { useGrouping: 'always', maximumFractionDigits: 1 }).format(n);
@@ -37,7 +37,8 @@
   }
   // Chats grandes (más de ~5 MB, unos 100.000 mensajes) se analizan en un Worker; si no se puede crear, se usa el hilo principal.
   function parseAsync(text, name, size) {
-    const sync = () => E().parseWhatsApp(text, name);
+    const defaultOrder = /^en-(US|PH)\b/i.test((root.navigator && navigator.language) || '') ? 'mdy' : 'dmy';
+    const sync = () => E().parseWhatsApp(text, name, { defaultOrder });
     if (!root.Worker || (size || text.length) < 5 * 1024 * 1024) return Promise.resolve(sync());
     return new Promise(resolve => {
       let w; try { w = new Worker('./modules/experiencias/worker.js'); } catch (e) { resolve(sync()); return; }
@@ -50,7 +51,7 @@
         fin(arr);
       };
       w.onerror = () => fin(sync());
-      w.postMessage({ text, name });
+      w.postMessage({ text, name, defaultOrder });
     });
   }
   async function importWhatsApp(input) {
@@ -182,6 +183,8 @@
     const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="glass">Golifiar</option><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exSound" ${soundOn() ? 'checked' : ''}> ${esc(tr('Sonidos y vibración'))}</label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
     const premiumOn = isPremium();
     const ta = state.topicsEnabled, dna = E().emojiDna(messages, ta), moments = ta ? E().firstMoments(messages) : [], bur = E().burst(messages), run = E().longestRun(messages), likely = E().mostLikely(messages, ta), soul = E().soulmates(messages), compat = ta && chemistryResult !== undefined ? E().topicCompat(messages, chemistryA, chemistryB) : { available: false };
+    const themes = ta ? E().topicThemes(messages, chemistryA, chemistryB) : { available: false }, bm = E().bestMatches(messages, chemistryA, ta), soulName = soul[0] ? `${soul[0].a} + ${soul[0].b}` : null;
+    const found = premiumOn && state.findTerm ? E().firstMoments(messages, [state.findTerm])[0] : null;
     const fdt = ts => new Date(ts).toLocaleString(root.I18n ? I18n.locale : undefined, { dateStyle: 'medium', timeStyle: 'short' });
     const optin = `<label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics2" ${ta ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label>`;
     const diplomaBtns = who.map(w => `<button type="button" class="btn-sub" data-card="diploma:${w.key}">🎓 ${esc(tr(w.title))}</button>`).join('');
@@ -192,10 +195,11 @@
       ${run ? `<article class="ex-record"><span>⚡</span><div><small>${esc(tr('Conversación más larga sin pausas'))}</small><strong>${num(run.count)} ${esc(tr('mensajes'))} · ${esc(E().formatDuration(run.end - run.start))}</strong></div></article>` : ''}
       ${soul.map(x => `<article class="ex-record"><span>💞</span><div><small>${esc(tr('Mejor encaje'))}</small><strong>${esc(x.a)} + ${esc(x.b)} · ${x.percent}%</strong></div></article>`).join('')}
       </div></section>
+      <section class="ex-card"><h3>${esc(tr('Personas que mejor encajan con tus mensajes'))} · ${esc(chemistryA)}</h3>${bm.length ? `<ul class="ex-bars">${bm.slice(0, 5).map(x => `<li><span class="ex-bar-name">${esc(x.name)}</span><span class="ex-bar"><i style="width:${x.percent}%"></i></span><strong>${x.percent}%</strong></li>`).join('')}</ul>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}${soulName ? `<p class="ex-discovery">💞 ${esc(tr('Alma gemela conversacional'))}: <strong>${esc(soulName)}</strong></p>` : ''}<p class="ex-note">${esc(tr('Elige a la persona en el selector de Chemistry Score (pestaña Juegos). Compara tono, longitud, velocidad de respuesta y horarios.'))}</p></section>
       <section class="ex-card"><h3>${esc(tr('¿Con quién es más probable que…?'))}</h3>${likely.length ? `<div class="ex-records">${likely.map(x => `<article class="ex-record"><div><strong>${esc(tr(x.title))}</strong><span>${esc(x.name)} · ${esc(x.value)}</span></div></article>`).join('')}</div>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}</section>
       <section class="ex-card"><h3>${esc(tr('ADN de la conversación'))}</h3>${ta ? `<p class="ex-discovery">${dna.emojis.map(e => `${e.emoji} ×${num(e.count)}`).join('  ') || '—'}</p><p>${esc(tr('Palabra mágica'))}: <strong>${esc(dna.magicWord || '—')}</strong></p>` : `<p>${esc(tr('Activa el análisis de palabras para verlo.'))}</p>`}
-        ${premiumOn ? `<h4>${esc(tr('Primeras veces'))}</h4>` : ''}${ta && premiumOn ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
-        <h4>${esc(tr('Compatibilidad de temas'))}</h4>${compat.available ? `<p class="ex-discovery"><strong class="ex-score">${num(compat.percent)}%</strong> · ${esc(compat.shared.join(' · '))}</p>${meter(compat.percent)}` : `<p>${esc(tr('Necesita el análisis de palabras y dos personas con mensajes.'))}</p>`}</section>
+        ${premiumOn ? `<h4>${esc(tr('Primeras veces'))}</h4><div class="ex-find"><label class="visually-hidden" for="exFindTerm">${esc(tr('Buscar una frase'))}</label><input type="search" id="exFindTerm" value="${esc(state.findTerm || '')}" placeholder="${esc(tr('Busca una frase, p. ej. vamos a quedar'))}"><button type="button" class="btn-sub" id="exFindBtn">${esc(tr('Buscar'))}</button></div>${found ? `<p class="ex-discovery">${found.timestamp ? `«${esc(found.term)}» · ${esc(found.sender)} · ${esc(fdt(found.timestamp))}` : esc(tr('No aparece en el chat.'))}</p>` : ''}` : ''}${ta && premiumOn ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
+        <h4>${esc(tr('Compatibilidad temática'))} · ${esc(chemistryA)} + ${esc(chemistryB)}</h4>${themes.available ? `<p class="ex-discovery"><strong class="ex-score">${num(themes.percent)}%</strong></p>${meter(themes.percent)}<ul class="ex-bars">${themes.shared.map(x => `<li><span class="ex-bar-name">${esc(tr(x.theme))}</span><span class="ex-bar"><i style="width:${Math.max(4, Math.round(x.score / themes.shared[0].score * 100))}%"></i></span><strong>${num(x.a)} · ${num(x.b)}</strong></li>`).join('')}</ul>` : ''}<h4>${esc(tr('Compatibilidad de temas'))}</h4>${compat.available ? `<p class="ex-discovery"><strong class="ex-score">${num(compat.percent)}%</strong> · ${esc(compat.shared.join(' · '))}</p>${meter(compat.percent)}` : `<p>${esc(tr('Necesita el análisis de palabras y dos personas con mensajes.'))}</p>`}</section>
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tarjetas virales'))}</p><h3>${esc(tr('Comparte en tus Stories'))}</h3></div></div><div class="ex-share-actions"><button type="button" class="btn-sub" data-card="adn">🧬 ${esc(tr('ADN de la conversación'))}</button><button type="button" class="btn-sub" data-card="vs">⚔️ Vs</button><button type="button" class="btn-sub" data-card="turno">👉 ${esc(tr('Tu turno'))}</button><button type="button" class="btn-sub" data-card="adivina">🎯 ${esc(tr('Adivina tu resultado'))}</button><button type="button" class="btn-sub" data-card="peligro">⚠️ ${esc(tr('Peligro de racha'))}</button></div><h4>${esc(tr('Diplomas'))}</h4><div class="ex-share-actions">${diplomaBtns || `<span>${esc(tr('Datos insuficientes'))}</span>`}</div></section>`;
     const slides = [
       ['📅', `${num(dp.totalMessages)} ${tr('mensajes')}`, tr('en {n} días activos', { n: num(s.activeDays) })],
@@ -368,9 +372,13 @@
     ctx.textAlign = 'left'; ctx.font = `300px ${F}`; ctx.fillText('🔥', x0, y); ctx.fillStyle = L.glass ? '#ffffff' : L.accent; ctx.font = `bold 340px ${F}`; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 30; ctx.fillText(String(days), x0 + fw + gap, y); ctx.restore(); ctx.textAlign = 'center';
     ctx.fillStyle = L.text; ctx.font = `bold 74px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 175);
     const by = y + 205;
-    // Línea de luces de la racha
-    const dy = by + 60, N = 24;
-    for (let i = 0; i < N; i++) { const t = i / (N - 1), r = 6 + t * 9; ctx.save(); ctx.globalAlpha = 0.35 + t * 0.65; ctx.shadowColor = 'rgba(255,255,255,.95)'; ctx.shadowBlur = 18; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(120 + i * (840 / (N - 1)), dy, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    // Línea de racha real: los últimos 24 días; los días con mensajes brillan y crecen según la actividad.
+    const dy = by + 60, N = 24, cal = new Map(E().calendar(messages).map(d => [d.date, d.level])), endTs = messages.length ? messages[messages.length - 1].timestamp : Date.now();
+    for (let i = 0; i < N; i++) {
+      const dt = new Date(endTs - (N - 1 - i) * 86400000), key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`, lv = cal.get(key) || 0;
+      ctx.save(); ctx.globalAlpha = lv ? 0.55 + lv * 0.11 : 0.22; if (lv) { ctx.shadowColor = 'rgba(255,255,255,.95)'; ctx.shadowBlur = 18; } ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(120 + i * (840 / (N - 1)), dy, lv ? 8 + lv * 2 : 6, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
     const gy = dy + 65; glass(ctx, 110, gy, 860, 235, 56, 0.2);
     ctx.fillStyle = L.glass ? L.dark : L.text; ctx.font = `46px ${F}`;
     ctx.fillText(`${num(dp.words)} ${tr('palabras')} · ${num(dp.media.image)} ${tr('fotos enviadas')}`, 540, gy + 85);
@@ -471,7 +479,7 @@
     let o;
     if (kind.startsWith('diploma:')) {
       const w = who.find(x => x.key === kind.slice(8)); if (!w) return;
-      o = { kicker: tr('DIPLOMA OFICIAL'), big: '🎓', lines: [nm(w.name, 0), tr(E().DIPLOMAS[w.key]), `${tr(w.title)} · ${w.value}`, tr('(Documento satírico sin validez)')], bigSize: 220 };
+      o = { kicker: tr('DIPLOMA OFICIAL'), big: '🎓', lines: [tr('Se otorga a'), nm(w.name, 0), tr(E().DIPLOMAS[w.key]), `${tr(w.title)} · ${w.value}`, `✍️ ${tr('Firmado digitalmente: Golifiar')}`, tr('(Documento satírico sin validez)')], bigSize: 220 };
     } else if (kind === 'adn') {
       if (!state.topicsEnabled) return showModal(tr('Activa el análisis de palabras para crear esta tarjeta.'));
       const d = E().emojiDna(messages, true); o = { kicker: tr('ADN DE LA CONVERSACIÓN'), big: d.emojis.map(e => e.emoji).join(' ') || '💬', lines: [`${tr('Palabra mágica')}: ${d.magicWord || '—'}`], bigSize: 190 };
@@ -563,6 +571,7 @@
     if (button.id === 'exCompareBtn') render();
     if (button.id === 'exClear') clearAll();
     if (button.id === 'exTryPremium') premiumDemo();
+    if (button.id === 'exFindBtn') { const i = node('exFindTerm'); state.findTerm = i ? i.value.trim() : ''; render(); }
     if (button.dataset.card) viralCard(button.dataset.card);
     if (button.id === 'exNext' || button.id === 'exPrev') { state.slide = Math.max(0, state.slide + (button.id === 'exNext' ? 1 : -1)); render(); sound('ok'); }
     if (button.id === 'exStreakDl' || button.id === 'exStreakDl2') downloadStreak();

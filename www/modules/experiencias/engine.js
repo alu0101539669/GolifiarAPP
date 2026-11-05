@@ -47,11 +47,11 @@
     if ((m = s.match(/^(.+?) (?:se unió|joined)(?: usando| using|\.|$)/i))) return { type: 'join', name: m[1].trim() };
     return null;
   }
-  function detectOrder(heads) {
+  function detectOrder(heads, fallback) {
     for (const h of heads) { if (String(h[1]).length === 4) return 'ymd'; }
     for (const h of heads) { if (Number(h[1]) > 12) return 'dmy'; }
     for (const h of heads) { if (Number(h[2]) > 12) return 'mdy'; }
-    return 'dmy';
+    return fallback === 'mdy' ? 'mdy' : 'dmy';
   }
   function buildTs(h, order) {
     let a = Number(h[1]), b = Number(h[2]), c = Number(h[3]), day, month, year;
@@ -64,10 +64,10 @@
     if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day || dt.getHours() !== hour) return null;
     return dt.getTime();
   }
-  function parseWhatsApp(text, chatName) {
+  function parseWhatsApp(text, chatName, opts) {
     const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/);
     const parsed = lines.map(l => l.match(HEAD));
-    const order = detectOrder(parsed.filter(Boolean));
+    const order = detectOrder(parsed.filter(Boolean), opts && opts.defaultOrder);
     const messages = [], system = [];
     let last = null;
     lines.forEach((line, i) => {
@@ -362,7 +362,7 @@
       if (d.getHours() < 6) r.night++;
       r.caps += (m.text.match(/\b\p{Lu}{3,}\b/gu) || []).length; r.excl += (m.text.match(/[!¡]/g) || []).length; r.emojis += (m.text.match(/\p{Extended_Pictographic}/gu) || []).length;
       const prev = ms[i - 1];
-      if (!prev || m.timestamp - prev.timestamp > 6 * 3600000) r.starts++;
+      if (!prev || dayKey(m.timestamp) !== dayKey(prev.timestamp)) r.starts++;
       else if (prev.sender !== m.sender && m.timestamp - prev.timestamp < 24 * 3600000) r.responseMs.push(m.timestamp - prev.timestamp);
     });
     const lastTs = ms.length ? ms[ms.length - 1].timestamp : 0, DAY = 86400000;
@@ -393,7 +393,7 @@
       { key: 'nocturnal', title: 'Más nocturno', fn: p => p.night / p.messages, fmt: pct, explanation: 'Porcentaje de sus mensajes entre las 00:00 y las 06:00.' },
       { key: 'voice', title: 'Más notas de voz', fn: p => p.audio, fmt: v => String(v), explanation: 'Notas de voz enviadas. El .txt no incluye su duración, solo cuántas hay.' },
       { key: 'stickers', title: 'Rey o reina de los stickers', fn: p => p.stickers, fmt: v => String(v), explanation: 'Stickers enviados.' },
-      { key: 'initiator', title: 'Quien rompe el hielo', fn: p => p.starts, fmt: v => String(v), explanation: 'Veces que escribe el primer mensaje tras una pausa de más de 6 horas.' },
+      { key: 'initiator', title: 'Quien rompe el hielo', fn: p => p.starts, fmt: v => String(v), explanation: 'Veces que escribe el primer mensaje del día.' },
       { key: 'dramatic', title: 'Más dramático', fn: p => (p.caps * 2 + p.excl + p.emojis * 0.5) / p.messages, fmt: v => (Math.round(v * 10) / 10).toString(), explanation: 'Mayúsculas, exclamaciones y emojis por mensaje.' }
     ];
     return defs.map(df => { const b = best(df.fn, 3); return b && b.v > 0 ? { key: df.key, title: df.title, name: b.p.name, value: df.fmt(b.v), explanation: df.explanation } : null; }).filter(Boolean);
@@ -435,8 +435,9 @@
   }
   // Solo devuelve fecha y autor de la primera aparición, nunca el texto.
   function firstMoments(messages, terms) {
-    const list = terms || ['te quiero', 'perdon', 'gracias', 'jajaja', 'te amo'];
-    return list.map(term => { const m = normalizeMessages(messages).find(x => norm(x.text).includes(term)); return m ? { term, timestamp: m.timestamp, sender: m.sender } : { term, timestamp: null, sender: null }; });
+    const list = (terms || ['te quiero', 'perdon', 'gracias', 'jajaja', 'te amo', 'vamos a quedar']).map(norm).filter(Boolean);
+    const ms = normalizeMessages(messages);
+    return list.map(term => { const m = ms.find(x => norm(x.text).includes(term)); return m ? { term, timestamp: m.timestamp, sender: m.sender } : { term, timestamp: null, sender: null }; });
   }
   function burst(messages) {
     const ms = normalizeMessages(messages); let best = { count: 0, start: null }, j = 0;
@@ -513,6 +514,52 @@
     return { available: true, score, parts: parts.map(p => ({ key: p.k, percent: Math.round(p.v * 100) })), explanation: 'Mezcla orientativa de equilibrio y horarios, velocidad de respuesta' + (content ? ', emojis y vocabulario.' : '. Activa el análisis de palabras para añadir emojis y vocabulario.') };
   }
 
+
+  const THEMES = {
+    'Deportes': ['futbol', 'partido', 'gol', 'liga', 'baloncesto', 'gimnasio', 'entreno', 'correr', 'padel', 'tenis'],
+    'Música': ['cancion', 'musica', 'concierto', 'spotify', 'playlist', 'cantante', 'album', 'festival'],
+    'Cine y series': ['peli', 'pelicula', 'serie', 'netflix', 'cine', 'capitulo', 'temporada'],
+    'Videojuegos': ['juego', 'jugar', 'partida', 'playstation', 'xbox', 'fortnite', 'minecraft', 'steam', 'gamer'],
+    'Fiesta': ['fiesta', 'birra', 'cerveza', 'copas', 'discoteca', 'salir', 'cumple', 'botellon'],
+    'Planes': ['plan', 'quedamos', 'quedar', 'cena', 'comer', 'cafe', 'manana', 'finde'],
+    'Viajes': ['viaje', 'vuelo', 'playa', 'vacaciones', 'hotel', 'maleta', 'billete'],
+    'Estudios y trabajo': ['examen', 'clase', 'trabajo', 'proyecto', 'reunion', 'jefe', 'estudiar', 'apuntes'],
+    'Comida': ['pizza', 'hamburguesa', 'comida', 'cenar', 'restaurante', 'sushi', 'tortilla', 'helado']
+  };
+  function themeCounts(messages, name) {
+    const out = Object.fromEntries(Object.keys(THEMES).map(k => [k, 0]));
+    for (const m of normalizeMessages(messages)) {
+      if (name && m.sender !== name) continue;
+      const t = norm(m.text); if (!t) continue;
+      for (const [k, words] of Object.entries(THEMES)) for (const w of words) if (t.includes(w)) out[k]++;
+    }
+    return out;
+  }
+  // Compatibilidad temática entre dos personas: similitud de coseno de sus intereses y los temas que más las unen.
+  function topicThemes(messages, nameA, nameB) {
+    const a = themeCounts(messages, nameA), b = themeCounts(messages, nameB), keys = Object.keys(THEMES);
+    const dot = keys.reduce((x, k) => x + a[k] * b[k], 0), na = Math.sqrt(keys.reduce((x, k) => x + a[k] ** 2, 0)), nb = Math.sqrt(keys.reduce((x, k) => x + b[k] ** 2, 0));
+    if (!na || !nb) return { available: false };
+    const shared = keys.map(k => ({ theme: k, a: a[k], b: b[k], score: Math.min(a[k], b[k]) })).filter(x => x.score > 0).sort((x, y) => y.score - x.score).slice(0, 5);
+    return { available: true, percent: Math.round(dot / (na * nb) * 100), shared };
+  }
+  // «Personas que mejor encajan con tus mensajes»: tono, longitud, velocidad de respuesta y horarios.
+  function bestMatches(messages, name, content) {
+    const d = deep(messages), me = d.members.find(m => m.name === name); if (!me || !me.messages) return [];
+    const ms = normalizeMessages(messages);
+    const prof = n => { const mm = ms.filter(x => x.sender === n); const txt = mm.filter(x => !x.media);
+      const hrs = Array(24).fill(0); mm.forEach(x => hrs[new Date(x.timestamp).getHours()]++);
+      return { len: txt.length ? txt.reduce((a, x) => a + x.text.length, 0) / txt.length : 0, emo: content && txt.length ? txt.reduce((a, x) => a + (x.text.match(/\p{Extended_Pictographic}/gu) || []).length, 0) / txt.length : 0, hrs, n: mm.length }; };
+    const sim = (x, y) => (x === 0 && y === 0) ? 1 : Math.min(x, y) / Math.max(x, y);
+    const cos = (u, v) => { const dot = u.reduce((a, x, i) => a + x * v[i], 0), nu = Math.hypot(...u), nv = Math.hypot(...v); return nu && nv ? dot / (nu * nv) : 0; };
+    const P = prof(name), meResp = me.avgResponseMs;
+    return d.members.filter(m => m.name !== name && m.messages > 0 && m.state !== 'ex').map(m => {
+      const Q = prof(m.name), parts = [sim(P.len, Q.len), cos(P.hrs, Q.hrs), (meResp && m.avgResponseMs) ? sim(meResp, m.avgResponseMs) : 0.5];
+      if (content) parts.push(sim(P.emo, Q.emo));
+      return { name: m.name, percent: Math.round(parts.reduce((a, x) => a + x, 0) / parts.length * 100) };
+    }).sort((x, y) => y.percent - x.percent);
+  }
+
   function summaryText(messages, name, system) {
     const s = stats(messages), st = streaks(messages), d = deep(messages, system);
     const top = d.members[0];
@@ -521,5 +568,5 @@
 
   function toCardData(messages, name) { return wrapped(messages, name); }
 
-  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind, emojiDna, firstMoments, burst, longestRun, mostLikely, soulmates, topicCompat, DIPLOMAS, insideJokes, emojiCloud, chemistryFull });
+  root.GolifiarExperienciasEngine = Object.freeze({ normalizeMessages, parseWhatsApp, parseInstagramThread, parseInstagramZip, stats, calendar, streaks, comparePeriods, topics, funTests, balance, chemistry, records, achievements, wrapped, dailyDiscovery, partyQuiz, tournament, toCardData, formatDuration, monthKey, dayKey, deep, whoIsMore, ghostOfWeek, dangerStreak, hourHeat, summaryText, mediaKind, emojiDna, firstMoments, burst, longestRun, mostLikely, soulmates, topicCompat, DIPLOMAS, insideJokes, emojiCloud, chemistryFull, topicThemes, bestMatches, THEMES });
 }(typeof window !== 'undefined' ? window : globalThis));

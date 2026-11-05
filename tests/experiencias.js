@@ -94,4 +94,14 @@ const igm = E.parseInstagramThread({ title: 'M', participants: [{ name: 'Ana' }]
 const igd = E.deep(igm);
 assert.equal(igd.media.image, 3, 'Cuenta cada foto de un mensaje de Instagram');
 assert.equal(igd.media.audio, 1); assert.equal(igd.media.sticker, 1);
+
+const amb = E.parseWhatsApp('03/04/2026, 10:00 - Ana: hola', 'A', { defaultOrder: 'mdy' });
+assert.equal(new Date(amb[0].timestamp).getMonth(), 2, 'Fecha ambigua en orden MM/DD si el sistema es de EE. UU.');
+assert.equal(new Date(E.parseWhatsApp('03/04/2026, 10:00 - Ana: hola', 'A')[0].timestamp).getMonth(), 3, 'Por defecto DD/MM');
+const th = E.parseWhatsApp(['[01/10/2026, 10:00:00] Ana: vamos al futbol y luego una pelicula','[01/10/2026, 10:01:00] Luis: el partido de futbol estuvo genial, y la serie','[02/10/2026, 10:02:00] Ana: ese cine nuevo mola'].join('\n'), 'T');
+const tt = E.topicThemes(th, 'Ana', 'Luis'); assert.ok(tt.available && tt.shared.some(x => x.theme === 'Deportes'), 'Temas compartidos');
+assert.ok(E.bestMatches(jk, 'Ana', true)[0].name === 'Luis', 'Mejor encaje');
+assert.ok(E.firstMoments(jk, ['chiringuito'])[0].sender, 'Búsqueda de frase personalizada');
+const dayStarts = E.deep(E.parseWhatsApp(['[01/10/2026, 10:00:00] Ana: a','[01/10/2026, 10:30:00] Luis: b','[02/10/2026, 09:00:00] Luis: c','[02/10/2026, 09:05:00] Ana: d'].join('\n'),'D'));
+assert.equal(dayStarts.members.find(m => m.name === 'Luis').starts, 1, 'Inicia = primer mensaje del día'); assert.equal(dayStarts.members.find(m => m.name === 'Ana').starts, 1);
 console.log('experiencias: OK');
