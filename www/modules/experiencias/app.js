@@ -2,10 +2,10 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0, mount: 'experienciasResults', hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'glass', avatars: [null, null], slide: 0, mount: 'experienciasResults', hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const num = n => root.I18n && I18n.num ? I18n.num(n) : new Intl.NumberFormat().format(n);
+  const num = n => new Intl.NumberFormat(root.I18n ? I18n.locale : undefined, { useGrouping: 'always', maximumFractionDigits: 1 }).format(n);
   const fmtDate = ts => new Date(ts).toLocaleDateString(root.I18n ? I18n.locale : undefined);
   // Rol de desarrollo: con #dev o ?dev se activa el Premium de demostración en este dispositivo (solo cliente, sin valor de seguridad).
   try { if (/(^|[#&?])dev($|[=&])/.test(root.location.hash + root.location.search)) localStorage.setItem('golifiar-dev', '1'); } catch (e) { /* sin almacenamiento */ }
@@ -178,7 +178,7 @@
     const heat = E().hourHeat(messages), heatMax = Math.max(1, ...heat.flat());
     const heatHtml = `<div class="ex-heat" role="img" aria-label="${esc(tr('Mapa de calor: día de la semana por hora'))}">${heat.map((row, d) => `<div class="ex-heat-row"><span>${esc(wd(d).slice(0, 2))}</span>${row.map((v, h) => `<i style="--a:${(v / heatMax).toFixed(2)}" title="${esc(wd(d))} ${h}:00 · ${num(v)}"></i>`).join('')}</div>`).join('')}</div>`;
     const rangeHtml = `<div class="ex-range"><label>${esc(tr('Periodo a analizar'))}<select id="exRange"><option value="all">${esc(tr('Todo el chat'))}</option><option value="year">${esc(tr('Último año'))}</option><option value="summer">${esc(tr('Último verano'))}</option><option value="custom">${esc(tr('Personalizado'))}</option></select></label>${state.range === 'custom' ? `<label>${esc(tr('Desde'))}<input type="date" id="exFrom" value="${esc(state.from)}"></label><label>${esc(tr('Hasta'))}<input type="date" id="exTo" value="${esc(state.to)}"></label>` : ''}</div>`;
-    const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
+    const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="glass">Golifiar</option><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
     const ta = state.topicsEnabled, dna = E().emojiDna(messages, ta), moments = ta ? E().firstMoments(messages) : [], bur = E().burst(messages), run = E().longestRun(messages), likely = E().mostLikely(messages, ta), soul = E().soulmates(messages), compat = ta && chemistryResult !== undefined ? E().topicCompat(messages, chemistryA, chemistryB) : { available: false };
     const fdt = ts => new Date(ts).toLocaleString(root.I18n ? I18n.locale : undefined, { dateStyle: 'medium', timeStyle: 'short' });
     const optin = `<label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics2" ${ta ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label>`;
@@ -222,7 +222,7 @@
     }
     const edit = state.edit;
     const lockTxt = premiumOn ? '' : ' 🔒';
-    const editorHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Personaliza'))}</p><h3>${esc(tr('Editor de tarjeta en vivo'))}</h3></div></div><div class="ex-editor"><div class="ex-editor-controls"><label><input type="checkbox" id="edOn" ${edit.on ? 'checked' : ''}> ${esc(tr('Usar colores y tipografía propios'))}</label><label>${esc(tr('Fondo'))} 1<input type="color" id="edBg1" value="${edit.bg1}"></label><label>${esc(tr('Fondo'))} 2<input type="color" id="edBg2" value="${edit.bg2}"></label><label>${esc(tr('Acento'))}<input type="color" id="edAccent" value="${edit.accent}"></label><label>${esc(tr('Texto'))}<input type="color" id="edText" value="${edit.text}"></label><label>${esc(tr('Tipografía'))}<select id="edFont"><option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option></select></label><label>${esc(tr('Posición del contador'))}<input type="range" id="edNumY" min="760" max="1300" value="${edit.numY}"></label><label><input type="checkbox" id="exHd" ${state.hd && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Exportación HD (2160×3840)'))}${lockTxt}</label><label><input type="checkbox" id="exNoMark" ${state.noMark && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Sin marca de agua'))}${lockTxt}</label></div><canvas id="exPreview" class="ex-preview" width="270" height="480" role="img" aria-label="${esc(tr('Vista previa de la tarjeta'))}"></canvas></div></section>`;
+    const editorHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Personaliza'))}</p><h3>${esc(tr('Editor de tarjeta en vivo'))}</h3></div></div><div class="ex-editor"><div class="ex-editor-controls"><label><input type="checkbox" id="edOn" ${edit.on ? 'checked' : ''}> ${esc(tr('Usar colores y tipografía propios'))}</label><label>${esc(tr('Fondo'))} 1<input type="color" id="edBg1" value="${edit.bg1}"></label><label>${esc(tr('Fondo'))} 2<input type="color" id="edBg2" value="${edit.bg2}"></label><label>${esc(tr('Acento'))}<input type="color" id="edAccent" value="${edit.accent}"></label><label>${esc(tr('Texto'))}<input type="color" id="edText" value="${edit.text}"></label><label>${esc(tr('Tipografía'))}<select id="edFont"><option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option></select></label><label>${esc(tr('Posición del contador'))}<input type="range" id="edNumY" min="760" max="1300" value="${edit.numY}"></label><label>${esc(tr('Foto 1 (solo en tu dispositivo)'))}<input type="file" id="edAv0" accept="image/*"></label><label>${esc(tr('Foto 2 (solo en tu dispositivo)'))}<input type="file" id="edAv1" accept="image/*"></label><label><input type="checkbox" id="exHd" ${state.hd && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Exportación HD (2160×3840)'))}${lockTxt}</label><label><input type="checkbox" id="exNoMark" ${state.noMark && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Sin marca de agua'))}${lockTxt}</label></div><canvas id="exPreview" class="ex-preview" width="270" height="480" role="img" aria-label="${esc(tr('Vista previa de la tarjeta'))}"></canvas></div></section>`;
     const all = `
       <!--pane:resumen--><section class="ex-card ex-profile"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-kpis">${kpi('Mensajes analizados',num(s.totalMessages))}${kpi('Participantes',num(s.participantCount))}${kpi('Días activos',num(s.activeDays))}${kpi('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}</div><details class="ex-more" open><summary>${esc(tr('Más datos del chat'))}</summary><div class="ex-metrics">${metric('Racha actual',dias(st.current))}${metric('Racha más larga',dias(st.longest))}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div></details><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ul class="ex-bars">${s.participants.slice(0,6).map(p => `<li><span class="ex-bar-name">${esc(p.name)}</span><span class="ex-bar"><i style="width:${Math.max(3, Math.round(p.count / topCount * 100))}%"></i></span><strong>${num(p.count)}</strong></li>`).join('')}</ul></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
       <!--pane:resumen-->${dangerHtml}${deepHtml}
@@ -234,7 +234,7 @@
       <!--pane:actividad--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Temas del chat'))}</p><h3>${esc(tr('Palabras más frecuentes'))}</h3><p>${esc(tr('Se calculan localmente en memoria; no se conserva el texto de los mensajes.'))}</p><label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics" ${state.topicsEnabled ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label></div></div>${topicHtml}</section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Galería de récords'))}</p><h3>${esc(tr('Trofeos y logros'))}</h3></div></div><div class="ex-achievements">${achievementsHtml}</div><h4>${esc(tr('Récords del chat'))}</h4><div class="ex-records">${recordsHtml}</div></section>
       <!--pane:curiosidad-->${curioHtml}${jokesHtml}${compareChatsHtml}
-      <!--pane:wrapped-->${storyHtml}${shareHtml}${editorHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p><div class="ex-card-options"><label>${esc(tr('Estilo de tarjeta'))}<select id="exCardTheme"><option value="ocean">${esc(tr('Océano'))}</option><option value="violet">${esc(tr('Violeta'))}</option><option value="sunset">${esc(tr('Atardecer'))}</option></select></label><label><input type="checkbox" id="exCardShowWords" ${state.cardShowWords ? 'checked' : ''}> ${esc(tr('Incluir palabras'))}</label><label><input type="checkbox" id="exCardShowStreak" ${state.cardShowStreak ? 'checked' : ''}> ${esc(tr('Incluir racha'))}</label></div></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
+      <!--pane:wrapped-->${storyHtml}${shareHtml}${editorHtml}<section class="ex-card ex-wrapped"><div><p class="ex-kicker">${esc(tr('Tu resumen compartible'))}</p><h3>${esc(tr('Wrapped del chat'))}</h3><p>${esc(wrap.period)} · ${num(wrap.totalMessages)} ${esc(tr('mensajes'))} · ${num(wrap.participantCount)} ${esc(tr('participantes'))}</p><p>${esc(tr('Palabras destacadas'))}: ${state.topicsEnabled ? (wrap.topWords.map(esc).join(' · ') || '—') : esc(tr('Activa el análisis de palabras para incluirlas'))}</p></div><button type="button" class="btn-minimal" id="exExportCard2">${esc(tr('Descargar tarjeta'))}</button></section>
       <!--pane:juegos--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Modo fiesta'))}</p><h3>${esc(tr('Pon a prueba al grupo'))}</h3><p>${esc(tr('Preguntas generadas con estadísticas, sin revelar mensajes privados.'))}</p></div></div><div id="exPartyArea">${renderQuizIntro()}</div></section>
       <!--pane:records--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Torneo entre chats'))}</p><h3>${esc(tr('¿Qué chat tiene más actividad relativa?'))}</h3><p>${esc(tr('La puntuación combina mensajes por participante y por día activo para reducir la ventaja de los grupos grandes.'))}</p></div></div>${renderTournament()}</section>
       <!--pane:resumen--><section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Descubrimiento diario'))}</p><h3>${esc(tr('Una curiosidad de hoy'))}</h3></div></div><p class="ex-discovery">${esc(dailyDiscoveryText(messages))}</p></section>`;
@@ -297,59 +297,126 @@
 
 
   function initials(n) { return String(n || '?').trim().split(/\s+/).slice(0, 2).map(w => Array.from(w)[0] || '').join('').toUpperCase() || '?'; }
+  const FREE_LOOKS = ['glass', 'canario'];
   const LOOKS = {
-    canario: { bg: ['#0f0f14', '#2a2210'], accent: '#FFD21F', text: '#ffffff', sub: '#c9c3ad' },
-    neon: { bg: ['#05010f', '#1b0a4a'], accent: '#39ff14', text: '#ffffff', sub: '#b8a7ff' },
-    cyber: { bg: ['#12002b', '#3a0057'], accent: '#ff2bd6', text: '#00f0ff', sub: '#e9a8ff' },
-    mini: { bg: ['#fafafa', '#e9e9ee'], accent: '#111111', text: '#111111', sub: '#555555' }
+    glass: { bg: ['#0284c7', '#14b8a6', '#4ade80'], bgStreak: ['#0284c7', '#14b8a6', '#4ade80'], bgSummary: ['#c026d3', '#e11d48', '#dc2626'], accent: '#FFD21F', text: '#ffffff', sub: 'rgba(255,255,255,.75)', dark: '#0f172a', glass: true },
+    canario: { bg: ['#0f0f14', '#2a2210'], accent: '#FFD21F', text: '#ffffff', sub: '#c9c3ad', dark: '#ffffff' },
+    neon: { bg: ['#05010f', '#1b0a4a'], accent: '#39ff14', text: '#ffffff', sub: '#b8a7ff', dark: '#ffffff' },
+    cyber: { bg: ['#12002b', '#3a0057'], accent: '#ff2bd6', text: '#00f0ff', sub: '#e9a8ff', dark: '#00f0ff' },
+    mini: { bg: ['#fafafa', '#e9e9ee'], accent: '#111111', text: '#111111', sub: '#555555', dark: '#111111' }
   };
   const AV = ['#FFD21F', '#ff7a59', '#4cc9f0', '#9b5de5', '#43aa8b', '#f15bb5'];
   const isPremium = () => Boolean(root.premiumActivo && root.premiumActivo()) || (() => { try { return localStorage.getItem('golifiar-rol') === 'dev'; } catch (e) { return false; } })();
   const FONTS = { sans: 'system-ui, sans-serif', serif: 'Georgia, serif', mono: 'ui-monospace, Menlo, monospace' };
-  function cardStyle() {
-    const ed = state.edit; let look = state.cardLook; if (look !== 'canario' && !isPremium()) look = 'canario';
-    const L = ed.on ? { bg: [ed.bg1, ed.bg2], accent: ed.accent, text: ed.text, sub: ed.text } : (LOOKS[look] || LOOKS.canario);
+  function cardStyle(kind) {
+    const ed = state.edit; let look = state.cardLook; if (!FREE_LOOKS.includes(look) && !isPremium()) look = 'glass';
+    const base = LOOKS[look] || LOOKS.glass;
+    const L = ed.on ? { bg: [ed.bg1, ed.bg2], accent: ed.accent, text: ed.text, sub: ed.text, dark: ed.text, glass: true }
+      : { ...base, bg: (kind === 'summary' && base.bgSummary) || (kind === 'streak' && base.bgStreak) || base.bg };
     const hd = isPremium() && state.hd;
     return { L, F: FONTS[ed.on ? ed.font : 'sans'] || FONTS.sans, k: hd ? 2 : 1, mark: !(isPremium() && state.noMark), numY: ed.on ? ed.numY : 1000 };
   }
   function baseCanvas(S) {
     const canvas = document.createElement('canvas'); canvas.width = 1080 * S.k; canvas.height = 1920 * S.k; const ctx = canvas.getContext('2d'); ctx.scale(S.k, S.k);
-    const g = ctx.createLinearGradient(0, 0, 0, 1920); g.addColorStop(0, S.L.bg[0]); g.addColorStop(1, S.L.bg[1]); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
+    const g = ctx.createLinearGradient(0, 0, 1080, 1920); const n = S.L.bg.length; S.L.bg.forEach((c, i) => g.addColorStop(n === 1 ? 0 : i / (n - 1), c)); ctx.fillStyle = g; ctx.fillRect(0, 0, 1080, 1920);
     ctx.textAlign = 'center'; return { canvas, ctx };
   }
-  function brand(ctx, S) {
-    ctx.fillStyle = S.L.accent; ctx.font = `bold 76px ${S.F}`; ctx.fillText('Golifiar', 540, 1700);
-    if (S.mark) { ctx.fillStyle = S.L.sub; ctx.font = `34px ${S.F}`; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, 1770); }
+  function rr(ctx, x, y, w, h, r) { ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h); }
+  function glow(ctx, x, y, r, color) { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, color); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+  function glass(ctx, x, y, w, h, r, alpha) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.28)'; ctx.shadowBlur = 36; ctx.shadowOffsetY = 14;
+    rr(ctx, x, y, w, h, r); ctx.fillStyle = `rgba(255,255,255,${alpha == null ? 0.12 : alpha})`; ctx.fill(); ctx.restore();
+    rr(ctx, x, y, w, h, r); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 3; ctx.stroke();
   }
+  function frame(ctx, S, kind) {
+    glow(ctx, 160, 160, 520, kind === 'summary' ? 'rgba(139,92,246,.55)' : 'rgba(103,232,249,.5)');
+    glow(ctx, 920, 1760, 560, kind === 'summary' ? 'rgba(251,146,60,.45)' : 'rgba(190,242,100,.45)');
+    glass(ctx, 54, 54, 972, 1812, 96, 0.1);
+  }
+  function brand(ctx, S, y) {
+    ctx.fillStyle = S.L.glass ? S.L.dark : S.L.accent; ctx.font = `bold 84px ${S.F}`; ctx.fillText('Golifiar', 540, y || 1740);
+    if (S.mark) { ctx.fillStyle = S.L.sub; ctx.font = `34px ${S.F}`; ctx.fillText(tr('Analiza tu chat en tu dispositivo · golifiar'), 540, (y || 1740) + 60); }
+  }
+  // Avatar circular: foto local opcional (solo en memoria) o iniciales. Con anonimizar nunca se usa la foto.
+  function avatar(ctx, S, x, y, r, person, idx) {
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = AV[idx % 6]; ctx.fill(); ctx.restore();
+    const img = !state.anon && state.avatars[idx];
+    if (img) { ctx.save(); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.clip(); const k = Math.max(2 * r / img.width, 2 * r / img.height); ctx.drawImage(img, x - img.width * k / 2, y - img.height * k / 2, img.width * k, img.height * k); ctx.restore(); }
+    else { ctx.fillStyle = 'rgba(0,0,0,.65)'; ctx.font = `bold ${Math.round(r * 0.8)}px ${S.F}`; ctx.textBaseline = 'middle'; ctx.fillText(state.anon ? String(idx + 1) : initials(person.name), x, y + 4); ctx.textBaseline = 'alphabetic'; }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 10; ctx.stroke();
+  }
+  function peopleFor(dp) {
+    const list = (dp.members.filter(m => m.state !== 'ex').slice(0, 2));
+    return list.map((m, i) => ({ name: state.anon ? tr('Persona {n}', { n: i + 1 }) : m.name, share: m.share }));
+  }
+  const handle = n => '@' + String(n).toLowerCase().replace(/\s+/g, '');
+  function tierBadge(days) { return days >= 100 ? 'Amistad Inmortal 👑' : days >= 30 ? 'Amistad Leyenda 🔥' : days >= 7 ? 'Amistad en Racha ⚡' : 'Primeros pasos 🌱'; }
+  function traitFor(slot) { return { madrugada: ['🦉', 'Búhos nocturnos'], 'noche': ['🌙', 'Noctámbulos'], 'mañana': ['☀️', 'Madrugadores'], tarde: ['☕', 'Charla de tarde'] }[slot] || ['💬', 'Charlatanes']; }
   function streakCanvas(chatArg) {
     const chat = chatArg || selectedChat(); if (!chat) return null;
-    const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages), heatDays = E().calendar(messages).slice(-28);
-    const S = cardStyle(), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
-    const glow = ctx.createRadialGradient(540, S.numY - 180, 40, 540, S.numY - 180, 620); glow.addColorStop(0, L.accent + '55'); glow.addColorStop(1, 'transparent'); ctx.fillStyle = glow; ctx.fillRect(0, 0, 1080, 1920);
-    ctx.fillStyle = L.sub; ctx.font = `600 38px ${F}`;
-    const plat = chat.platform || 'WhatsApp';
-    ctx.fillText(tr('Días hablando en {plat}', { plat }), 540, 250);
-    const people = (dp.isGroup ? dp.podium : dp.members.slice(0, 2)).map((m, i) => ({ name: state.anon ? tr('Persona {n}', { n: i + 1 }) : m.name, i }));
-    const n = Math.max(1, people.length), gap = people.length === 2 ? 150 : 230, x0 = 540 - (n - 1) * gap / 2;
-    people.forEach((p, k) => { const x = x0 + k * gap; ctx.fillStyle = AV[p.i % 6]; ctx.beginPath(); ctx.arc(x, 420, 90, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#111'; ctx.font = `bold 64px ${F}`; ctx.fillText(state.anon ? String(p.i + 1) : initials(p.name), x, 442); });
-    if (people.length === 2) { ctx.font = `90px ${F}`; ctx.fillText('🔥', 540, 440); }
-    ctx.fillStyle = L.text; ctx.font = `600 34px ${F}`;
-    people.forEach((p, k) => ctx.fillText(truncate(ctx, '@' + p.name.toLowerCase().replace(/\s+/g, ''), 210, 34), x0 + k * gap, 570));
+    const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages);
+    const S = cardStyle('streak'), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    frame(ctx, S, 'streak');
+    ctx.fillStyle = L.text; ctx.font = `600 46px ${F}`; ctx.fillText(tr('Días hablando en {plat}', { plat: chat.platform || 'WhatsApp' }), 540, 190);
+    const ppl = peopleFor(dp); while (ppl.length < 2) ppl.push({ name: tr('Persona {n}', { n: ppl.length + 1 }) });
+    avatar(ctx, S, 540 - 80, 390, 115, ppl[0], 0); avatar(ctx, S, 540 + 80, 390, 115, ppl[1], 1);
+    ctx.fillStyle = L.text; ctx.font = `600 40px ${F}`; ctx.fillText(truncate(ctx, handle(ppl[0].name), 300, 40), 540 - 190, 580); ctx.fillText(truncate(ctx, handle(ppl[1].name), 300, 40), 540 + 190, 580);
     const days = st.current || st.longest, y = S.numY;
-    ctx.fillStyle = L.accent; ctx.font = `bold 340px ${F}`; ctx.fillText(`🔥 ${days}`, 540, y);
-    ctx.fillStyle = L.text; ctx.font = `bold 56px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 100);
-    // Línea de racha: últimos 28 días con actividad.
-    const lastDay = heatDays.length ? new Date(heatDays[heatDays.length - 1].date + 'T12:00:00').getTime() : Date.now(), have = new Map(heatDays.map(d => [d.date, d.level]));
-    for (let i = 0; i < 28; i++) { const dt = new Date(lastDay - (27 - i) * 86400000), key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`, lv = have.get(key) || 0; ctx.globalAlpha = lv ? 0.35 + lv * 0.16 : 0.12; ctx.fillStyle = lv ? L.accent : L.text; ctx.beginPath(); ctx.arc(150 + i * 29.5, y + 190, 11, 0, Math.PI * 2); ctx.fill(); }
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = L.sub; ctx.font = `40px ${F}`; ctx.fillText(`${num(dp.totalMessages)} ${tr('mensajes')} · ${num(dp.words)} ${tr('palabras')}`, 540, y + 330);
-    brand(ctx, S);
+    ctx.font = `bold 340px ${F}`; const nw = ctx.measureText(String(days)).width; ctx.font = `300px ${F}`; const fw = ctx.measureText('🔥').width, gap = 20, total = fw + gap + nw, x0 = 540 - total / 2;
+    ctx.textAlign = 'left'; ctx.font = `300px ${F}`; ctx.fillText('🔥', x0, y); ctx.fillStyle = L.glass ? '#ffffff' : L.accent; ctx.font = `bold 340px ${F}`; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 30; ctx.fillText(String(days), x0 + fw + gap, y); ctx.restore(); ctx.textAlign = 'center';
+    ctx.fillStyle = L.text; ctx.font = `bold 74px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 160);
+    const bt = tr(tierBadge(days)); ctx.font = `bold 50px ${F}`; const bw = Math.min(900, ctx.measureText(bt).width + 120), by = y + 205;
+    const bg = ctx.createLinearGradient(540 - bw / 2, 0, 540 + bw / 2, 0); bg.addColorStop(0, 'rgba(251,191,36,.85)'); bg.addColorStop(1, 'rgba(249,115,22,.85)');
+    ctx.save(); ctx.shadowColor = 'rgba(251,146,60,.5)'; ctx.shadowBlur = 30; rr(ctx, 540 - bw / 2, by, bw, 96, 48); ctx.fillStyle = bg; ctx.fill(); ctx.restore(); rr(ctx, 540 - bw / 2, by, bw, 96, 48); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#451a03'; ctx.fillText(bt, 540, by + 65);
+    // Línea de luces de la racha
+    const dy = by + 165, N = 24;
+    for (let i = 0; i < N; i++) { const t = i / (N - 1), r = 6 + t * 9; ctx.save(); ctx.globalAlpha = 0.35 + t * 0.65; ctx.shadowColor = 'rgba(255,255,255,.95)'; ctx.shadowBlur = 18; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(120 + i * (840 / (N - 1)), dy, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+    const gy = dy + 65; glass(ctx, 110, gy, 860, 235, 56, 0.2);
+    ctx.fillStyle = L.glass ? L.dark : L.text; ctx.font = `46px ${F}`;
+    ctx.fillText(`${num(dp.words)} ${tr('palabras')} · ${num(dp.media.image)} ${tr('fotos enviadas')}`, 540, gy + 85);
+    const tr2 = traitFor(dp.topSlot), tt = `${tr(tr2[1])} ${tr2[0]} (${tr('horario pico')})`; ctx.font = `bold 42px ${F}`; const tw = Math.min(800, ctx.measureText(tt).width + 80);
+    rr(ctx, 540 - tw / 2, gy + 120, tw, 80, 40); ctx.fillStyle = 'rgba(15,23,42,.85)'; ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(tt, 540, gy + 175);
+    brand(ctx, S, 1775);
+    return canvas;
+  }
+  function summaryCanvas() {
+    const chat = selectedChat(); if (!chat) return null;
+    const messages = rangeMessages(chat), s = E().stats(messages), st = E().streaks(messages), dp = E().deep(messages);
+    const S = cardStyle('summary'), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    frame(ctx, S, 'summary');
+    ctx.fillStyle = L.text; ctx.font = `bold 40px ${F}`; ctx.fillText(`GOLIFIAR · CHAT WRAPPED 🎉`, 540, 175);
+    ctx.font = `bold 96px ${F}`; ctx.fillText(truncate(ctx, state.anon ? tr('Mi chat') : chat.name, 880, 96), 540, 310);
+    const ppl = peopleFor(dp); while (ppl.length < 2) ppl.push({ name: tr('Persona {n}', { n: ppl.length + 1 }), share: 0 });
+    avatar(ctx, S, 540 - 75, 480, 105, ppl[0], 0); avatar(ctx, S, 540 + 75, 480, 105, ppl[1], 1);
+    ctx.fillStyle = L.text; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 30; ctx.font = `900 230px ${F}`; ctx.fillText(num(s.totalMessages), 540, 800); ctx.restore();
+    ctx.font = `46px ${F}`; ctx.globalAlpha = 0.85; ctx.fillText(tr('mensajes'), 540, 870); ctx.globalAlpha = 1;
+    const pill = (x, y, w, h) => glass(ctx, x, y, w, h, 44, 0.16);
+    const X = 110, W = 860, half = 420;
+    pill(X, 930, half, 110); pill(X + half + 20, 930, half, 110);
+    ctx.fillStyle = L.text; ctx.font = `44px ${F}`; ctx.fillText(`${num(s.participantCount)} ${tr('participantes')}`, X + half / 2, 1000); ctx.fillText(`${num(s.activeDays)} ${tr('días activos')}`, X + half + 20 + half / 2, 1000);
+    pill(X, 1060, W, 170);
+    const a = ppl[0], b = ppl[1], sum = (a.share + b.share) || 1, pa = Math.round(a.share / sum * 100), pb = 100 - pa;
+    rr(ctx, X + 40, 1092, W - 80, 24, 12); ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fill();
+    const bw = W - 80, ga = ctx.createLinearGradient(X + 40, 0, X + 40 + bw * pa / 100, 0); ga.addColorStop(0, '#38bdf8'); ga.addColorStop(1, '#6ee7b7'); rr(ctx, X + 40, 1092, Math.max(24, bw * pa / 100), 24, 12); ctx.fillStyle = ga; ctx.fill();
+    ctx.save(); rr(ctx, X + 40 + bw * pa / 100, 1092, bw * pb / 100, 24, 12); ctx.fillStyle = '#fb923c'; ctx.fill(); ctx.restore();
+    ctx.fillStyle = L.text; ctx.font = `bold 44px ${F}`; ctx.fillText(`${pa}% ${handle(a.name)} · ${pb}% ${handle(b.name)}`, 540, 1190);
+    pill(X, 1250, half, 160); pill(X + half + 20, 1250, half, 160);
+    const topDay = Object.entries(s.days).sort((x, y) => y[1] - x[1])[0];
+    ctx.font = `40px ${F}`; ctx.fillText(tr('Hora punta'), X + half / 2, 1310); ctx.font = `bold 54px ${F}`; ctx.fillText(s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00 ⏰`, X + half / 2, 1378);
+    ctx.font = `40px ${F}`; ctx.fillText(tr('Día récord'), X + half + 20 + half / 2, 1310); ctx.font = `bold 46px ${F}`;
+    const dl = topDay ? new Date(topDay[0] + 'T12:00:00').toLocaleDateString(root.I18n ? I18n.locale : undefined, { day: 'numeric', month: 'short' }).replace('.', '') : '—';
+    ctx.fillText(`${dl} 🏆`, X + half + 20 + half / 2, 1363); ctx.font = `34px ${F}`; ctx.fillText(topDay ? `(${num(topDay[1])} msgs)` : '', X + half + 20 + half / 2, 1400);
+    pill(X, 1430, W, 110); ctx.font = `44px ${F}`; ctx.fillText(`${tr('Racha más larga')}: ${num(st.longest)} ${tr('días')} 📈`, 540, 1500);
+    ctx.fillStyle = L.sub; ctx.font = `34px ${F}`; ctx.fillText(tr('Generado localmente por Golifiar'), 540, 1790);
     return canvas;
   }
   function simpleCard(o) {
-    const S = cardStyle(), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    const S = cardStyle('streak'), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
+    if (L.glass) frame(ctx, S, 'streak');
     ctx.fillStyle = L.sub; ctx.font = `600 44px ${F}`; ctx.fillText(o.kicker, 540, 260);
-    ctx.fillStyle = L.accent; ctx.font = `bold ${o.bigSize || 150}px ${F}`; ctx.fillText(truncate(ctx, o.big, 960, o.bigSize || 150), 540, 760);
+    ctx.fillStyle = L.glass ? '#ffffff' : L.accent; ctx.font = `bold ${o.bigSize || 150}px ${F}`; ctx.fillText(truncate(ctx, o.big, 960, o.bigSize || 150), 540, 760);
     ctx.fillStyle = L.text; ctx.font = `bold 60px ${F}`; (o.lines || []).forEach((l, i) => ctx.fillText(truncate(ctx, l, 960, 60), 540, 940 + i * 100));
     brand(ctx, S);
     return canvas;
@@ -458,24 +525,10 @@
 
   function exportCard() {
     const chat = selectedChat(); if (!chat) return;
-    const data = E().toCardData(state.topicsEnabled ? chat.messages : chat.messages.map(m => ({ ...m, text: '' })), chat.name);
-    const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1350;
-    const ctx = canvas.getContext('2d');
-    const palettes = { ocean: ['#0b6e99','#6542a6'], violet: ['#4c1d95','#c026d3'], sunset: ['#9a3412','#db2777'] }; const palette = palettes[state.cardTheme] || palettes.ocean; const gradient = ctx.createLinearGradient(0,0,1080,1350); gradient.addColorStop(0,palette[0]); gradient.addColorStop(1,palette[1]); ctx.fillStyle = gradient; ctx.fillRect(0,0,1080,1350);
-    ctx.fillStyle = 'rgba(255,255,255,.13)'; if (ctx.roundRect) { ctx.beginPath(); ctx.roundRect(55,55,970,1240,34); ctx.fill(); } else { ctx.fillRect(55,55,970,1240); }
-    ctx.fillStyle = '#ffffff'; ctx.textAlign = 'left'; ctx.font = 'bold 42px system-ui'; ctx.fillText('GOLIFIAR · CHAT WRAPPED', 100, 145);
-    ctx.font = 'bold 56px system-ui'; ctx.fillText(truncate(ctx, data.title, 820, 58), 100, 260);
-    ctx.font = 'bold 108px system-ui'; ctx.fillText(num(data.totalMessages), 100, 445);
-    ctx.font = '32px system-ui'; ctx.fillText(tr('mensajes'), 105, 500);
-    ctx.font = 'bold 46px system-ui'; ctx.fillText(`${num(data.participantCount)} ${tr('participantes')}`, 100, 620);
-    ctx.font = '38px system-ui'; ctx.fillText(`${num(data.activeDays)} ${tr('días activos')}`, 100, 700);
-    ctx.fillText(`${tr('Hora punta')}: ${data.peakHour === null ? '—' : `${String(data.peakHour).padStart(2,'0')}:00`}`, 100, 780);
-    if (state.cardShowWords && state.topicsEnabled) { ctx.font = 'bold 34px system-ui'; ctx.fillText(tr('Palabras destacadas'), 100, 980); ctx.font = '32px system-ui'; ctx.fillText(truncate(ctx, data.topWords.join(' · ') || '—', 820, 32), 100, 1040); }
-    if (state.cardShowStreak) { ctx.font = '32px system-ui'; ctx.fillText(`${tr('Racha más larga')}: ${data.longestStreak} ${tr('días')}`, 100, 920); }
-    ctx.font = '28px system-ui'; ctx.fillText(tr('Generado localmente por Golifiar'), 100, 1200);
-    canvas.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-wrapped-${safeFile(chat.name)}.png`); }, 'image/png');
+    const c = summaryCanvas(); if (!c) return;
+    c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-wrapped-${safeFile(chat.name)}.png`); }, 'image/png');
   }
-  function truncate(ctx, text, maxWidth, fontSize) { let value = String(text || ''); ctx.font = `bold ${fontSize}px system-ui`; while (value.length && ctx.measureText(value).width > maxWidth) value = value.slice(0,-2); return value === text ? value : `${value}…`; }
+  function truncate(ctx, text, maxWidth, fontSize) { let value = String(text || ''); ctx.font = `bold ${fontSize}px system-ui, sans-serif`; while (value.length && ctx.measureText(value).width > maxWidth) value = value.slice(0,-2); return value === text ? value : `${value}…`; }
   function safeFile(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9-]+/g,'-').replace(/^-|-$/g,'').slice(0,60) || 'chat'; }
 
   document.addEventListener('change', e => {
@@ -491,9 +544,10 @@
     if (e.target.id === 'exRange') { state.range = e.target.value; render(); }
     if (e.target.id === 'exFrom') { state.from = e.target.value; render(); }
     if (e.target.id === 'exTo') { state.to = e.target.value; render(); }
-    if (e.target.id === 'exLook') { state.cardLook = e.target.value; if (state.cardLook !== 'canario' && !(root.premiumActivo && root.premiumActivo())) { showStatus(tr('Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará Amarillo Canario.'), false); } }
+    if (e.target.id === 'exLook') { state.cardLook = e.target.value; if (!FREE_LOOKS.includes(state.cardLook) && !isPremium()) { showStatus(tr('Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará el estilo Golifiar.'), false); } updatePreview(); }
     if (e.target.id === 'exAnon') state.anon = e.target.checked;
     if (e.target.id === 'exCompareFile') importCompare(e.target);
+    if (e.target.id === 'edAv0' || e.target.id === 'edAv1') { const i = e.target.id === 'edAv1' ? 1 : 0, f = e.target.files && e.target.files[0]; if (f && root.createImageBitmap) root.createImageBitmap(f).then(bm => { state.avatars[i] = bm; updatePreview(); }).catch(() => showModal(tr('No se pudo leer la imagen.'))); }
     if (e.target.id === 'exHd') { state.hd = e.target.checked; updatePreview(); }
     if (e.target.id === 'exNoMark') { state.noMark = e.target.checked; updatePreview(); }
     if (e.target.id === 'edOn') { state.edit.on = e.target.checked; updatePreview(); }

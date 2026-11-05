@@ -360,5 +360,20 @@ window.I18n.registrar('en', {
   "Mezcla orientativa de equilibrio y horarios, velocidad de respuesta. Activa el análisis de palabras para añadir emojis y vocabulario.": "Indicative mix of balance and schedules and response speed. Enable word analysis to add emojis and vocabulary.",
   "Premium activo en este dispositivo": "Premium active on this device",
   "Funciones bloqueadas en la versión gratuita": "Features locked in the free version",
-  "Se ha abierto otro chat en otra sección. Vuelve a abrir esta pestaña para verlo aquí.": "Another chat was opened in another section. Reopen this tab to see it here."
+  "Se ha abierto otro chat en otra sección. Vuelve a abrir esta pestaña para verlo aquí.": "Another chat was opened in another section. Reopen this tab to see it here.",
+  "fotos enviadas": "photos sent",
+  "horario pico": "peak time",
+  "Amistad Inmortal 👑": "Immortal Friendship 👑",
+  "Amistad Leyenda 🔥": "Legendary Friendship 🔥",
+  "Amistad en Racha ⚡": "Friendship on a Streak ⚡",
+  "Primeros pasos 🌱": "First steps 🌱",
+  "Búhos nocturnos": "Night owls",
+  "Noctámbulos": "Night wanderers",
+  "Madrugadores": "Early birds",
+  "Charla de tarde": "Afternoon chatters",
+  "Foto 1 (solo en tu dispositivo)": "Photo 1 (only on your device)",
+  "Foto 2 (solo en tu dispositivo)": "Photo 2 (only on your device)",
+  "No se pudo leer la imagen.": "The image could not be read.",
+  "Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará el estilo Golifiar.": "The Neon, Cyberpunk and Minimalist styles are Premium. The Golifiar style will be used.",
+  "Día récord": "Record day"
 });
