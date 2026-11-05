@@ -351,8 +351,6 @@
     return list.map((m, i) => ({ name: state.anon ? tr('Persona {n}', { n: i + 1 }) : m.name, share: m.share }));
   }
   const handle = n => '@' + String(n).toLowerCase().replace(/\s+/g, '');
-  function tierBadge(days) { return days >= 100 ? 'Amistad Inmortal 👑' : days >= 30 ? 'Amistad Leyenda 🔥' : days >= 7 ? 'Amistad en Racha ⚡' : 'Primeros pasos 🌱'; }
-  function traitFor(slot) { return { madrugada: ['🦉', 'Búhos nocturnos'], 'noche': ['🌙', 'Noctámbulos'], 'mañana': ['☀️', 'Madrugadores'], tarde: ['☕', 'Charla de tarde'] }[slot] || ['💬', 'Charlatanes']; }
   function streakCanvas(chatArg) {
     const chat = chatArg || selectedChat(); if (!chat) return null;
     const messages = chatArg ? chatArg.messages : rangeMessages(chat), st = E().streaks(messages), dp = E().deep(messages);
@@ -365,18 +363,15 @@
     const days = st.current || st.longest, y = S.numY;
     ctx.font = `bold 340px ${F}`; const nw = ctx.measureText(String(days)).width; ctx.font = `300px ${F}`; const fw = ctx.measureText('🔥').width, gap = 20, total = fw + gap + nw, x0 = 540 - total / 2;
     ctx.textAlign = 'left'; ctx.font = `300px ${F}`; ctx.fillText('🔥', x0, y); ctx.fillStyle = L.glass ? '#ffffff' : L.accent; ctx.font = `bold 340px ${F}`; ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 30; ctx.fillText(String(days), x0 + fw + gap, y); ctx.restore(); ctx.textAlign = 'center';
-    ctx.fillStyle = L.text; ctx.font = `bold 74px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 160);
-    const bt = tr(tierBadge(days)); ctx.font = `bold 50px ${F}`; const bw = Math.min(900, ctx.measureText(bt).width + 120), by = y + 205;
-    const bg = ctx.createLinearGradient(540 - bw / 2, 0, 540 + bw / 2, 0); bg.addColorStop(0, 'rgba(251,191,36,.85)'); bg.addColorStop(1, 'rgba(249,115,22,.85)');
-    ctx.save(); ctx.shadowColor = 'rgba(251,146,60,.5)'; ctx.shadowBlur = 30; rr(ctx, 540 - bw / 2, by, bw, 96, 48); ctx.fillStyle = bg; ctx.fill(); ctx.restore(); rr(ctx, 540 - bw / 2, by, bw, 96, 48); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = '#451a03'; ctx.fillText(bt, 540, by + 65);
+    ctx.fillStyle = L.text; ctx.font = `bold 74px ${F}`; ctx.fillText(tr(st.current ? 'días seguidos' : 'racha más larga'), 540, y + 175);
+    const by = y + 205;
     // Línea de luces de la racha
-    const dy = by + 165, N = 24;
+    const dy = by + 60, N = 24;
     for (let i = 0; i < N; i++) { const t = i / (N - 1), r = 6 + t * 9; ctx.save(); ctx.globalAlpha = 0.35 + t * 0.65; ctx.shadowColor = 'rgba(255,255,255,.95)'; ctx.shadowBlur = 18; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(120 + i * (840 / (N - 1)), dy, r, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
     const gy = dy + 65; glass(ctx, 110, gy, 860, 235, 56, 0.2);
     ctx.fillStyle = L.glass ? L.dark : L.text; ctx.font = `46px ${F}`;
     ctx.fillText(`${num(dp.words)} ${tr('palabras')} · ${num(dp.media.image)} ${tr('fotos enviadas')}`, 540, gy + 85);
-    const tr2 = traitFor(dp.topSlot), tt = `${tr(tr2[1])} ${tr2[0]} (${tr('horario pico')})`; ctx.font = `bold 42px ${F}`; const tw = Math.min(800, ctx.measureText(tt).width + 80);
+    const ph = E().stats(messages).peakHour, tt = `${tr('Hora más activa')}: ${ph === null ? '—' : String(ph).padStart(2, '0') + ':00'} ⏰`; ctx.font = `bold 42px ${F}`; const tw = Math.min(800, ctx.measureText(tt).width + 80);
     rr(ctx, 540 - tw / 2, gy + 120, tw, 80, 40); ctx.fillStyle = 'rgba(15,23,42,.85)'; ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(tt, 540, gy + 175);
     brand(ctx, S, 1775);
     return canvas;

@@ -375,5 +375,6 @@ window.I18n.registrar('en', {
   "Foto 2 (solo en tu dispositivo)": "Photo 2 (only on your device)",
   "No se pudo leer la imagen.": "The image could not be read.",
   "Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará el estilo Golifiar.": "The Neon, Cyberpunk and Minimalist styles are Premium. The Golifiar style will be used.",
-  "Día récord": "Record day"
+  "Día récord": "Record day",
+  "Hora más activa": "Most active hour"
 });
