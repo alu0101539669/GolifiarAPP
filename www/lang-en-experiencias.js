@@ -359,5 +359,6 @@ window.I18n.registrar('en', {
   "Mezcla orientativa de equilibrio y horarios, velocidad de respuesta, emojis y vocabulario.": "Indicative mix of balance and schedules, response speed, emojis and vocabulary.",
   "Mezcla orientativa de equilibrio y horarios, velocidad de respuesta. Activa el análisis de palabras para añadir emojis y vocabulario.": "Indicative mix of balance and schedules and response speed. Enable word analysis to add emojis and vocabulary.",
   "Premium activo en este dispositivo": "Premium active on this device",
-  "Funciones bloqueadas en la versión gratuita": "Features locked in the free version"
+  "Funciones bloqueadas en la versión gratuita": "Features locked in the free version",
+  "Se ha abierto otro chat en otra sección. Vuelve a abrir esta pestaña para verlo aquí.": "Another chat was opened in another section. Reopen this tab to see it here."
 });

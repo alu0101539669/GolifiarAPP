@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0, hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'canario', slide: 0, mount: 'experienciasResults', hd: false, noMark: false, edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => root.I18n && I18n.num ? I18n.num(n) : new Intl.NumberFormat().format(n);
@@ -64,7 +64,7 @@
       if (!messages.length) throw new Error(tr('No se encontraron mensajes con un formato compatible.'));
       state.chats = state.chats.filter(c => c.platform !== 'WhatsApp');
       state.chats.unshift({ name: file.name.replace(/\.txt$/i, ''), platform: 'WhatsApp', messages });
-      state.selected = 0; state.range = 'all';
+      state.selected = 0; state.range = 'all'; state.mount = 'experienciasResults';
       showStatus(tr('Importación completada: {n} conversaciones.', { n: 1 }), false); setTag('exTagWhatsApp', 1); sound('ok'); render();
     } catch (err) { showModal(`${file.name}: ${err.message || tr('No se pudo importar el archivo.')}`); }
     setProgress(null); input.value = '';
@@ -105,7 +105,7 @@
         for (const [name, threadMessages] of threads) state.chats.push({ name, platform: 'Instagram', messages: threadMessages });
       } catch (err) { showStatus(`${file.name}: ${err.message || tr('No se pudo importar el ZIP.')}`, true); }
     }
-    input.value = ''; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) { showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); setTag('exTagInstagram', state.chats.filter(c => c.platform === 'Instagram').length); } render();
+    input.value = ''; state.mount = 'experienciasResults'; state.selected = Math.max(0, state.chats.length - 1); if (state.chats.length > startCount) { showStatus(tr('Importación completada: {n} conversaciones.', { n: num(state.chats.length - startCount) }), false); setTag('exTagInstagram', state.chats.filter(c => c.platform === 'Instagram').length); } render();
   }
   function clearAll() {
     state.chats = []; state.selected = 0; state.tab = 'resumen'; state.quiz = [];
@@ -133,10 +133,12 @@
   }
   const TABS = [['resumen', 'Resumen'], ['actividad', 'Actividad'], ['juegos', 'Juegos'], ['records', 'Récords y torneo'], ['curiosidad', 'Full Curiosidad'], ['wrapped', 'Wrapped']];
   function renderEmpty() {
-    node('experienciasResults').innerHTML = '<section class="ex-card ex-empty"><h3>Empieza importando una conversación</h3><p>Elige un TXT exportado desde WhatsApp o un ZIP de datos de Instagram. Los archivos se procesan localmente y no se guardan en el dispositivo.</p></section>';
+    const t0 = node(state.mount); if (!t0) return; t0.innerHTML = '<section class="ex-card ex-empty"><h3>Empieza importando una conversación</h3><p>Elige un TXT exportado desde WhatsApp o un ZIP de datos de Instagram. Los archivos se procesan localmente y no se guardan en el dispositivo.</p></section>';
   }
   function render() {
-    const results = node('experienciasResults'); if (!results) return;
+    const results = node(state.mount) || node('experienciasResults'); if (!results) return;
+    ['experienciasResults', 'waFull', 'panel-curiosidad'].forEach(id => { const o = node(id); if (o && o !== results && o.querySelector('.ex-toolbar')) { o.innerHTML = `<p class="ex-note">${esc(tr('Se ha abierto otro chat en otra sección. Vuelve a abrir esta pestaña para verlo aquí.'))}</p>`; o.dataset.stale = '1'; } });
+    results.removeAttribute('data-stale');
     if (!state.chats.length) { renderEmpty(); return; }
     if (!rangeMessages(selectedChat()).length) { state.range = 'all'; showStatus(tr('No hay mensajes en ese periodo.'), true); }
     const chat = selectedChat(), messages = rangeMessages(chat), s = E().stats(messages), st = E().streaks(messages), cal = E().calendar(messages), rec = E().records(messages), achievements = E().achievements(messages), wrap = E().wrapped(state.topicsEnabled ? messages : messages.map(m => ({ ...m, text: '' })), chat.name), fun = E().funTests(messages), balance = E().balance(messages);
@@ -353,6 +355,29 @@
     return canvas;
   }
 
+
+  // Monta el análisis completo en otra sección (WhatsApp, informe de Instagram) sin duplicar lógica.
+  function mountChats(chats, id) {
+    const same = state.mount === id && state.chats.length === chats.length && state.chats[0] === chats[0];
+    state.mount = id;
+    if (!same) { state.chats = chats; state.selected = 0; state.range = 'all'; state.tab = 'resumen'; state.quiz = []; state.compare = null; }
+    render();
+  }
+  async function mountInstagram(files, id) {
+    const box = node(id); if (!box) return;
+    box.innerHTML = `<p class="ex-note" role="status">${esc(tr('Leyendo ZIP de Instagram en este dispositivo…'))}</p>`;
+    const chats = [];
+    try {
+      for (const file of files) {
+        const messages = await E().parseInstagramZip(file), threads = new Map();
+        for (const m of messages) { const key = m.chat || file.name.replace(/\.zip$/i, ''); if (!threads.has(key)) threads.set(key, []); threads.get(key).push(m); }
+        for (const [name, tm] of threads) chats.push({ name, platform: 'Instagram', messages: tm });
+      }
+      if (!chats.length) throw new Error(tr('No se encontraron conversaciones compatibles dentro del ZIP.'));
+      chats.sort((a, b) => b.messages.length - a.messages.length);
+      mountChats(chats, id);
+    } catch (err) { box.innerHTML = `<p class="ex-status error" role="alert">${esc(err.message || tr('No se pudo importar el ZIP.'))}</p>`; }
+  }
   function updatePreview() {
     const cv = node('exPreview'); if (!cv || !selectedChat()) return;
     const big = streakCanvas(); if (!big) return; const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(big, 0, 0, cv.width, cv.height);
@@ -513,7 +538,7 @@
     refreshPremiumUI();
     ['exTagWhatsApp', 'exTagInstagram'].forEach(id => { const el = node(id); if (el && Number(el.dataset.n)) setTag(id, Number(el.dataset.n)); });
     render();
-    if (I18n.lang !== 'es' && node('experienciasResults')) I18n.aplicar(node('experienciasResults'));
+    const mt = node(state.mount); if (I18n.lang !== 'es' && mt) I18n.aplicar(mt);
   });
-  root.GolifiarExperiencias = Object.freeze({ parseAsync, premium: { demo: premiumDemo, refresh: refreshPremiumUI }, share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
+  root.GolifiarExperiencias = Object.freeze({ parseAsync, mountChats, mountInstagram, premium: { demo: premiumDemo, refresh: refreshPremiumUI }, share: { download: downloadStreak, copyImage: copyStreak, copyText, setAnon: v => { state.anon = Boolean(v); } }, importWhatsApp, importInstagram, render, getState: () => ({ chats: state.chats.map(c => ({name:c.name,platform:c.platform,messages:c.messages.length})), selected: state.selected }) });
 }(typeof window !== 'undefined' ? window : globalThis));

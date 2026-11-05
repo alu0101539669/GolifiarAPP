@@ -101,6 +101,7 @@
             mostrarEstado(t('Leyendo el archivo localmente. No cierres esta ventana.'), '');
 
             try {
+                window.__igFiles = files; // referencias locales a los ZIP; solo se leen si abres «Full Curiosidad»
                 zipFollowersArray = [];
                 zipFollowingArray = [];
                 zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;

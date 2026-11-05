@@ -1070,8 +1070,8 @@
   }
 
   /* ================================ interfaz ================================ */
-  const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'actividad', 'mensajes', 'contenido', 'comparar'];
-  const ESTADO = { resumen: null, seg: [], sig: [], cmp: null, cmpHtml: '', limp: null };
+  const PANELES = ['resumen', 'seguidores', 'interacciones', 'limpieza', 'actividad', 'mensajes', 'contenido', 'comparar', 'curiosidad'];
+  const ESTADO = { cur: false, resumen: null, seg: [], sig: [], cmp: null, cmpHtml: '', limp: null };
   let ULTIMO = null; // últimos datos pintados, para repintar al cambiar de idioma
 
   function cambiarPanel(nombre) {
@@ -1082,6 +1082,10 @@
       if (panel) panel.classList.toggle('hidden', p !== nombre);
       if (tab) { tab.classList.toggle('active', p === nombre); tab.setAttribute('aria-selected', p === nombre ? 'true' : 'false'); tab.tabIndex = p === nombre ? 0 : -1; }
     });
+    if (nombre === 'curiosidad' && global.GolifiarExperiencias && global.__igFiles) {
+      const pc = document.getElementById('panel-curiosidad');
+      if (pc && (!ESTADO.cur || pc.dataset.stale)) { ESTADO.cur = true; pc.removeAttribute('data-stale'); global.GolifiarExperiencias.mountInstagram(global.__igFiles, 'panel-curiosidad'); }
+    }
     const act = document.getElementById('ptab-' + nombre);
     if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest', inline: 'center' });
   }
@@ -1106,6 +1110,7 @@
     }
     tabs.classList.remove('hidden');
     HTML_EN_ZIP = d.htmlOmitidos > 0;
+    ESTADO.cur = false; { const pc = document.getElementById('panel-curiosidad'); if (pc) { pc.innerHTML = ''; pc.removeAttribute('data-stale'); } }
     ESTADO.seg = seg || []; ESTADO.sig = sig || []; ESTADO.cmp = null; ESTADO.cmpHtml = ''; ESTADO.limp = null;
     const c = contexto(d, seg, sig);
     const mapa = {

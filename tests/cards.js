@@ -23,6 +23,21 @@ const chat = Array.from({ length: 120 }, (_, i) => `[${String(1 + i % 28).padSta
   await page.click('#extab-curiosidad');
   await page.setInputFiles('#exCompareFile', { name: 'otro.txt', mimeType: 'text/plain', buffer: Buffer.from(chat) });
   await page.waitForSelector('#expane-curiosidad .ex-table');
+  // Vista de WhatsApp: el análisis completo se monta debajo del resumen.
+  await page.evaluate(() => cambiarVista('whatsapp'));
+  await page.setInputFiles('#whatsappFile', { name: 'wa.txt', mimeType: 'text/plain', buffer: Buffer.from(chat) });
+  await page.waitForSelector('#waFull .ex-toolbar');
+  await page.click('#waFull #extab-curiosidad');
+  assert.ok(await page.locator('#waFull .ex-heat, #waFull #expane-curiosidad').count() > 0, 'WhatsApp muestra Full Curiosidad');
+  assert.strictEqual(await page.locator('#exChatSelect').count(), 1, 'Sin IDs duplicados');
+  // Informe de Instagram: pestaña Full Curiosidad con los mensajes del ZIP.
+  await page.evaluate(() => cambiarVista('auditoria'));
+  await page.setInputFiles('#zipFileInput', path.resolve(__dirname, 'fixtures/dejados-y-mensajes.zip'));
+  await page.waitForTimeout(1500); await page.evaluate(() => ejecutarAnalisis()); await page.waitForTimeout(1500);
+  await page.waitForSelector('#ptab-curiosidad', { state: 'visible', timeout: 20000 });
+  await page.click('#ptab-curiosidad');
+  await page.waitForSelector('#panel-curiosidad .ex-toolbar, #panel-curiosidad .ex-status', { timeout: 20000 });
+  assert.strictEqual(await page.locator('#panel-curiosidad .ex-status.error').count(), 0, 'Instagram monta el análisis sin error');
   assert.deepStrictEqual(errores, [], 'Sin errores de consola: ' + errores.join(' | '));
   await browser.close();
   console.log('OK: tarjetas');
