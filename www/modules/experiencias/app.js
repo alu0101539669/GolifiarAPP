@@ -76,6 +76,7 @@
     m.hidden = false; const b = node('exModalClose'); if (b) b.focus();
   }
   // Sonidos sintetizados en el dispositivo; desactivados salvo que el usuario los active.
+  function soundOn() { try { return localStorage.getItem('golifiar-sonido') === '1'; } catch (e) { return false; } }
   function sound(kind) {
     try {
       if (localStorage.getItem('golifiar-sonido') !== '1') return;
@@ -178,20 +179,22 @@
     const heat = E().hourHeat(messages), heatMax = Math.max(1, ...heat.flat());
     const heatHtml = `<div class="ex-heat" role="img" aria-label="${esc(tr('Mapa de calor: día de la semana por hora'))}">${heat.map((row, d) => `<div class="ex-heat-row"><span>${esc(wd(d).slice(0, 2))}</span>${row.map((v, h) => `<i style="--a:${(v / heatMax).toFixed(2)}" title="${esc(wd(d))} ${h}:00 · ${num(v)}"></i>`).join('')}</div>`).join('')}</div>`;
     const rangeHtml = `<div class="ex-range"><label>${esc(tr('Periodo a analizar'))}<select id="exRange"><option value="all">${esc(tr('Todo el chat'))}</option><option value="year">${esc(tr('Último año'))}</option><option value="summer">${esc(tr('Último verano'))}</option><option value="custom">${esc(tr('Personalizado'))}</option></select></label>${state.range === 'custom' ? `<label>${esc(tr('Desde'))}<input type="date" id="exFrom" value="${esc(state.from)}"></label><label>${esc(tr('Hasta'))}<input type="date" id="exTo" value="${esc(state.to)}"></label>` : ''}</div>`;
-    const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="glass">Golifiar</option><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
+    const shareHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Para compartir'))}</p><h3>${esc(tr('Tarjeta de racha para Story (9:16)'))}</h3><p>${esc(tr('Se genera en tu dispositivo. Nada se sube a ningún sitio.'))}</p></div></div><div class="ex-card-options"><label>${esc(tr('Estilo'))}<select id="exLook"><option value="glass">Golifiar</option><option value="canario">${esc(tr('Amarillo Canario'))}</option><option value="neon">${esc(tr('Neón'))} · Premium</option><option value="cyber">Cyberpunk · Premium</option><option value="mini">${esc(tr('Minimalista'))} · Premium</option></select></label><label><input type="checkbox" id="exSound" ${soundOn() ? 'checked' : ''}> ${esc(tr('Sonidos y vibración'))}</label><label><input type="checkbox" id="exAnon" ${state.anon ? 'checked' : ''}> ${esc(tr('Anonimizar nombres en la tarjeta'))}</label></div><div class="ex-share-actions"><button type="button" class="btn-minimal" id="exStreakDl">${esc(tr('Descargar para Story (9:16)'))}</button><button type="button" class="btn-sub" id="exStreakCopy">${esc(tr('Copiar imagen al portapapeles'))}</button><button type="button" class="btn-sub" id="exCopyText">${esc(tr('Copiar resumen para WhatsApp'))}</button></div></section>`;
+    const premiumOn = isPremium();
     const ta = state.topicsEnabled, dna = E().emojiDna(messages, ta), moments = ta ? E().firstMoments(messages) : [], bur = E().burst(messages), run = E().longestRun(messages), likely = E().mostLikely(messages, ta), soul = E().soulmates(messages), compat = ta && chemistryResult !== undefined ? E().topicCompat(messages, chemistryA, chemistryB) : { available: false };
     const fdt = ts => new Date(ts).toLocaleString(root.I18n ? I18n.locale : undefined, { dateStyle: 'medium', timeStyle: 'short' });
     const optin = `<label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics2" ${ta ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label>`;
     const diplomaBtns = who.map(w => `<button type="button" class="btn-sub" data-card="diploma:${w.key}">🎓 ${esc(tr(w.title))}</button>`).join('');
     const curioHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">Golifiar Labs</p><h3>${esc(tr('Full Curiosidad'))}</h3><p>${esc(tr('Algunas curiosidades leen el texto en memoria, solo si activas el análisis de palabras. Nunca se muestra ni se guarda.'))}</p>${optin}</div></div>
       <div class="ex-records">
-      ${bur ? `<article class="ex-record"><span>💥</span><div><small>${esc(tr('Momento de más drama (1 hora)'))}</small><strong>${num(bur.count)} ${esc(tr('mensajes'))} · ${esc(fdt(bur.start))}</strong></div></article>` : ''}
+      ${!premiumOn ? `<article class="ex-record"><span>🔒</span><div><strong>${esc(tr('Detector de dramas y buscador de primeras veces'))}</strong><small>${esc(tr('Funciones Premium'))}</small><button type="button" class="btn-sub" id="exTryPremium">${esc(tr('Probar Premium'))}</button></div></article>` : ''}
+      ${premiumOn && bur ? `<article class="ex-record"><span>💥</span><div><small>${esc(tr('Momento de más drama (1 hora)'))}</small><strong>${num(bur.count)} ${esc(tr('mensajes'))} · ${esc(fdt(bur.start))}</strong></div></article>` : ''}
       ${run ? `<article class="ex-record"><span>⚡</span><div><small>${esc(tr('Conversación más larga sin pausas'))}</small><strong>${num(run.count)} ${esc(tr('mensajes'))} · ${esc(E().formatDuration(run.end - run.start))}</strong></div></article>` : ''}
       ${soul.map(x => `<article class="ex-record"><span>💞</span><div><small>${esc(tr('Mejor encaje'))}</small><strong>${esc(x.a)} + ${esc(x.b)} · ${x.percent}%</strong></div></article>`).join('')}
       </div></section>
       <section class="ex-card"><h3>${esc(tr('¿Con quién es más probable que…?'))}</h3>${likely.length ? `<div class="ex-records">${likely.map(x => `<article class="ex-record"><div><strong>${esc(tr(x.title))}</strong><span>${esc(x.name)} · ${esc(x.value)}</span></div></article>`).join('')}</div>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}</section>
       <section class="ex-card"><h3>${esc(tr('ADN de la conversación'))}</h3>${ta ? `<p class="ex-discovery">${dna.emojis.map(e => `${e.emoji} ×${num(e.count)}`).join('  ') || '—'}</p><p>${esc(tr('Palabra mágica'))}: <strong>${esc(dna.magicWord || '—')}</strong></p>` : `<p>${esc(tr('Activa el análisis de palabras para verlo.'))}</p>`}
-        <h4>${esc(tr('Primeras veces'))}</h4>${ta ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
+        ${premiumOn ? `<h4>${esc(tr('Primeras veces'))}</h4>` : ''}${ta && premiumOn ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
         <h4>${esc(tr('Compatibilidad de temas'))}</h4>${compat.available ? `<p class="ex-discovery"><strong class="ex-score">${num(compat.percent)}%</strong> · ${esc(compat.shared.join(' · '))}</p>${meter(compat.percent)}` : `<p>${esc(tr('Necesita el análisis de palabras y dos personas con mensajes.'))}</p>`}</section>
       <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tarjetas virales'))}</p><h3>${esc(tr('Comparte en tus Stories'))}</h3></div></div><div class="ex-share-actions"><button type="button" class="btn-sub" data-card="adn">🧬 ${esc(tr('ADN de la conversación'))}</button><button type="button" class="btn-sub" data-card="vs">⚔️ Vs</button><button type="button" class="btn-sub" data-card="turno">👉 ${esc(tr('Tu turno'))}</button><button type="button" class="btn-sub" data-card="adivina">🎯 ${esc(tr('Adivina tu resultado'))}</button><button type="button" class="btn-sub" data-card="peligro">⚠️ ${esc(tr('Peligro de racha'))}</button></div><h4>${esc(tr('Diplomas'))}</h4><div class="ex-share-actions">${diplomaBtns || `<span>${esc(tr('Datos insuficientes'))}</span>`}</div></section>`;
     const slides = [
@@ -206,7 +209,7 @@
     const storyHtml = `<section class="ex-card ex-story" aria-roledescription="carousel" aria-label="${esc(tr('Golifiar Wrapped'))}">${slides.map((x, i) => `<div class="ex-slide" ${i === state.slide ? '' : 'hidden'}><span class="ex-slide-ico" aria-hidden="true">${x[0]}</span><strong>${esc(x[1])}</strong><span>${esc(x[2])}</span></div>`).join('')}<div class="ex-share-actions"><button type="button" class="btn-sub" id="exPrev">${esc(tr('Anterior'))}</button><span aria-live="polite">${state.slide + 1}/${slides.length}</span><button type="button" class="btn-minimal" id="exNext">${esc(tr('Siguiente'))}</button></div></section>`;
     const jokes = state.topicsEnabled ? E().insideJokes(messages, 10) : [], cloud = state.topicsEnabled ? E().emojiCloud(messages, 18) : [], cmax = Math.max(1, ...cloud.map(x => x.count));
     const jokesHtml = state.topicsEnabled ? `<section class="ex-card"><h3>${esc(tr('Diccionario del chat'))}</h3>${jokes.length ? `<div class="ex-word-cloud">${jokes.map(j => `<span class="ex-word ex-word-${j.count % 5}">${esc(j.word)} <small>${num(j.count)}</small></span>`).join('')}</div>` : `<p>${esc(tr('Aún no hay palabras que se repitan lo bastante entre varias personas.'))}</p>`}<h3>${esc(tr('Nube de emojis'))}</h3>${cloud.length ? `<div class="ex-emoji-cloud" role="img" aria-label="${esc(tr('Nube de emojis'))}">${cloud.map(x => `<span style="font-size:${(1 + 2.4 * x.count / cmax).toFixed(2)}rem" title="${num(x.count)}">${x.emoji}</span>`).join('')}</div>` : `<p>—</p>`}</section>` : '';
-    const premiumOn = isPremium(), unlocked = premiumOn || (() => { try { return localStorage.getItem('golifiar-compare-ok') === '1'; } catch (e) { return false; } })();
+    const unlocked = premiumOn || (() => { try { return localStorage.getItem('golifiar-compare-ok') === '1'; } catch (e) { return false; } })();
     let compareChatsHtml;
     if (!unlocked) compareChatsHtml = `<section class="ex-card"><h3>🔒 ${esc(tr('Comparar 2 chats'))}</h3><p>${esc(tr('Se desbloquea al compartir una tarjeta de racha en tus Stories mencionando a Golifiar. Este desbloqueo es de confianza: se activa al crear o compartir la tarjeta en este dispositivo.'))}</p><button type="button" class="btn-minimal" id="exStreakDl2">${esc(tr('Crear y compartir tarjeta de racha'))}</button></section>`;
     else {
@@ -289,7 +292,7 @@
   function answerQuiz(answer) {
     const q = state.quiz[state.quizIndex]; if (!q) return;
     const feedback = node('exQuizFeedback');
-    if (answer === q.answer) { state.quizScore++; if (feedback) feedback.textContent = tr('¡Correcto!'); }
+    if (answer === q.answer) { state.quizScore++; sound('ok'); if (feedback) feedback.textContent = tr('¡Correcto!'); }
     else if (feedback) feedback.textContent = `${tr('La respuesta era')}: ${q.answer}`;
     state.quizIndex++;
     window.setTimeout(renderQuizQuestion, 700);
@@ -540,7 +543,8 @@
     if (e.target.id === 'exFrom') { state.from = e.target.value; render(); }
     if (e.target.id === 'exTo') { state.to = e.target.value; render(); }
     if (e.target.id === 'exLook') { state.cardLook = e.target.value; if (!FREE_LOOKS.includes(state.cardLook) && !isPremium()) { showStatus(tr('Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará el estilo Golifiar.'), false); } updatePreview(); }
-    if (e.target.id === 'exAnon') state.anon = e.target.checked;
+    if (e.target.id === 'exAnon') { state.anon = e.target.checked; updatePreview(); }
+    if (e.target.id === 'exSound') { try { localStorage.setItem('golifiar-sonido', e.target.checked ? '1' : '0'); } catch (err) { /* sin almacenamiento */ } sound('ok'); }
     if (e.target.id === 'exCompareFile') importCompare(e.target);
     if (e.target.id === 'edAv0' || e.target.id === 'edAv1') { const i = e.target.id === 'edAv1' ? 1 : 0, f = e.target.files && e.target.files[0]; if (f && root.createImageBitmap) root.createImageBitmap(f).then(bm => { state.avatars[i] = bm; updatePreview(); }).catch(() => showModal(tr('No se pudo leer la imagen.'))); }
     if (e.target.id === 'exHd') { state.hd = e.target.checked; updatePreview(); }
@@ -558,6 +562,7 @@
     const button = e.target.closest('button'); if (!button) return;
     if (button.id === 'exCompareBtn') render();
     if (button.id === 'exClear') clearAll();
+    if (button.id === 'exTryPremium') premiumDemo();
     if (button.dataset.card) viralCard(button.dataset.card);
     if (button.id === 'exNext' || button.id === 'exPrev') { state.slide = Math.max(0, state.slide + (button.id === 'exNext' ? 1 : -1)); render(); sound('ok'); }
     if (button.id === 'exStreakDl' || button.id === 'exStreakDl2') downloadStreak();
@@ -570,6 +575,7 @@
     if (button.classList.contains('ex-answer')) answerQuiz(button.dataset.answer || '');
   });
   function selectTab(key) {
+    if (key === 'juegos' && state.tab !== 'juegos') sound('ok');
     state.tab = key;
     document.querySelectorAll('[data-extab]').forEach(b => { const on = b.dataset.extab === key; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
     document.querySelectorAll('.ex-pane').forEach(p => { p.hidden = p.id !== 'expane-' + key; });

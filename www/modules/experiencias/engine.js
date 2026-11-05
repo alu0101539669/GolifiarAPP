@@ -18,7 +18,7 @@
       const timestamp = safeDate(m.timestamp ?? m.timestamp_ms ?? m.date);
       const sender = String(m.sender ?? m.sender_name ?? m.participante ?? '').trim();
       if (timestamp === null || !sender) return null;
-      return { timestamp, sender, text: typeof m.text === 'string' ? m.text : (typeof m.content === 'string' ? m.content : ''), platform: m.platform || cfg.platform || 'unknown', chat: m.chat || cfg.chat || 'Chat', reactions: Array.isArray(m.reactions) ? m.reactions.length : Number(m.reactions || 0), attachmentsCount: Number(m.attachmentsCount || 0), isStoryReply: Boolean(m.isStoryReply), media: m.media || null };
+      return { timestamp, sender, text: typeof m.text === 'string' ? m.text : (typeof m.content === 'string' ? m.content : ''), platform: m.platform || cfg.platform || 'unknown', chat: m.chat || cfg.chat || 'Chat', reactions: Array.isArray(m.reactions) ? m.reactions.length : Number(m.reactions || 0), attachmentsCount: Number(m.attachmentsCount || 0), isStoryReply: Boolean(m.isStoryReply), media: m.media || null, mediaCounts: m.mediaCounts || null };
     }).filter(Boolean).sort((a,b) => a.timestamp - b.timestamp);
   }
 
@@ -112,6 +112,7 @@
       platform: 'instagram', chat: fixText(chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram')),
       reactions: m.reactions,
       media: m.audio_files ? 'audio' : m.videos ? 'video' : m.photos ? 'image' : m.sticker ? 'sticker' : null,
+      mediaCounts: { audio: (m.audio_files || []).length, video: (m.videos || []).length, image: (m.photos || []).length, sticker: m.sticker ? 1 : 0 },
       attachmentsCount: ['photos','videos','audio_files','files','share'].reduce((n, key) => n + (m[key] ? (Array.isArray(m[key]) ? m[key].length : 1) : 0), 0),
       isStoryReply: /story|historia/i.test(JSON.stringify(m.share || {})) || /replied to your story|respondio a tu historia|respondió a tu historia/i.test(String(m.content || ''))
     })), { platform: 'instagram', chat: fixText(chatName || obj.title || 'Instagram') });
@@ -355,7 +356,7 @@
     ms.forEach((m, i) => {
       const r = row(m.sender), d = new Date(m.timestamp), isMedia = Boolean(m.media);
       r.messages++; if (r.first === null) r.first = m.timestamp; r.last = m.timestamp;
-      if (isMedia) { media[m.media] = (media[m.media] || 0) + 1; r.media++; if (m.media === 'audio') r.audio++; if (m.media === 'sticker') r.stickers++; }
+      if (isMedia) { if (m.mediaCounts) { for (const k of Object.keys(m.mediaCounts)) media[k] = (media[k] || 0) + m.mediaCounts[k]; } else media[m.media] = (media[m.media] || 0) + 1; r.media++; if (m.media === 'audio' || (m.mediaCounts && m.mediaCounts.audio)) r.audio += m.mediaCounts ? m.mediaCounts.audio : 1; if (m.media === 'sticker' || (m.mediaCounts && m.mediaCounts.sticker)) r.stickers += m.mediaCounts ? m.mediaCounts.sticker : 1; }
       else { const w = wordCount(m.text); words += w; chars += m.text.length; r.words += w; r.chars += m.text.length; }
       slots[slotOf(d.getHours())]++; weekdays[(d.getDay() + 6) % 7]++;
       if (d.getHours() < 6) r.night++;

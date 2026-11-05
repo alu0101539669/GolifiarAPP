@@ -86,4 +86,12 @@ assert.equal(E.emojiCloud(jk)[0].emoji, '🍻');
 const cf = E.chemistryFull(jk, 'Ana', 'Luis', true);
 assert.ok(cf.available && cf.score >= 0 && cf.score <= 100 && cf.parts.length === 4, 'Química con 4 factores');
 assert.equal(E.chemistryFull(jk, 'Ana', 'Luis', false).parts.length, 2, 'Sin opt-in solo factores de metadatos');
+
+const igm = E.parseInstagramThread({ title: 'M', participants: [{ name: 'Ana' }], messages: [
+  { sender_name: 'Ana', timestamp_ms: Date.UTC(2026, 0, 2, 10), photos: [{ uri: 'a' }, { uri: 'b' }, { uri: 'c' }] },
+  { sender_name: 'Ana', timestamp_ms: Date.UTC(2026, 0, 2, 11), audio_files: [{ uri: 'v' }] },
+  { sender_name: 'Ana', timestamp_ms: Date.UTC(2026, 0, 2, 12), sticker: { uri: 's' } }] });
+const igd = E.deep(igm);
+assert.equal(igd.media.image, 3, 'Cuenta cada foto de un mensaje de Instagram');
+assert.equal(igd.media.audio, 1); assert.equal(igd.media.sticker, 1);
 console.log('experiencias: OK');

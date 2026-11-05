@@ -368,5 +368,9 @@ window.I18n.registrar('en', {
   "No se pudo leer la imagen.": "The image could not be read.",
   "Los estilos Neón, Cyberpunk y Minimalista son Premium. Se usará el estilo Golifiar.": "The Neon, Cyberpunk and Minimalist styles are Premium. The Golifiar style will be used.",
   "Día récord": "Record day",
-  "Hora más activa": "Most active hour"
+  "Hora más activa": "Most active hour",
+  "Detector de dramas y buscador de primeras veces": "Drama detector and first-times finder",
+  "Funciones Premium": "Premium features",
+  "Sonidos y vibración": "Sounds and vibration",
+  "Probar Premium": "Try Premium"
 });
