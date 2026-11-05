@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v32';
+const CACHE_NAME = 'golifiar-v33';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
@@ -73,7 +73,7 @@ self.addEventListener('fetch', event => {
   if (url.pathname.startsWith('/_capacitor_file_/') || url.pathname.includes('/compartido/')) return;
   // Red primero (así las actualizaciones llegan siempre) y caché como respaldo sin conexión
   event.respondWith(
-    fetch(event.request).then(response => {
+    fetch(event.request, { cache: 'no-cache' }).then(response => {
       if (response && response.ok) {
         const copy = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
