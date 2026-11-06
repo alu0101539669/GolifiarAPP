@@ -26,6 +26,11 @@ const chat = Array.from({ length: 120 }, (_, i) => `[${String(1 + i % 28).padSta
   await page.click('#extab-curiosidad');
   await page.setInputFiles('#exCompareFile', { name: 'otro.txt', mimeType: 'text/plain', buffer: Buffer.from(chat) });
   await page.waitForSelector('#expane-curiosidad .ex-table');
+  // Buscador de conversaciones cuando hay muchas
+  await page.evaluate(() => { const mk = n => ({ name: n, platform: 'Instagram', messages: Array.from({ length: 5 }, (_, i) => ({ timestamp: 1.7e12 + i * 60000, sender: i % 2 ? 'A' : 'B', text: 'hola', platform: 'instagram', chat: n })) }); GolifiarExperiencias.mountChats(['Ana Ruiz', 'Bray', 'Goyo Torres', 'Marta', 'Lisbeth', 'Hermanas Osaso', 'Marta Montelongo', 'Pepe'].map(mk), 'experienciasResults'); });
+  await page.waitForSelector('#exChatSearch');
+  await page.fill('#exChatSearch', 'marta');
+  assert.strictEqual(await page.locator('#exChatSelect option').count(), 3, 'El buscador filtra (2 coincidencias + la elegida)');
   // Vista de WhatsApp: el análisis completo se monta debajo del resumen.
   await page.evaluate(() => cambiarVista('whatsapp'));
   await page.setInputFiles('#whatsappFile', { name: 'wa.txt', mimeType: 'text/plain', buffer: Buffer.from(chat) });

@@ -392,5 +392,9 @@ window.I18n.registrar('en', {
   "Planes": "Plans",
   "Viajes": "Travel",
   "Estudios y trabajo": "Study and work",
-  "Comida": "Food"
+  "Comida": "Food",
+  "Buscar conversación": "Search conversation",
+  "bloqueado": "locked",
+  "Premium": "Premium",
+  "DIPLOMA": "DIPLOMA"
 });

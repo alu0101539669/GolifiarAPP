@@ -77,7 +77,7 @@
         const rest = h[7];
         const sm = rest.match(/^(.+?): ([\s\S]*)$/);
         if (sm && !/^[^:]*\d:\d/.test(sm[1])) {
-          const sender = sm[1].replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim();
+          const sender = cleanName(sm[1].replace(/[\u200e\u200f\u202a-\u202e]/g, ''));
           const body = sm[2];
           last = { timestamp: ts, sender, text: body, platform: 'whatsapp', chat: chatName || 'WhatsApp', media: mediaKind(body) };
           messages.push(last);
@@ -98,24 +98,34 @@
   }
 
   // Meta exporta el UTF-8 leído como latin-1 («JosÃ©»): se corrige solo si el texto lo parece.
+  // Meta exporta el UTF-8 como si fuera Latin-1 («HernÃ¡ndez», emojis como «ð«ð¶»). Se revierte con una decodificación UTF-8.
   function fixText(v) {
-    if (typeof v !== 'string' || !/[ÃÂ]/.test(v)) return v;
-    try { return decodeURIComponent(escape(v)); } catch (e) { return v; }
+    const s = String(v == null ? '' : v);
+    if (!/[\u0080-\u00ff]/.test(s) || /[^\u0000-\u00ff]/.test(s)) return s;
+    const bytes = Uint8Array.from(Array.from(s, ch => ch.charCodeAt(0)));
+    try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch (e) { /* continúa */ }
+    if (/\u00f0[\u0080-\u00bf]/.test(s) || /[\u00c2-\u00f4][\u0080-\u00bf]/.test(s)) return new TextDecoder('utf-8').decode(bytes).replace(/\ufffd/g, '');
+    return s;
+  }
+  // Nombres legibles: sin emojis ni símbolos raros (si queda vacío se conserva el original).
+  function cleanName(v) {
+    const fixed = fixText(v), c = fixed.replace(/[\p{Extended_Pictographic}\u200d\ufe0f\ufffd]/gu, '').replace(/\s+/g, ' ').trim();
+    return c || fixed.trim() || 'Desconocido';
   }
   function parseInstagramThread(json, chatName) {
     const obj = typeof json === 'string' ? JSON.parse(json) : json;
     const messages = Array.isArray(obj && obj.messages) ? obj.messages : [];
     return normalizeMessages(messages.map(m => ({
       timestamp: m.timestamp_ms ?? m.timestamp,
-      sender: fixText(m.sender_name || m.sender || 'Desconocido'),
+      sender: cleanName(m.sender_name || m.sender || 'Desconocido'),
       text: typeof m.content === 'string' ? fixText(m.content) : '',
-      platform: 'instagram', chat: fixText(chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram')),
+      platform: 'instagram', chat: cleanName(chatName || (obj.title || (obj.participants || []).map(p => p.name).join(', ') || 'Instagram')),
       reactions: m.reactions,
       media: m.audio_files ? 'audio' : m.videos ? 'video' : m.photos ? 'image' : m.sticker ? 'sticker' : null,
       mediaCounts: { audio: (m.audio_files || []).length, video: (m.videos || []).length, image: (m.photos || []).length, sticker: m.sticker ? 1 : 0 },
       attachmentsCount: ['photos','videos','audio_files','files','share'].reduce((n, key) => n + (m[key] ? (Array.isArray(m[key]) ? m[key].length : 1) : 0), 0),
       isStoryReply: /story|historia/i.test(JSON.stringify(m.share || {})) || /replied to your story|respondio a tu historia|respondió a tu historia/i.test(String(m.content || ''))
-    })), { platform: 'instagram', chat: fixText(chatName || obj.title || 'Instagram') });
+    })), { platform: 'instagram', chat: cleanName(chatName || obj.title || 'Instagram') });
   }
 
   async function parseInstagramZip(file) {
@@ -284,15 +294,15 @@
     const s = stats(messages), st = streaks(messages);
     const spanDays = s.firstMessage && s.lastMessage ? Math.floor((s.lastMessage - s.firstMessage) / 86400000) + 1 : 0;
     const candidates = [
-      { key: 'firstMessage', title: 'Primeros pasos', description: 'La primera conversación ya está analizada.', icon: '🌱', unlocked: s.totalMessages >= 1 },
-      { key: 'hundred', title: 'Centenario', description: 'Has analizado al menos 100 mensajes.', icon: '💬', unlocked: s.totalMessages >= 100 },
-      { key: 'fiveHundred', title: 'Charla larga', description: 'Has analizado al menos 500 mensajes.', icon: '🗣️', unlocked: s.totalMessages >= 500 },
-      { key: 'thousand', title: 'Mil y una historias', description: 'Has analizado al menos 1.000 mensajes.', icon: '🏅', unlocked: s.totalMessages >= 1000 },
-      { key: 'week', title: 'Una semana presente', description: 'El chat tiene actividad en 7 días distintos.', icon: '📆', unlocked: s.activeDays >= 7 },
-      { key: 'month', title: 'Costumbre de grupo', description: 'El chat tiene actividad en 30 días distintos.', icon: '🗓️', unlocked: s.activeDays >= 30 },
-      { key: 'streak7', title: 'Racha de siete', description: 'Se registró una racha de 7 días consecutivos.', icon: '🔥', unlocked: st.longest >= 7 },
-      { key: 'span30', title: 'De largo recorrido', description: 'La exportación cubre al menos 30 días entre el primer y último mensaje.', icon: '🧭', unlocked: spanDays >= 30 },
-      { key: 'crew', title: 'Buen grupo', description: 'Participan al menos 5 personas.', icon: '👥', unlocked: s.participantCount >= 5 }
+      { key: 'firstMessage', title: 'Primeros pasos', description: 'La primera conversación ya está analizada.', icon: '', unlocked: s.totalMessages >= 1 },
+      { key: 'hundred', title: 'Centenario', description: 'Has analizado al menos 100 mensajes.', icon: '', unlocked: s.totalMessages >= 100 },
+      { key: 'fiveHundred', title: 'Charla larga', description: 'Has analizado al menos 500 mensajes.', icon: '', unlocked: s.totalMessages >= 500 },
+      { key: 'thousand', title: 'Mil y una historias', description: 'Has analizado al menos 1.000 mensajes.', icon: '', unlocked: s.totalMessages >= 1000 },
+      { key: 'week', title: 'Una semana presente', description: 'El chat tiene actividad en 7 días distintos.', icon: '', unlocked: s.activeDays >= 7 },
+      { key: 'month', title: 'Costumbre de grupo', description: 'El chat tiene actividad en 30 días distintos.', icon: '', unlocked: s.activeDays >= 30 },
+      { key: 'streak7', title: 'Racha de siete', description: 'Se registró una racha de 7 días consecutivos.', icon: '', unlocked: st.longest >= 7 },
+      { key: 'span30', title: 'De largo recorrido', description: 'La exportación cubre al menos 30 días entre el primer y último mensaje.', icon: '', unlocked: spanDays >= 30 },
+      { key: 'crew', title: 'Buen grupo', description: 'Participan al menos 5 personas.', icon: '', unlocked: s.participantCount >= 5 }
     ];
     return candidates.filter(x => x.unlocked);
   }
@@ -563,7 +573,7 @@
   function summaryText(messages, name, system) {
     const s = stats(messages), st = streaks(messages), d = deep(messages, system);
     const top = d.members[0];
-    return [`📊 ${name || 'Mi chat'} · Golifiar`, `💬 ${s.totalMessages} mensajes · ${d.words} palabras`, `🔥 Racha más larga: ${st.longest} días`, top ? `🏆 Más activo: ${top.name} (${Math.round(top.share)}%)` : '', 'Analizado en mi dispositivo con Golifiar'].filter(Boolean).join('\n');
+    return [`${name || 'Mi chat'} · Golifiar`, `${s.totalMessages} mensajes · ${d.words} palabras`, `Racha más larga: ${st.longest} días`, top ? `Más activo: ${top.name} (${Math.round(top.share)}%)` : '', 'Analizado en mi dispositivo con Golifiar'].filter(Boolean).join('\n');
   }
 
   function toCardData(messages, name) { return wrapped(messages, name); }

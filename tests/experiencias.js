@@ -104,4 +104,16 @@ assert.ok(E.bestMatches(jk, 'Ana', true)[0].name === 'Luis', 'Mejor encaje');
 assert.ok(E.firstMoments(jk, ['chiringuito'])[0].sender, 'Búsqueda de frase personalizada');
 const dayStarts = E.deep(E.parseWhatsApp(['[01/10/2026, 10:00:00] Ana: a','[01/10/2026, 10:30:00] Luis: b','[02/10/2026, 09:00:00] Luis: c','[02/10/2026, 09:05:00] Ana: d'].join('\n'),'D'));
 assert.equal(dayStarts.members.find(m => m.name === 'Luis').starts, 1, 'Inicia = primer mensaje del día'); assert.equal(dayStarts.members.find(m => m.name === 'Ana').starts, 1);
+
+// Nombres de Instagram: UTF-8 leído como Latin-1
+const moji = s => Buffer.from(s, 'utf8').toString('latin1');
+const ig2 = E.parseInstagramThread({ title: moji('Hermanas Osasco 🌸'), participants: [], messages: [
+  { sender_name: moji('Gabriela Hernández'), timestamp_ms: Date.UTC(2026, 0, 2, 10), content: moji('qué tal 😀') },
+  { sender_name: moji('🌸🌸'), timestamp_ms: Date.UTC(2026, 0, 2, 11), content: 'hola' }] });
+assert.equal(ig2[0].chat, 'Hermanas Osasco', 'Título sin emoji ni basura');
+assert.equal(ig2[0].sender, 'Gabriela Hernández', 'Acentos recuperados');
+assert.ok(!/[ðÃ]/.test(ig2[1].sender), 'Nombre solo emoji legible');
+assert.equal(ig2[0].text, 'qué tal 😀', 'El texto conserva sus emojis para el análisis');
+const cut = Buffer.from('Hermanas Osasco 🌸', 'utf8').subarray(0, 18).toString('latin1');
+assert.equal(E.parseInstagramThread({ title: cut, participants: [], messages: [{ sender_name: 'A', timestamp_ms: 1e12, content: 'x' }] })[0].chat, 'Hermanas Osasco', 'Emoji cortado');
 console.log('experiencias: OK');

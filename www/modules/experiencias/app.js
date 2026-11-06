@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const E = () => root.GolifiarExperienciasEngine;
-  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'glass', avatars: [null, null], slide: 0, mount: 'experienciasResults', hd: false, noMark: false, findTerm: '', edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
+  const state = { tab: 'resumen', chats: [], selected: 0, compareA: '', compareB: '', chemistryA: '', chemistryB: '', quizIndex: 0, quizScore: 0, quiz: [], topicsEnabled: false, cardTheme: 'ocean', cardShowWords: true, cardShowStreak: true, range: 'all', from: '', to: '', anon: false, cardLook: 'glass', avatars: [null, null], slide: 0, mount: 'experienciasResults', hd: false, noMark: false, findTerm: '', chatFilter: '', edit: { on: false, bg1: '#0f0f14', bg2: '#2a2210', accent: '#FFD21F', text: '#ffffff', font: 'sans', numY: 1000 }, compare: null };
   const tr = (s, p) => typeof root.t === 'function' ? root.t(s, p) : s;
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const num = n => new Intl.NumberFormat(root.I18n ? I18n.locale : undefined, { useGrouping: 'always', maximumFractionDigits: 1 }).format(n);
@@ -144,7 +144,7 @@
     if (!state.chats.length) { renderEmpty(); return; }
     if (!rangeMessages(selectedChat()).length) { state.range = 'all'; showStatus(tr('No hay mensajes en ese periodo.'), true); }
     const chat = selectedChat(), messages = rangeMessages(chat), s = E().stats(messages), st = E().streaks(messages), cal = E().calendar(messages), rec = E().records(messages), achievements = E().achievements(messages), wrap = E().wrapped(state.topicsEnabled ? messages : messages.map(m => ({ ...m, text: '' })), chat.name), fun = E().funTests(messages), balance = E().balance(messages);
-    const options = state.chats.map((c,i) => `<option value="${i}" ${i === state.selected ? 'selected' : ''}>${esc(c.name)} · ${esc(c.platform)}</option>`).join('');
+    const options = chatOptions();
     const months = Object.keys(s.months).sort();
     const periodA = months.includes(state.compareA) ? state.compareA : (months[0] || '');
     const periodB = months.includes(state.compareB) ? state.compareB : (months[months.length-1] || '');
@@ -161,7 +161,7 @@
     const calendarHtml = cal.length ? `<div class="ex-calendar" role="list" aria-label="${esc(tr('Calendario de actividad'))}">${cal.map(d => `<div role="listitem" class="ex-day level-${d.level}" title="${esc(d.date)} · ${num(d.count)}" aria-label="${esc(d.date)}: ${num(d.count)} ${esc(tr('mensajes'))}"><span>${Number(d.date.slice(-2))}</span></div>`).join('')}</div><p class="ex-note">${esc(tr('Cada cuadro representa un día; la intensidad indica cuántos mensajes hubo.'))}</p>` : `<p>${esc(tr('No hay datos de actividad.'))}</p>`;
     const topics = state.topicsEnabled ? E().topics(messages, 12) : [];
     const topicHtml = topics.length ? `<div class="ex-word-cloud">${topics.map((x,i) => `<span style="--weight:${Math.min(4,1+Math.log2(x.count+1))}" class="ex-word ex-word-${i%5}">${esc(x.word)} <small>${num(x.count)}</small></span>`).join('')}</div>` : `<p>${esc(tr('No se han detectado palabras frecuentes. Importa una conversación con mensajes de texto para calcularlas.'))}</p>`;
-    const recordsHtml = rec.map(r => `<article class="ex-record"><span>🏆</span><div><small>${esc(tr(r.title))}</small><strong>${esc(r.value)}</strong></div></article>`).join('');
+    const recordsHtml = rec.map(r => `<article class="ex-record"><div><small>${esc(tr(r.title))}</small><strong>${esc(r.value)}</strong></div></article>`).join('');
     const achievementsHtml = achievements.length ? `<div class="ex-achievements">${achievements.map(a => `<article class="ex-achievement"><span aria-hidden="true">${a.icon}</span><div><strong>${esc(tr(a.title))}</strong><small>${esc(tr(a.description))}</small></div></article>`).join('')}</div>` : `<p>${esc(tr('Sigue usando el análisis para desbloquear tus primeros trofeos.'))}</p>`;
     const daysHtml = cal.slice(-14).map(d => `<div class="ex-mini-day"><span>${esc(d.date.slice(5))}</span><i class="level-${d.level}" title="${num(d.count)}"></i></div>`).join('');
     const topCount = Math.max(1, ...s.participants.map(p => p.count));
@@ -171,12 +171,12 @@
     const wd = i => new Date(2024, 0, 1 + i).toLocaleDateString(root.I18n ? I18n.locale : undefined, { weekday: 'long' });
     const badge = m => m.state === 'ex' ? `<span class="ex-badge ex">${esc(tr('Ex-miembro'))}</span> <span class="ex-badge ex">${esc(tr('Salió del grupo'))}</span>` : m.state === 'ghost' ? `<span class="ex-badge ghost">${esc(tr('Fantasma'))}</span>` : '';
     const avatar = (m, i) => `<span class="ex-avatar c${i % 6}" aria-hidden="true">${esc(initials(m.name))}</span>`;
-    const podiumHtml = dp.members.length ? `${dp.isGroup ? `<ol class="ex-podium">${dp.podium.map((m, i) => `<li class="p${i + 1}">${avatar(m, i)}<strong>${['🥇', '🥈', '🥉'][i]} ${esc(m.name)}</strong>${badge(m)}<span>${num(m.messages)} · ${Math.round(m.share)}%</span></li>`).join('')}</ol>` : ''}${(dp.isGroup ? dp.rest : dp.members).length ? `<details class="ex-more"><summary>${esc(tr(dp.isGroup ? 'Ver al resto del grupo ({n})' : 'Participantes ({n})', { n: num((dp.isGroup ? dp.rest : dp.members).length) }))}</summary><ul class="ex-bars">${(dp.isGroup ? dp.rest : dp.members).map(m => `<li><span class="ex-bar-name">${esc(m.name)} ${badge(m)}</span><span class="ex-bar"><i style="width:${Math.max(2, Math.round(m.share))}%"></i></span><strong>${m.share.toFixed(1)}%</strong></li>`).join('')}</ul></details>` : ''}` : '';
+    const podiumHtml = dp.members.length ? `${dp.isGroup ? `<ol class="ex-podium">${dp.podium.map((m, i) => `<li class="p${i + 1}">${avatar(m, i)}<strong>${['1º', '2º', '3º'][i]} ${esc(m.name)}</strong>${badge(m)}<span>${num(m.messages)} · ${Math.round(m.share)}%</span></li>`).join('')}</ol>` : ''}${(dp.isGroup ? dp.rest : dp.members).length ? `<details class="ex-more"><summary>${esc(tr(dp.isGroup ? 'Ver al resto del grupo ({n})' : 'Participantes ({n})', { n: num((dp.isGroup ? dp.rest : dp.members).length) }))}</summary><ul class="ex-bars">${(dp.isGroup ? dp.rest : dp.members).map(m => `<li><span class="ex-bar-name">${esc(m.name)} ${badge(m)}</span><span class="ex-bar"><i style="width:${Math.max(2, Math.round(m.share))}%"></i></span><strong>${m.share.toFixed(1)}%</strong></li>`).join('')}</ul></details>` : ''}` : '';
     const mediaTotal = Object.values(dp.media).reduce((a, b) => a + b, 0);
     const deepHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tu chat en detalle'))}</p><h3>${esc(tr('Palabras, medios y momentos'))}</h3></div></div><div class="ex-kpis">${kpi('Palabras', num(dp.words))}${kpi('Caracteres', num(dp.chars))}${kpi('Medios', num(mediaTotal))}${kpi('Franja más activa', dp.topSlot ? tr(dp.topSlot) : '—')}</div><div class="ex-metrics">${metric('Audios', num(dp.media.audio))}${metric('Fotos', num(dp.media.image))}${metric('Vídeos', num(dp.media.video))}${metric('Stickers', num(dp.media.sticker))}${metric('Día más activo de la semana', dp.topWeekday === null ? '—' : wd(dp.topWeekday))}${metric('Ex-miembros', num(dp.exMembers.length))}</div><h4 class="ex-chart-title">${esc(tr('Participantes'))}</h4>${podiumHtml}</section>`;
-    const dangerHtml = danger.danger ? `<section class="ex-card ex-danger" role="status"><strong>⚠️ ${esc(tr('Tu racha de {n} días vence hoy a las 23:59', { n: num(danger.days) }))}</strong><span>${esc(tr('Escribe hoy para no perderla.'))}</span></section>` : '';
+    const dangerHtml = danger.danger ? `<section class="ex-card ex-danger" role="status"><strong>${esc(tr('Tu racha de {n} días vence hoy a las 23:59', { n: num(danger.days) }))}</strong><span>${esc(tr('Escribe hoy para no perderla.'))}</span></section>` : '';
     const whoHtml = who.length ? `<div class="ex-records">${who.map(t => `<article class="ex-record"><div><strong>${esc(tr(t.title))}</strong><span>${esc(t.name)} · ${esc(t.value)}</span><small>${esc(tr(t.explanation))}</small></div></article>`).join('')}</div>` : `<p>${esc(tr('Datos insuficientes'))}</p>`;
-    const ghostHtml = ghost ? `<article class="ex-record"><span>👻</span><div><small>${esc(tr('Fantasma de la semana'))}</small><strong>${esc(ghost.name)} · ${esc(dias(ghost.daysSilent))}</strong></div></article>` : '';
+    const ghostHtml = ghost ? `<article class="ex-record"><div><small>${esc(tr('Fantasma de la semana'))}</small><strong>${esc(ghost.name)} · ${esc(dias(ghost.daysSilent))}</strong></div></article>` : '';
     const heat = E().hourHeat(messages), heatMax = Math.max(1, ...heat.flat());
     const heatHtml = `<div class="ex-heat" role="img" aria-label="${esc(tr('Mapa de calor: día de la semana por hora'))}">${heat.map((row, d) => `<div class="ex-heat-row"><span>${esc(wd(d).slice(0, 2))}</span>${row.map((v, h) => `<i style="--a:${(v / heatMax).toFixed(2)}" title="${esc(wd(d))} ${h}:00 · ${num(v)}"></i>`).join('')}</div>`).join('')}</div>`;
     const rangeHtml = `<div class="ex-range"><label>${esc(tr('Periodo a analizar'))}<select id="exRange"><option value="all">${esc(tr('Todo el chat'))}</option><option value="year">${esc(tr('Último año'))}</option><option value="summer">${esc(tr('Último verano'))}</option><option value="custom">${esc(tr('Personalizado'))}</option></select></label>${state.range === 'custom' ? `<label>${esc(tr('Desde'))}<input type="date" id="exFrom" value="${esc(state.from)}"></label><label>${esc(tr('Hasta'))}<input type="date" id="exTo" value="${esc(state.to)}"></label>` : ''}</div>`;
@@ -187,35 +187,35 @@
     const found = premiumOn && state.findTerm ? E().firstMoments(messages, [state.findTerm])[0] : null;
     const fdt = ts => new Date(ts).toLocaleString(root.I18n ? I18n.locale : undefined, { dateStyle: 'medium', timeStyle: 'short' });
     const optin = `<label class="ex-topic-toggle"><input type="checkbox" id="exEnableTopics2" ${ta ? 'checked' : ''}> ${esc(tr('Activar análisis local de palabras'))}</label>`;
-    const diplomaBtns = who.map(w => `<button type="button" class="btn-sub" data-card="diploma:${w.key}">🎓 ${esc(tr(w.title))}</button>`).join('');
+    const diplomaBtns = who.map(w => `<button type="button" class="btn-sub" data-card="diploma:${w.key}">${esc(tr(w.title))}</button>`).join('');
     const curioHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">Golifiar Labs</p><h3>${esc(tr('Full Curiosidad'))}</h3><p>${esc(tr('Algunas curiosidades leen el texto en memoria, solo si activas el análisis de palabras. Nunca se muestra ni se guarda.'))}</p>${optin}</div></div>
       <div class="ex-records">
-      ${!premiumOn ? `<article class="ex-record"><span>🔒</span><div><strong>${esc(tr('Detector de dramas y buscador de primeras veces'))}</strong><small>${esc(tr('Funciones Premium'))}</small><button type="button" class="btn-sub" id="exTryPremium">${esc(tr('Probar Premium'))}</button></div></article>` : ''}
-      ${premiumOn && bur ? `<article class="ex-record"><span>💥</span><div><small>${esc(tr('Momento de más drama (1 hora)'))}</small><strong>${num(bur.count)} ${esc(tr('mensajes'))} · ${esc(fdt(bur.start))}</strong></div></article>` : ''}
-      ${run ? `<article class="ex-record"><span>⚡</span><div><small>${esc(tr('Conversación más larga sin pausas'))}</small><strong>${num(run.count)} ${esc(tr('mensajes'))} · ${esc(E().formatDuration(run.end - run.start))}</strong></div></article>` : ''}
-      ${soul.map(x => `<article class="ex-record"><span>💞</span><div><small>${esc(tr('Mejor encaje'))}</small><strong>${esc(x.a)} + ${esc(x.b)} · ${x.percent}%</strong></div></article>`).join('')}
+      ${!premiumOn ? `<article class="ex-record"><div><strong>${esc(tr('Detector de dramas y buscador de primeras veces'))}</strong><small>${esc(tr('Funciones Premium'))}</small><button type="button" class="btn-sub" id="exTryPremium">${esc(tr('Probar Premium'))}</button></div></article>` : ''}
+      ${premiumOn && bur ? `<article class="ex-record"><div><small>${esc(tr('Momento de más drama (1 hora)'))}</small><strong>${num(bur.count)} ${esc(tr('mensajes'))} · ${esc(fdt(bur.start))}</strong></div></article>` : ''}
+      ${run ? `<article class="ex-record"><div><small>${esc(tr('Conversación más larga sin pausas'))}</small><strong>${num(run.count)} ${esc(tr('mensajes'))} · ${esc(E().formatDuration(run.end - run.start))}</strong></div></article>` : ''}
+      ${soul.map(x => `<article class="ex-record"><div><small>${esc(tr('Mejor encaje'))}</small><strong>${esc(x.a)} + ${esc(x.b)} · ${x.percent}%</strong></div></article>`).join('')}
       </div></section>
-      <section class="ex-card"><h3>${esc(tr('Personas que mejor encajan con tus mensajes'))} · ${esc(chemistryA)}</h3>${bm.length ? `<ul class="ex-bars">${bm.slice(0, 5).map(x => `<li><span class="ex-bar-name">${esc(x.name)}</span><span class="ex-bar"><i style="width:${x.percent}%"></i></span><strong>${x.percent}%</strong></li>`).join('')}</ul>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}${soulName ? `<p class="ex-discovery">💞 ${esc(tr('Alma gemela conversacional'))}: <strong>${esc(soulName)}</strong></p>` : ''}<p class="ex-note">${esc(tr('Elige a la persona en el selector de Chemistry Score (pestaña Juegos). Compara tono, longitud, velocidad de respuesta y horarios.'))}</p></section>
+      <section class="ex-card"><h3>${esc(tr('Personas que mejor encajan con tus mensajes'))} · ${esc(chemistryA)}</h3>${bm.length ? `<ul class="ex-bars">${bm.slice(0, 5).map(x => `<li><span class="ex-bar-name">${esc(x.name)}</span><span class="ex-bar"><i style="width:${x.percent}%"></i></span><strong>${x.percent}%</strong></li>`).join('')}</ul>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}${soulName ? `<p class="ex-discovery">${esc(tr('Alma gemela conversacional'))}: <strong>${esc(soulName)}</strong></p>` : ''}<p class="ex-note">${esc(tr('Elige a la persona en el selector de Chemistry Score (pestaña Juegos). Compara tono, longitud, velocidad de respuesta y horarios.'))}</p></section>
       <section class="ex-card"><h3>${esc(tr('¿Con quién es más probable que…?'))}</h3>${likely.length ? `<div class="ex-records">${likely.map(x => `<article class="ex-record"><div><strong>${esc(tr(x.title))}</strong><span>${esc(x.name)} · ${esc(x.value)}</span></div></article>`).join('')}</div>` : `<p>${esc(tr('Datos insuficientes'))}</p>`}</section>
       <section class="ex-card"><h3>${esc(tr('ADN de la conversación'))}</h3>${ta ? `<p class="ex-discovery">${dna.emojis.map(e => `${e.emoji} ×${num(e.count)}`).join('  ') || '—'}</p><p>${esc(tr('Palabra mágica'))}: <strong>${esc(dna.magicWord || '—')}</strong></p>` : `<p>${esc(tr('Activa el análisis de palabras para verlo.'))}</p>`}
         ${premiumOn ? `<h4>${esc(tr('Primeras veces'))}</h4><div class="ex-find"><label class="visually-hidden" for="exFindTerm">${esc(tr('Buscar una frase'))}</label><input type="search" id="exFindTerm" value="${esc(state.findTerm || '')}" placeholder="${esc(tr('Busca una frase, p. ej. vamos a quedar'))}"><button type="button" class="btn-sub" id="exFindBtn">${esc(tr('Buscar'))}</button></div>${found ? `<p class="ex-discovery">${found.timestamp ? `«${esc(found.term)}» · ${esc(found.sender)} · ${esc(fdt(found.timestamp))}` : esc(tr('No aparece en el chat.'))}</p>` : ''}` : ''}${ta && premiumOn ? `<div class="ex-records">${moments.map(m => `<article class="ex-record"><div><strong>«${esc(m.term)}»</strong><span>${m.timestamp ? `${esc(m.sender)} · ${esc(fdt(m.timestamp))}` : '—'}</span></div></article>`).join('')}</div>` : ''}
         <h4>${esc(tr('Compatibilidad temática'))} · ${esc(chemistryA)} + ${esc(chemistryB)}</h4>${themes.available ? `<p class="ex-discovery"><strong class="ex-score">${num(themes.percent)}%</strong></p>${meter(themes.percent)}<ul class="ex-bars">${themes.shared.map(x => `<li><span class="ex-bar-name">${esc(tr(x.theme))}</span><span class="ex-bar"><i style="width:${Math.max(4, Math.round(x.score / themes.shared[0].score * 100))}%"></i></span><strong>${num(x.a)} · ${num(x.b)}</strong></li>`).join('')}</ul>` : ''}<h4>${esc(tr('Compatibilidad de temas'))}</h4>${compat.available ? `<p class="ex-discovery"><strong class="ex-score">${num(compat.percent)}%</strong> · ${esc(compat.shared.join(' · '))}</p>${meter(compat.percent)}` : `<p>${esc(tr('Necesita el análisis de palabras y dos personas con mensajes.'))}</p>`}</section>
-      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tarjetas virales'))}</p><h3>${esc(tr('Comparte en tus Stories'))}</h3></div></div><div class="ex-share-actions"><button type="button" class="btn-sub" data-card="adn">🧬 ${esc(tr('ADN de la conversación'))}</button><button type="button" class="btn-sub" data-card="vs">⚔️ Vs</button><button type="button" class="btn-sub" data-card="turno">👉 ${esc(tr('Tu turno'))}</button><button type="button" class="btn-sub" data-card="adivina">🎯 ${esc(tr('Adivina tu resultado'))}</button><button type="button" class="btn-sub" data-card="peligro">⚠️ ${esc(tr('Peligro de racha'))}</button></div><h4>${esc(tr('Diplomas'))}</h4><div class="ex-share-actions">${diplomaBtns || `<span>${esc(tr('Datos insuficientes'))}</span>`}</div></section>`;
+      <section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Tarjetas virales'))}</p><h3>${esc(tr('Comparte en tus Stories'))}</h3></div></div><div class="ex-share-actions"><button type="button" class="btn-sub" data-card="adn">${esc(tr('ADN de la conversación'))}</button><button type="button" class="btn-sub" data-card="vs">Vs</button><button type="button" class="btn-sub" data-card="turno">${esc(tr('Tu turno'))}</button><button type="button" class="btn-sub" data-card="adivina">${esc(tr('Adivina tu resultado'))}</button><button type="button" class="btn-sub" data-card="peligro">${esc(tr('Peligro de racha'))}</button></div><h4>${esc(tr('Diplomas'))}</h4><div class="ex-share-actions">${diplomaBtns || `<span>${esc(tr('Datos insuficientes'))}</span>`}</div></section>`;
     const slides = [
-      ['📅', `${num(dp.totalMessages)} ${tr('mensajes')}`, tr('en {n} días activos', { n: num(s.activeDays) })],
-      ['🔥', dias(st.longest), tr('Racha más larga')],
-      ['⏰', s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00`, tr('Hora con más actividad')],
-      ['🏆', dp.members[0] ? dp.members[0].name : '—', tr('Más mensajes')],
-      ['🎭', who[0] ? who[0].name : '—', who[0] ? tr(who[0].title) : ''],
-      ['💬', `${num(dp.words)} ${tr('palabras')}`, tr('Gracias por hablar tanto')]
+      [null, `${num(dp.totalMessages)} ${tr('mensajes')}`, tr('en {n} días activos', { n: num(s.activeDays) })],
+      [null, dias(st.longest), tr('Racha más larga')],
+      [null, s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00`, tr('Hora con más actividad')],
+      [null, dp.members[0] ? dp.members[0].name : '—', tr('Más mensajes')],
+      [null, who[0] ? who[0].name : '—', who[0] ? tr(who[0].title) : ''],
+      [null, `${num(dp.words)} ${tr('palabras')}`, tr('Gracias por hablar tanto')]
     ];
     state.slide = Math.min(state.slide, slides.length - 1);
-    const storyHtml = `<section class="ex-card ex-story" aria-roledescription="carousel" aria-label="${esc(tr('Golifiar Wrapped'))}">${slides.map((x, i) => `<div class="ex-slide" ${i === state.slide ? '' : 'hidden'}><span class="ex-slide-ico" aria-hidden="true">${x[0]}</span><strong>${esc(x[1])}</strong><span>${esc(x[2])}</span></div>`).join('')}<div class="ex-share-actions"><button type="button" class="btn-sub" id="exPrev">${esc(tr('Anterior'))}</button><span aria-live="polite">${state.slide + 1}/${slides.length}</span><button type="button" class="btn-minimal" id="exNext">${esc(tr('Siguiente'))}</button></div></section>`;
+    const storyHtml = `<section class="ex-card ex-story" aria-roledescription="carousel" aria-label="${esc(tr('Golifiar Wrapped'))}">${slides.map((x, i) => `<div class="ex-slide" ${i === state.slide ? '' : 'hidden'}><strong>${esc(x[1])}</strong><span>${esc(x[2])}</span></div>`).join('')}<div class="ex-share-actions"><button type="button" class="btn-sub" id="exPrev">${esc(tr('Anterior'))}</button><span aria-live="polite">${state.slide + 1}/${slides.length}</span><button type="button" class="btn-minimal" id="exNext">${esc(tr('Siguiente'))}</button></div></section>`;
     const jokes = state.topicsEnabled ? E().insideJokes(messages, 10) : [], cloud = state.topicsEnabled ? E().emojiCloud(messages, 18) : [], cmax = Math.max(1, ...cloud.map(x => x.count));
     const jokesHtml = state.topicsEnabled ? `<section class="ex-card"><h3>${esc(tr('Diccionario del chat'))}</h3>${jokes.length ? `<div class="ex-word-cloud">${jokes.map(j => `<span class="ex-word ex-word-${j.count % 5}">${esc(j.word)} <small>${num(j.count)}</small></span>`).join('')}</div>` : `<p>${esc(tr('Aún no hay palabras que se repitan lo bastante entre varias personas.'))}</p>`}<h3>${esc(tr('Nube de emojis'))}</h3>${cloud.length ? `<div class="ex-emoji-cloud" role="img" aria-label="${esc(tr('Nube de emojis'))}">${cloud.map(x => `<span style="font-size:${(1 + 2.4 * x.count / cmax).toFixed(2)}rem" title="${num(x.count)}">${x.emoji}</span>`).join('')}</div>` : `<p>—</p>`}</section>` : '';
     const unlocked = premiumOn || (() => { try { return localStorage.getItem('golifiar-compare-ok') === '1'; } catch (e) { return false; } })();
     let compareChatsHtml;
-    if (!unlocked) compareChatsHtml = `<section class="ex-card"><h3>🔒 ${esc(tr('Comparar 2 chats'))}</h3><p>${esc(tr('Se desbloquea al compartir una tarjeta de racha en tus Stories mencionando a Golifiar. Este desbloqueo es de confianza: se activa al crear o compartir la tarjeta en este dispositivo.'))}</p><button type="button" class="btn-minimal" id="exStreakDl2">${esc(tr('Crear y compartir tarjeta de racha'))}</button></section>`;
+    if (!unlocked) compareChatsHtml = `<section class="ex-card"><h3>${esc(tr('Comparar 2 chats'))} (${esc(tr('bloqueado'))})</h3><p>${esc(tr('Se desbloquea al compartir una tarjeta de racha en tus Stories mencionando a Golifiar. Este desbloqueo es de confianza: se activa al crear o compartir la tarjeta en este dispositivo.'))}</p><button type="button" class="btn-minimal" id="exStreakDl2">${esc(tr('Crear y compartir tarjeta de racha'))}</button></section>`;
     else {
       let tbl = '';
       if (state.compare) {
@@ -223,12 +223,12 @@
         const cols = X => { const sx = E().stats(X.m), stk = E().streaks(X.m), dd = E().deep(X.m); return { name: X.name, v: [sx.totalMessages, dd.words, sx.activeDays, stk.longest, stk.current, sx.participantCount, sx.messagesPerActiveDay] }; };
         const ca = cols(A), cb = cols(B), labels = ['Mensajes', 'Palabras', 'Días activos', 'Racha más larga', 'Racha actual', 'Participantes', 'Mensajes por día activo'];
         const winner = ca.v[6] >= cb.v[6] ? ca.name : cb.name;
-        tbl = `<div class="ex-table-wrap"><table class="ex-table"><thead><tr><th></th><th>${esc(ca.name)}</th><th>${esc(cb.name)}</th></tr></thead><tbody>${labels.map((l, i) => `<tr><td>${esc(tr(l))}</td><td>${num(Math.round(ca.v[i] * 10) / 10)}</td><td>${num(Math.round(cb.v[i] * 10) / 10)}</td></tr>`).join('')}</tbody></table></div><p class="ex-discovery">🏆 ${esc(tr('Conversación más activa'))}: <strong>${esc(winner)}</strong></p>`;
+        tbl = `<div class="ex-table-wrap"><table class="ex-table"><thead><tr><th></th><th>${esc(ca.name)}</th><th>${esc(cb.name)}</th></tr></thead><tbody>${labels.map((l, i) => `<tr><td>${esc(tr(l))}</td><td>${num(Math.round(ca.v[i] * 10) / 10)}</td><td>${num(Math.round(cb.v[i] * 10) / 10)}</td></tr>`).join('')}</tbody></table></div><p class="ex-discovery">${esc(tr('Conversación más activa'))}: <strong>${esc(winner)}</strong></p>`;
       }
       compareChatsHtml = `<section class="ex-card"><h3>${esc(tr('Comparar 2 chats'))}</h3><p>${esc(tr('Sube un segundo .txt solo para compararlo. No se guarda ni se mezcla con el primero.'))}</p><label class="btn-sub ex-file-btn">${esc(tr('Elegir segundo chat'))}<input type="file" id="exCompareFile" accept=".txt,text/plain" class="visually-hidden"></label>${tbl}</section>`;
     }
     const edit = state.edit;
-    const lockTxt = premiumOn ? '' : ' 🔒';
+    const lockTxt = premiumOn ? '' : ` (${tr('Premium')})`;
     const editorHtml = `<section class="ex-card"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Personaliza'))}</p><h3>${esc(tr('Editor de tarjeta en vivo'))}</h3></div></div><div class="ex-editor"><div class="ex-editor-controls"><label><input type="checkbox" id="edOn" ${edit.on ? 'checked' : ''}> ${esc(tr('Usar colores y tipografía propios'))}</label><label>${esc(tr('Fondo'))} 1<input type="color" id="edBg1" value="${edit.bg1}"></label><label>${esc(tr('Fondo'))} 2<input type="color" id="edBg2" value="${edit.bg2}"></label><label>${esc(tr('Acento'))}<input type="color" id="edAccent" value="${edit.accent}"></label><label>${esc(tr('Texto'))}<input type="color" id="edText" value="${edit.text}"></label><label>${esc(tr('Tipografía'))}<select id="edFont"><option value="sans">Sans</option><option value="serif">Serif</option><option value="mono">Mono</option></select></label><label>${esc(tr('Posición del contador'))}<input type="range" id="edNumY" min="760" max="1300" value="${edit.numY}"></label><label>${esc(tr('Foto 1 (solo en tu dispositivo)'))}<input type="file" id="edAv0" accept="image/*"></label><label>${esc(tr('Foto 2 (solo en tu dispositivo)'))}<input type="file" id="edAv1" accept="image/*"></label><label><input type="checkbox" id="exHd" ${state.hd && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Exportación HD (2160×3840)'))}${lockTxt}</label><label><input type="checkbox" id="exNoMark" ${state.noMark && premiumOn ? 'checked' : ''} ${premiumOn ? '' : 'disabled'}> ${esc(tr('Sin marca de agua'))}${lockTxt}</label></div><canvas id="exPreview" class="ex-preview" width="270" height="480" role="img" aria-label="${esc(tr('Vista previa de la tarjeta'))}"></canvas></div></section>`;
     const all = `
       <!--pane:resumen--><section class="ex-card ex-profile"><div class="ex-section-head"><div><p class="ex-kicker">${esc(tr('Perfil del grupo'))}</p><h3>${esc(chat.name)}</h3><p>${esc(tr('Resumen calculado a partir de las fechas y participantes de la exportación.'))}</p></div><button type="button" class="btn-sub" id="exExportCard">${esc(tr('Crear tarjeta PNG'))}</button></div><div class="ex-kpis">${kpi('Mensajes analizados',num(s.totalMessages))}${kpi('Participantes',num(s.participantCount))}${kpi('Días activos',num(s.activeDays))}${kpi('Hora punta',s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2,'0')}:00`)}</div><details class="ex-more" open><summary>${esc(tr('Más datos del chat'))}</summary><div class="ex-metrics">${metric('Racha actual',dias(st.current))}${metric('Racha más larga',dias(st.longest))}${metric('Conversaciones estimadas',num(s.sessionCount))}${metric('Quién inicia más',s.topInitiator ? `${s.topInitiator.name} · ${num(s.topInitiator.count)}` : '—')}${metric('Duración media',s.avgConversationDurationMs === null ? '—' : E().formatDuration(s.avgConversationDurationMs))}${metric('Mediana de respuesta',s.medianResponseMinutes === null ? '—' : E().formatDuration(s.medianResponseMinutes*60000))}${metric('Reacciones',num(s.totalReactions))}${metric('Contenido compartido',num(s.sharedContentMessages))}${metric('Respuestas a historias',s.storyReplies ? num(s.storyReplies) : '—',s.storyReplies ? '' : tr('Solo si el ZIP las identifica'))}</div></details><div class="ex-top-participants"><h4>${esc(tr('Participantes más activos'))}</h4><ul class="ex-bars">${s.participants.slice(0,6).map(p => `<li><span class="ex-bar-name">${esc(p.name)}</span><span class="ex-bar"><i style="width:${Math.max(3, Math.round(p.count / topCount * 100))}%"></i></span><strong>${num(p.count)}</strong></li>`).join('')}</ul></div><p class="ex-note">${s.firstMessage ? `${esc(fmtDate(s.firstMessage))} – ${esc(fmtDate(s.lastMessage))}` : ''} · ${esc(tr('El texto original no se muestra ni se guarda.'))}</p></section>
@@ -250,7 +250,7 @@
     if (!TABS.some(t => t[0] === state.tab)) state.tab = 'resumen';
     const tabsHtml = `<div class="category-tabs ex-tabs" role="tablist" aria-label="${esc(tr('Secciones de Experiencias'))}">${TABS.map(([k, l]) => `<button type="button" role="tab" class="cat-tab${k === state.tab ? ' active' : ''}" id="extab-${k}" data-extab="${k}" aria-controls="expane-${k}" aria-selected="${k === state.tab}" tabindex="${k === state.tab ? 0 : -1}">${esc(tr(l))}</button>`).join('')}</div>`;
     const panesHtml = TABS.map(([k]) => `<div role="tabpanel" class="ex-pane" id="expane-${k}" aria-labelledby="extab-${k}"${k === state.tab ? '' : ' hidden'}>${panes[k] || ''}</div>`).join('');
-    results.innerHTML = `<section class="ex-toolbar"><div class="ex-chat-picker"><label for="exChatSelect">${esc(tr('Conversación seleccionada'))}</label><select id="exChatSelect">${options}</select><span class="ex-platform">${esc(chat.platform)}</span></div><button type="button" class="btn-sub" id="exClear">${esc(tr('Borrar chats importados'))}</button></section>${rangeHtml}${tabsHtml}${panesHtml}`;
+    results.innerHTML = `<section class="ex-toolbar"><div class="ex-chat-picker"><label for="exChatSelect">${esc(tr('Conversación seleccionada'))}</label>${state.chats.length > 6 ? `<input type="search" id="exChatSearch" class="ex-chat-search" value="${esc(state.chatFilter)}" placeholder="${esc(tr('Buscar conversación'))}" aria-label="${esc(tr('Buscar conversación'))}" autocomplete="off">` : ''}<select id="exChatSelect">${options}</select><span class="ex-platform">${esc(chat.platform)}</span></div><button type="button" class="btn-sub" id="exClear">${esc(tr('Borrar chats importados'))}</button></section>${rangeHtml}${tabsHtml}${panesHtml}`;
     const ef = node('edFont'); if (ef) ef.value = state.edit.font;
     updatePreview();
     const rg = node('exRange'); if (rg) rg.value = state.range;
@@ -382,7 +382,7 @@
     const gy = dy + 65; glass(ctx, 110, gy, 860, 235, 56, 0.2);
     ctx.fillStyle = L.glass ? L.dark : L.text; ctx.font = `46px ${F}`;
     ctx.fillText(`${num(dp.words)} ${tr('palabras')} · ${num(dp.media.image)} ${tr('fotos enviadas')}`, 540, gy + 85);
-    const ph = E().stats(messages).peakHour, tt = `${tr('Hora más activa')}: ${ph === null ? '—' : String(ph).padStart(2, '0') + ':00'} ⏰`; ctx.font = `bold 42px ${F}`; const tw = Math.min(800, ctx.measureText(tt).width + 80);
+    const ph = E().stats(messages).peakHour, tt = `${tr('Hora más activa')}: ${ph === null ? '—' : String(ph).padStart(2, '0') + ':00'}`; ctx.font = `bold 42px ${F}`; const tw = Math.min(800, ctx.measureText(tt).width + 80);
     rr(ctx, 540 - tw / 2, gy + 120, tw, 80, 40); ctx.fillStyle = 'rgba(15,23,42,.85)'; ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(tt, 540, gy + 175);
     brand(ctx, S, 1775);
     return canvas;
@@ -392,7 +392,7 @@
     const messages = rangeMessages(chat), s = E().stats(messages), st = E().streaks(messages), dp = E().deep(messages);
     const S = cardStyle('summary'), L = S.L, F = S.F, { canvas, ctx } = baseCanvas(S);
     frame(ctx, S, 'summary');
-    ctx.fillStyle = L.text; ctx.font = `bold 40px ${F}`; ctx.fillText(`GOLIFIAR · CHAT WRAPPED 🎉`, 540, 175);
+    ctx.fillStyle = L.text; ctx.font = `bold 40px ${F}`; ctx.fillText(`GOLIFIAR · CHAT WRAPPED`, 540, 175);
     ctx.font = `bold 96px ${F}`; ctx.fillText(truncate(ctx, state.anon ? tr('Mi chat') : chat.name, 880, 96), 540, 310);
     const ppl = peopleFor(dp); while (ppl.length < 2) ppl.push({ name: tr('Persona {n}', { n: ppl.length + 1 }), share: 0 });
     avatar(ctx, S, 540 - 75, 480, 105, ppl[0], 0); avatar(ctx, S, 540 + 75, 480, 105, ppl[1], 1);
@@ -410,11 +410,11 @@
     ctx.fillStyle = L.text; ctx.font = `bold 44px ${F}`; ctx.fillText(`${pa}% ${handle(a.name)} · ${pb}% ${handle(b.name)}`, 540, 1190);
     pill(X, 1250, half, 160); pill(X + half + 20, 1250, half, 160);
     const topDay = Object.entries(s.days).sort((x, y) => y[1] - x[1])[0];
-    ctx.font = `40px ${F}`; ctx.fillText(tr('Hora punta'), X + half / 2, 1310); ctx.font = `bold 54px ${F}`; ctx.fillText(s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00 ⏰`, X + half / 2, 1378);
+    ctx.font = `40px ${F}`; ctx.fillText(tr('Hora punta'), X + half / 2, 1310); ctx.font = `bold 54px ${F}`; ctx.fillText(s.peakHour === null ? '—' : `${String(s.peakHour).padStart(2, '0')}:00`, X + half / 2, 1378);
     ctx.font = `40px ${F}`; ctx.fillText(tr('Día récord'), X + half + 20 + half / 2, 1310); ctx.font = `bold 46px ${F}`;
     const dl = topDay ? new Date(topDay[0] + 'T12:00:00').toLocaleDateString(root.I18n ? I18n.locale : undefined, { day: 'numeric', month: 'short' }).replace('.', '') : '—';
-    ctx.fillText(`${dl} 🏆`, X + half + 20 + half / 2, 1363); ctx.font = `34px ${F}`; ctx.fillText(topDay ? `(${num(topDay[1])} msgs)` : '', X + half + 20 + half / 2, 1400);
-    pill(X, 1430, W, 110); ctx.font = `44px ${F}`; ctx.fillText(`${tr('Racha más larga')}: ${num(st.longest)} ${tr('días')} 📈`, 540, 1500);
+    ctx.fillText(`${dl}`, X + half + 20 + half / 2, 1363); ctx.font = `34px ${F}`; ctx.fillText(topDay ? `(${num(topDay[1])} msgs)` : '', X + half + 20 + half / 2, 1400);
+    pill(X, 1430, W, 110); ctx.font = `44px ${F}`; ctx.fillText(`${tr('Racha más larga')}: ${num(st.longest)} ${tr('días')}`, 540, 1500);
     ctx.fillStyle = L.sub; ctx.font = `34px ${F}`; ctx.fillText(tr('Generado localmente por Golifiar'), 540, 1790);
     return canvas;
   }
@@ -451,6 +451,12 @@
       mountChats(chats, id);
     } catch (err) { box.innerHTML = `<p class="ex-status error" role="alert">${esc(err.message || tr('No se pudo importar el ZIP.'))}</p>`; }
   }
+  // Lista de conversaciones filtrable por texto (sin acentos ni mayúsculas); la elegida siempre se mantiene visible.
+  function chatOptions() {
+    const q = String(state.chatFilter || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    const rows = state.chats.map((c, i) => ({ c, i })).filter(({ c, i }) => i === state.selected || !q || c.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q));
+    return rows.map(({ c, i }) => `<option value="${i}" ${i === state.selected ? 'selected' : ''}>${esc(c.name)} (${num(c.messages.length)})</option>`).join('');
+  }
   function updatePreview() {
     const cv = node('exPreview'); if (!cv || !selectedChat()) return;
     const big = streakCanvas(); if (!big) return; const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(big, 0, 0, cv.width, cv.height);
@@ -479,19 +485,19 @@
     let o;
     if (kind.startsWith('diploma:')) {
       const w = who.find(x => x.key === kind.slice(8)); if (!w) return;
-      o = { kicker: tr('DIPLOMA OFICIAL'), big: '🎓', lines: [tr('Se otorga a'), nm(w.name, 0), tr(E().DIPLOMAS[w.key]), `${tr(w.title)} · ${w.value}`, `✍️ ${tr('Firmado digitalmente: Golifiar')}`, tr('(Documento satírico sin validez)')], bigSize: 220 };
+      o = { kicker: tr('DIPLOMA OFICIAL'), big: tr('DIPLOMA'), lines: [tr('Se otorga a'), nm(w.name, 0), tr(E().DIPLOMAS[w.key]), `${tr(w.title)} · ${w.value}`, `${tr('Firmado digitalmente: Golifiar')}`, tr('(Documento satírico sin validez)')], bigSize: 220 };
     } else if (kind === 'adn') {
       if (!state.topicsEnabled) return showModal(tr('Activa el análisis de palabras para crear esta tarjeta.'));
-      const d = E().emojiDna(messages, true); o = { kicker: tr('ADN DE LA CONVERSACIÓN'), big: d.emojis.map(e => e.emoji).join(' ') || '💬', lines: [`${tr('Palabra mágica')}: ${d.magicWord || '—'}`], bigSize: 190 };
+      const d = E().emojiDna(messages, true); o = { kicker: tr('ADN DE LA CONVERSACIÓN'), big: d.emojis.map(e => e.emoji).join(' ') || '—', lines: [`${tr('Palabra mágica')}: ${d.magicWord || '—'}`], bigSize: 190 };
     } else if (kind === 'vs') {
       const a = dp.members.find(m => m.name === state.chemistryA) || dp.members[0], b = dp.members.find(m => m.name === state.chemistryB && m !== a) || dp.members[1]; if (!a || !b) return showModal(tr('Datos insuficientes'));
-      o = { kicker: tr('DUELO DE CHAT'), big: `${num(a.messages)} ⚔️ ${num(b.messages)}`, lines: [nm(a.name, 0) + ' vs ' + nm(b.name, 1), `${Math.round(a.share)}% – ${Math.round(b.share)}%`], bigSize: 130 };
+      o = { kicker: tr('DUELO DE CHAT'), big: `${num(a.messages)} vs ${num(b.messages)}`, lines: [nm(a.name, 0) + ' vs ' + nm(b.name, 1), `${Math.round(a.share)}% – ${Math.round(b.share)}%`], bigSize: 130 };
     } else if (kind === 'turno') {
       o = { kicker: tr('TU TURNO'), big: `🔥 ${st.current || st.longest}`, lines: [tr('Mi racha de días hablando'), tr('¿Y la tuya? Súbela con Golifiar')] };
     } else if (kind === 'adivina') {
-      o = { kicker: tr('ADIVINA EL RESULTADO'), big: '🤔', lines: [tr('¿Cuántos mensajes crees que llevamos?'), tr('A) menos de 1.000   B) 1.000–10.000'), tr('C) más de 10.000')], bigSize: 220 };
+      o = { kicker: tr('ADIVINA EL RESULTADO'), big: '?', lines: [tr('¿Cuántos mensajes crees que llevamos?'), tr('A) menos de 1.000   B) 1.000–10.000'), tr('C) más de 10.000')], bigSize: 220 };
     } else if (kind === 'peligro') {
-      o = { kicker: tr('PELIGRO DE RACHA'), big: `⚠️ ${st.current || st.longest}`, lines: [tr('Tu racha de {n} días vence hoy a las 23:59', { n: num(st.current || st.longest) })] };
+      o = { kicker: tr('PELIGRO DE RACHA'), big: `${st.current || st.longest}`, lines: [tr('Tu racha de {n} días vence hoy a las 23:59', { n: num(st.current || st.longest) })] };
     } else return;
     const c = simpleCard(o);
     c.toBlob(blob => { if (!blob) return showStatus(tr('No se pudo generar la tarjeta.'), true); saveBlob(blob, `golifiar-${kind.replace(':', '-')}.png`); }, 'image/png');
@@ -563,6 +569,7 @@
     if (e.target.id === 'exChemB') { state.chemistryB = e.target.value; render(); }
   });
   document.addEventListener('input', e => {
+    if (e.target.id === 'exChatSearch') { state.chatFilter = e.target.value; const sel = node('exChatSelect'); if (sel) { sel.innerHTML = chatOptions(); const rows = sel.options.length; sel.size = 1; const hint = node('exChatCount'); if (hint) hint.textContent = ''; } return; }
     const m = { edBg1: 'bg1', edBg2: 'bg2', edAccent: 'accent', edText: 'text', edFont: 'font', edNumY: 'numY' }[e.target.id]; if (!m) return;
     state.edit[m] = m === 'numY' ? Number(e.target.value) : e.target.value; state.edit.on = true; const on = node('edOn'); if (on) on.checked = true; updatePreview();
   });
