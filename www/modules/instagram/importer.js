@@ -178,7 +178,9 @@
                     const antes = zipFollowingArray.length;
                     zipFollowingArray = zipFollowingArray.filter(o => {
                         const t = dejadoTs.get(o.username);
-                        return !(t !== undefined && t >= (o.timestamp || 0));
+                        // Solo se descarta si hay fecha de seguimiento y el «dejar de seguir» es estrictamente posterior;
+                        // sin fecha o con fechas iguales se conserva: es mejor no descartar a quien sí sigues.
+                        return !(t && o.timestamp && t > o.timestamp);
                     });
                     quitadas = antes - zipFollowingArray.length;
                 }

@@ -28,6 +28,11 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   assert.strictEqual(await pg.locator('#valFollowing').innerText(), '28', 'seguidos');
   assert.strictEqual(await pg.locator('#profileTabs.hidden').count(), 0, 'las pestañas del perfil deben verse');
 
+  // 2b) Regresión: sin fecha o con fecha igual NO se descarta a quien sí sigues
+  await pg.setInputFiles('#zipFileInput', fx('dejados-igual-fecha.zip'));
+  await pg.waitForTimeout(1500);
+  assert.deepStrictEqual(await pg.evaluate(() => zipFollowingArray.map(u => u.username).sort()), ['igual', 'sinfecha'], 'solo se descarta si el unfollow es posterior');
+
   // 2) Cuentas dejadas de seguir no cuentan como seguidas; solo se enlaza si el nombre es único
   await pg.setInputFiles('#zipFileInput', fx('dejados-y-mensajes.zip'));
   await pg.waitForTimeout(1500);

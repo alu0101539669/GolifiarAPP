@@ -34,3 +34,7 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 - Aparcados cerrados: interruptor «Sonidos y vibración» (golifiar-sonido), Premium bloquea de verdad el detector de dramas y el buscador de primeras veces, Instagram cuenta cada foto/audio/sticker de un mensaje. Siguen pendientes: pago real, prueba en móvil real, música del Wrapped, lectores reales de TikTok/Spotify.
 - Auditoría contra especificaciones: «inicia conversaciones» = primer mensaje del día, compatibilidad temática por categorías, ranking «quien mejor encaja» + alma gemela, buscador de frases (Premium), diploma con firma, racha con días reales, fecha ambigua según idioma del sistema.
 - Nombres de Instagram legibles (UTF-8 leído como Latin-1, también emojis cortados), buscador de conversaciones (>6 chats), emojis decorativos fuera de la interfaz y de las tarjetas (solo queda la llama de la racha).
+
+## 2026-11-08 · Comparación seguidores/seguidos
+- Hecho: el filtro de «dejados de seguir» solo descarta una cuenta si ambas fechas existen y el unfollow es estrictamente posterior (antes `>=`, y sin fecha = descartada). Test de regresión en smoke.js. SW v37.
+- Pendiente: confirmar con el ZIP real del usuario.
