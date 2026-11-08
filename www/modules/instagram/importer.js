@@ -105,7 +105,7 @@
                 zipFollowersArray = [];
                 zipFollowingArray = [];
                 zipPerfil = window.Perfil ? window.Perfil.nuevo() : null;
-                let nJson = 0, nHtml = 0;
+                let nJson = 0, nHtml = 0, fallosLista = 0;
                 const listasPorZip = [];
 
                 for (let i = 0; i < files.length; i++) {
@@ -150,6 +150,7 @@
                             }
                         } catch (e) {
                             console.error('Error procesando fichero:', relativePath, e);
+                            if (/^(followers(_\d+)?|following)\.(json|html?)$/.test(fileName)) fallosLista++;
                         }
                         hechos++;
                         progressFill.style.width = `${10 + Math.floor(((i + hechos / (entries.length || 1)) / files.length) * 85)}%`;
@@ -162,12 +163,18 @@
                 // mezclar exports antiguos resucita cuentas que ya no sigues o que ya no te siguen.
                 const fechaLista = l => { let m = 0; for (const u of l.seg) if ((u.timestamp || 0) > m) m = u.timestamp; for (const u of l.sig) if ((u.timestamp || 0) > m) m = u.timestamp; return m; };
                 const conListas = listasPorZip.filter(l => l.seg.length || l.sig.length);
-                let avisoListas = '';
+                let avisoListas = '', avisoRelleno = '';
                 let elegida = conListas[0];
                 conListas.forEach(l => { if (fechaLista(l) > fechaLista(elegida)) elegida = l; });
                 if (elegida) {
-                    zipFollowersArray = unirUsuarios(elegida.seg);
-                    zipFollowingArray = unirUsuarios(elegida.sig);
+                    let segFuente = elegida.seg, sigFuente = elegida.sig;
+                    // Si el ZIP elegido solo trae una de las dos listas (p. ej. exportaciones partidas), la que falta
+                    // se toma del ZIP más reciente que la tenga; si no, todos saldrían como «no te sigue» o «fans».
+                    const masReciente = campo => conListas.filter(l => l[campo].length).reduce((a, l) => (!a || fechaLista(l) > fechaLista(a)) ? l : a, null);
+                    if (!segFuente.length && masReciente('seg')) { segFuente = masReciente('seg').seg; avisoRelleno = t('Los seguidores se tomaron de «{nombre}».', { nombre: masReciente('seg').nombre }); }
+                    if (!sigFuente.length && masReciente('sig')) { sigFuente = masReciente('sig').sig; avisoRelleno = t('Los seguidos se tomaron de «{nombre}».', { nombre: masReciente('sig').nombre }); }
+                    zipFollowersArray = unirUsuarios(segFuente);
+                    zipFollowingArray = unirUsuarios(sigFuente);
                     if (conListas.length > 1) avisoListas = t('Había {n} ZIP con listas; se usó «{nombre}» (el más reciente) para seguidores y seguidos.', { n: conListas.length, nombre: elegida.nombre });
                 }
                 // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
@@ -184,7 +191,7 @@
                     });
                     quitadas = antes - zipFollowingArray.length;
                 }
-                zipAviso = [avisoListas, quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
+                zipAviso = [avisoListas, avisoRelleno, fallosLista ? t('{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.', { n: fallosLista }) : '', (zipFollowersArray.length && !zipFollowingArray.length) || (!zipFollowersArray.length && zipFollowingArray.length) ? t('Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.') : '', quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
 
                 setTimeout(() => {
                     progressContainer.classList.remove('active');

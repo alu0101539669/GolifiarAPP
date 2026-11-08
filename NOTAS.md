@@ -38,3 +38,4 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 ## 2026-11-08 · Comparación seguidores/seguidos
 - Hecho: el filtro de «dejados de seguir» solo descarta una cuenta si ambas fechas existen y el unfollow es estrictamente posterior (antes `>=`, y sin fecha = descartada). Test de regresión en smoke.js. SW v37.
 - Pendiente: confirmar con el ZIP real del usuario.
+- 2026-11-08 (2): ZIP partido: si el ZIP elegido no trae una de las listas se toma del más reciente que la tenga; avisos si falla la lectura o falta una lista. Test en smoke.js. SW v38.

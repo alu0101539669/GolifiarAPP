@@ -33,6 +33,13 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   await pg.waitForTimeout(1500);
   assert.deepStrictEqual(await pg.evaluate(() => zipFollowingArray.map(u => u.username).sort()), ['igual', 'sinfecha'], 'solo se descarta si el unfollow es posterior');
 
+  // 2c) Regresión: ZIP partido (seguidores en uno, seguidos en otro) -> comparación completa
+  await pg.setInputFiles('#zipFileInput', [fx('partido-seguidores.zip'), fx('partido-seguidos.zip')]);
+  await pg.waitForTimeout(1500);
+  await pg.evaluate(() => ejecutarAnalisis());
+  await pg.waitForTimeout(1500);
+  assert.deepStrictEqual(await pg.evaluate(() => [usuariosMutuosGlobal.length, usuariosSinRetornoGlobal.length, usuariosFansGlobal.length]), [2, 1, 1], 'ZIP partido: 2 mutuos, 1 no te sigue, 1 fan');
+
   // 2) Cuentas dejadas de seguir no cuentan como seguidas; solo se enlaza si el nombre es único
   await pg.setInputFiles('#zipFileInput', fx('dejados-y-mensajes.zip'));
   await pg.waitForTimeout(1500);
