@@ -179,17 +179,6 @@
                     zipFollowingArray = unirUsuarios(sigFuente);
                     if (conListas.length > 1) avisoListas = t('Había {n} ZIP con listas; se usó «{nombre}» (el más reciente) para seguidores y seguidos.', { n: conListas.length, nombre: elegida.nombre });
                 }
-                // ¿El export cubre solo una parte del historial? Entonces «seguidores» puede estar recortado y
-                // quien ya te seguía antes aparecería como «no te sigue».
-                zipRangoAviso = '';
-                if (elegida && zipFollowersArray.length && zipFollowingArray.length) {
-                    const min = a => a.reduce((m, u) => (u.timestamp > 0 && (!m || u.timestamp < m)) ? u.timestamp : m, 0);
-                    const segMin = min(zipFollowersArray), sigMin = min(zipFollowingArray), r = elegida.rango, AÑO = 365 * 86400;
-                    const porRango = r && (r.hasta - r.desde) < 2 * AÑO;
-                    const porDatos = segMin && sigMin && sigMin < segMin - AÑO;
-                    if (porRango) zipRangoAviso = t('Tu descarga solo incluye datos desde el {desde} hasta el {hasta}. Los seguidores anteriores a esa fecha no aparecen, así que muchas cuentas que sí te siguen saldrán como «no te siguen». Vuelve a pedir la descarga eligiendo «Desde el principio».', { desde: I18n.fecha(r.desde), hasta: I18n.fecha(r.hasta) });
-                    else if (porDatos) zipRangoAviso = t('Tus seguidos llegan hasta el {sig}, pero tu lista de seguidores empieza el {seg}: es probable que la descarga esté recortada y falten seguidores. Vuelve a pedirla eligiendo «Desde el principio».', { sig: I18n.fecha(sigMin), seg: I18n.fecha(segMin) });
-                }
                 // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
                 let quitadas = 0;
                 if (zipPerfil && zipPerfil.rel.dejados.length && zipFollowingArray.length) {
@@ -203,6 +192,28 @@
                         return !(t && o.timestamp && t > o.timestamp);
                     });
                     quitadas = antes - zipFollowingArray.length;
+                }
+                // ¿Pediste solo un periodo (último mes, año...)? «Seguidores» solo trae ese periodo: quien ya te seguía antes
+                // no aparece. Se avisa y se analiza solo lo comprobable: los seguidos anteriores al periodo se apartan.
+                zipRangoAviso = ''; zipRangoDesde = 0; zipSinVerificar = new Set();
+                if (elegida && zipFollowersArray.length && zipFollowingArray.length) {
+                    const min = arr => arr.reduce((m, u) => (u.timestamp > 0 && (!m || u.timestamp < m)) ? u.timestamp : m, 0);
+                    const segMin = min(zipFollowersArray), sigMin = min(zipFollowingArray), r = elegida.rango, DIA = 86400;
+                    const porRango = r && (r.hasta - r.desde) < 2 * 365 * DIA;
+                    const porDatos = !porRango && segMin && sigMin && sigMin < segMin - 365 * DIA;
+                    const desde = porRango ? r.desde : (porDatos ? segMin : 0);
+                    if (desde) {
+                        zipRangoDesde = desde;
+                        const segSet = new Set(zipFollowersArray.map(u => u.username));
+                        zipFollowingArray.forEach(u => { if (u.timestamp > 0 && u.timestamp < desde && !segSet.has(u.username)) zipSinVerificar.add(u.username); });
+                        const dias = porRango ? Math.round((r.hasta - r.desde) / DIA) : 0;
+                        const periodo = !porRango ? '' : dias <= 35 ? t('el último mes') : dias <= 100 ? t('los últimos 3 meses') : dias <= 190 ? t('los últimos 6 meses') : dias <= 380 ? t('el último año') : t('un periodo limitado');
+                        zipRangoAviso = (porRango
+                            ? t('Has solicitado tus datos de {periodo} (del {desde} al {hasta}).', { periodo, desde: I18n.fecha(r.desde), hasta: I18n.fecha(r.hasta) })
+                            : t('Tu lista de seguidores empieza el {seg}, mientras que tus seguidos llegan hasta el {sig}: parece que pediste solo un periodo.', { seg: I18n.fecha(segMin), sig: I18n.fecha(sigMin) }))
+                            + ' ' + t('Para tener la cuenta completa, pídela de nuevo eligiendo «Desde el principio» (todo el tiempo).')
+                            + ' ' + t('Mientras tanto se analiza solo ese periodo: {n} cuenta(s) que sigues desde antes del {desde} no se pueden comprobar y no cuentan como «no te siguen».', { n: zipSinVerificar.size, desde: I18n.fecha(desde) });
+                    }
                 }
                 zipAviso = [zipRangoAviso, avisoListas, avisoRelleno, fallosLista ? t('{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.', { n: fallosLista }) : '', (zipFollowersArray.length && !zipFollowingArray.length) || (!zipFollowersArray.length && zipFollowingArray.length) ? t('Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.') : '', quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
 
@@ -521,14 +532,15 @@
 
                 const buildObj = (arr, map) => arr.map(u => ({ username: u, timestamp: map.get(u) || 0 }));
 
-                usuariosSinRetornoGlobal = buildObj(followingArray.filter(user => !followersSet.has(user)), followingMap);
+                const apartar = usarModoZip ? zipSinVerificar : new Set();
+                usuariosSinRetornoGlobal = buildObj(followingArray.filter(user => !followersSet.has(user) && !apartar.has(user)), followingMap);
                 usuariosFansGlobal = buildObj(followersArray.filter(user => !followingSet.has(user)), followersMap);
                 usuariosMutuosGlobal = buildObj(followingArray.filter(user => followersSet.has(user)), followingMap);
 
                 let reciprocityRate = 100;
-                if (followingArray.length > 0) {
-                    const mutualsCount = usuariosMutuosGlobal.length;
-                    reciprocityRate = Math.round((mutualsCount / followingArray.length) * 100);
+                const comprobables = followingArray.length - apartar.size;
+                if (comprobables > 0) {
+                    reciprocityRate = Math.round((usuariosMutuosGlobal.length / comprobables) * 100);
                 }
 
                 document.getElementById('countNoTeSiguen').innerText = usuariosSinRetornoGlobal.length;

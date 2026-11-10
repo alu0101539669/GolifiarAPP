@@ -40,3 +40,4 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 - Pendiente: confirmar con el ZIP real del usuario.
 - 2026-11-08 (2): ZIP partido: si el ZIP elegido no trae una de las listas se toma del más reciente que la tenga; avisos si falla la lectura o falta una lista. Test en smoke.js. SW v38.
 - 2026-11-10: Causa real del fallo con los ZIP de prueba (HTML): el export traía seguidores solo de los últimos 12 meses (cabecera «desde 8 nov 2025») mientras seguidos llegaba a 2015 -> avisamos (#rangoAviso). Además: HTML en tablas (dejados, solicitudes, mejores amigos) no se leía (sin enlaces) y las fechas pegadas daban timestamp 0. SW v39.
+- 2026-11-10 (2): con un periodo pedido (mes/año) se avisa del periodo y se analiza solo lo comprobable: seguidos anteriores al periodo y que no están en seguidores se apartan de «no te siguen» y de la reciprocidad. SW v40.

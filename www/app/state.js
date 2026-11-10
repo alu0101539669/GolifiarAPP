@@ -9,6 +9,8 @@
         let zipFollowingArray = [];
         let zipAviso = '';
         let zipRangoAviso = '';
+        let zipRangoDesde = 0;
+        let zipSinVerificar = new Set();
         let zipPerfil = null;
 
         function ajustarAltoCabecera() {
