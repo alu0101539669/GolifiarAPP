@@ -444,10 +444,13 @@
   }
 
   function contexto(d, seg, sig) {
+    // Cuentas que sigues desde antes del periodo descargado: no se puede saber si te siguen, así que se apartan.
+    const apartadas = (typeof usarModoZip !== 'undefined' && usarModoZip && typeof zipSinVerificar !== 'undefined') ? zipSinVerificar : new Set();
     const seguidores = new Set((seg || []).map(o => o.username));
-    const seguidos = new Set((sig || []).map(o => o.username));
+    const sigObjs = (sig || []).filter(o => !apartadas.has(o.username));
+    const seguidos = new Set(sigObjs.map(o => o.username));
     return {
-      seguidores, seguidos, seguidoresObjs: seg || [], seguidosObjs: sig || [],
+      seguidores, seguidos, seguidoresObjs: seg || [], seguidosObjs: sigObjs, sinVerificar: apartadas,
       hayRel: seguidores.size > 0 || seguidos.size > 0,
       yo: resolverYo(d),
       yoUser: (d.perfil && d.perfil.usuario || '').toLowerCase(),
@@ -496,7 +499,7 @@
       barrasH(ranking.slice(0, 15).map(fila), 'puntos'));
 
     if (c.hayRel && c.seguidores.size) {
-      const sinRetorno = ranking.filter(r => !c.seguidores.has(r.u));
+      const sinRetorno = ranking.filter(r => !c.seguidores.has(r.u) && !c.sinVerificar.has(r.u));
       html += tarjeta(ya(tr('Interactúas con {n} cuentas que no te siguen', { n: num(sinRetorno.length) })),
         'Las que más atención recibes de ti sin seguirte de vuelta.',
         barrasH(sinRetorno.slice(0, 8).map(fila), 'puntos'));
