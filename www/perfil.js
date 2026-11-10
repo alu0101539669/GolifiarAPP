@@ -445,7 +445,7 @@
 
   function contexto(d, seg, sig) {
     // Cuentas que sigues desde antes del periodo descargado: no se puede saber si te siguen, así que se apartan.
-    const apartadas = (typeof usarModoZip !== 'undefined' && usarModoZip && typeof zipSinVerificar !== 'undefined') ? zipSinVerificar : new Set();
+    const apartadas = (typeof zipSinVerificar !== 'undefined') ? zipSinVerificar : new Set();
     const seguidores = new Set((seg || []).map(o => o.username));
     const sigObjs = (sig || []).filter(o => !apartadas.has(o.username));
     const seguidos = new Set(sigObjs.map(o => o.username));
@@ -834,7 +834,7 @@
     let mutuos = 0, sinRet = 0, fans = 0;
     c.seguidos.forEach(u => { if (c.seguidores.has(u)) mutuos++; else sinRet++; });
     c.seguidores.forEach(u => { if (!c.seguidos.has(u)) fans++; });
-    if (nSeg) comp.push({ clave: 'Reciprocidad', label: tr('Reciprocidad'), valor: Math.round(mutuos / nSeg * 100), detalle: tr('{m} de las {n} cuentas que sigues te siguen.', { m: num(mutuos), n: num(nSeg) }) });
+    if (nSeg) comp.push({ clave: 'Reciprocidad', label: tr('Reciprocidad'), valor: Math.round(mutuos / nSeg * 100), detalle: c.sinVerificar && c.sinVerificar.size ? tr('{m} de las {n} cuentas comprobables que sigues te siguen.', { m: num(mutuos), n: num(nSeg) }) : tr('{m} de las {n} cuentas que sigues te siguen.', { m: num(mutuos), n: num(nSeg) }) });
     const ri = c.res.interacciones;
     if (ri && nSeg && ri.seguidosSinInteraccion != null) comp.push({ clave: 'Interacción real', label: tr('Interacción real'), valor: Math.round((1 - ri.seguidosSinInteraccion / nSeg) * 100), detalle: tr('Interactúas con {m} de las {n} cuentas que sigues.', { m: num(nSeg - ri.seguidosSinInteraccion), n: num(nSeg) }) });
     const rm = c.res.mensajes;
@@ -890,12 +890,16 @@
   const escribirSnaps = a => { try { localStorage.setItem(CLAVE_SNAP, JSON.stringify(a)); return true; } catch (e) { return false; } };
   const aviso = k => { if (typeof global.mostrarToast === 'function') global.mostrarToast(tr(k)); };
 
+  // Una descarga de un periodo solo trae los seguidores de ese periodo: restar listas daría «bajas» y «altas» falsas.
+  const periodoActual = () => (typeof zipRangoDesde !== 'undefined' && zipRangoDesde > 0);
+
   function comparar(prev, etiqueta) {
     const cs = new Set(ESTADO.seg.map(o => o.username)), cg = new Set(ESTADO.sig.map(o => o.username));
     const ps = new Set(prev.seg), pg = new Set(prev.sig);
     const dif = (a, b) => [...a].filter(x => !b.has(x)).sort();
     const r = { perdidos: dif(ps, cs), nuevos: dif(cs, ps), dejaste: dif(pg, cg), empezaste: dif(cg, pg) };
-    ESTADO.cmp = { etiqueta, r };
+    const limAct = periodoActual(), limPrev = !!prev.limitado;
+    ESTADO.cmp = { etiqueta, r, limAct, limPrev };
     ESTADO.cmpHtml = renderResultadoCmp();
     renderComparar();
     aviso('Comparación lista.');
@@ -903,13 +907,18 @@
 
   function renderResultadoCmp() {
     if (!ESTADO.cmp) return '';
-    const { etiqueta, r } = ESTADO.cmp;
+    const { etiqueta, r, limAct, limPrev } = ESTADO.cmp;
+    // Si una de las dos descargas es de un periodo, lo que dependa de su lista de seguidores no es fiable.
+    if (limAct) { r.perdidos = []; }
+    if (limPrev) { r.nuevos = []; }
     const lst = (k, arr, txt) => desplegable(ya(`${tr(k)} (${num(arr.length)})`), arr.slice(0, 500).map(u => filaUsuario(u, txt ? tr(txt) : txt)), 'Ninguno.');
     return tarjeta(ya(tr('Cambios desde «{e}»', { e: etiqueta })), 'Comparado con el análisis que tienes abierto.',
       metricas([['Dejaron de seguirte', num(r.perdidos.length), r.perdidos.length ? 'highlight' : ''], ['Nuevos seguidores', num(r.nuevos.length), 'green'],
         ['Dejaste de seguir', num(r.dejaste.length)], ['Empezaste a seguir', num(r.empezaste.length)]]) +
       lst('Dejaron de seguirte', r.perdidos, 'ya no te sigue') + lst('Nuevos seguidores', r.nuevos, 'te sigue') +
       lst('Dejaste de seguir', r.dejaste) + lst('Empezaste a seguir', r.empezaste) +
+      (limAct ? nota('La descarga abierta incluye solo un periodo, así que no se puede calcular «Dejaron de seguirte». Pídela completa («Desde el principio») para comparar.') : '') +
+      (limPrev ? nota('La descarga anterior incluye solo un periodo, así que no se puede calcular «Nuevos seguidores». Pídela completa («Desde el principio») para comparar.') : '') +
       nota('Quien «deja de seguirte» puede haber borrado o desactivado su cuenta, no solo haberte dejado de seguir.'));
   }
 
@@ -932,7 +941,7 @@
   function guardarSnap() {
     if (!ESTADO.seg.length && !ESTADO.sig.length) { aviso('No hay seguidores ni seguidos que guardar.'); return; }
     const snaps = leerSnaps();
-    snaps.unshift({ id: Date.now(), date: new Date().toISOString(), seg: ESTADO.seg.map(o => o.username), sig: ESTADO.sig.map(o => o.username) });
+    snaps.unshift({ id: Date.now(), date: new Date().toISOString(), limitado: periodoActual(), seg: ESTADO.seg.map(o => o.username), sig: ESTADO.sig.map(o => o.username) });
     if (!escribirSnaps(snaps.slice(0, 6))) { aviso('No se pudo guardar: el almacenamiento de este dispositivo está lleno o bloqueado.'); return; }
     renderComparar();
     aviso('Descarga guardada solo en este dispositivo.');
@@ -949,17 +958,17 @@
     try {
       if (typeof global.abrirZip !== 'function' || typeof global.extraerUsuarios !== 'function' || typeof global.extraerUsuariosHtml !== 'function') throw new Error('Falta el lector de ZIP');
       const zip = await global.abrirZip(file);
-      let seg = [], sig = [];
+      let seg = [], sig = [], rango = null;
       for (const ent of zip.entradas) {
         const base = ent.ruta.toLowerCase().split('/').pop();
         if (/^followers(_\d+)?\.json$/.test(base)) seg = seg.concat(global.extraerUsuarios(JSON.parse(await ent.texto())));
         else if (base === 'following.json') sig = global.extraerUsuarios(JSON.parse(await ent.texto()));
-        else if (/^followers(_\d+)?\.html?$/.test(base)) seg = seg.concat(global.extraerUsuariosHtml(await ent.texto()));
+        else if (/^followers(_\d+)?\.html?$/.test(base)) { const h = await ent.texto(); seg = seg.concat(global.extraerUsuariosHtml(h)); rango = rango || (typeof global.rangoHtml === 'function' ? global.rangoHtml(h) : null); }
         else if (/^following\.html?$/.test(base)) sig = global.extraerUsuariosHtml(await ent.texto());
       }
       await zip.cerrar();
       if (!seg.length && !sig.length) { aviso('Ese ZIP no contiene seguidores ni seguidos (JSON o HTML).'); return; }
-      comparar({ seg: seg.map(o => o.username), sig: sig.map(o => o.username) }, file.name.replace(/\.zip$/i, ''));
+      comparar({ seg: seg.map(o => o.username), sig: sig.map(o => o.username), limitado: !!(typeof global.detectarPeriodo === 'function' && global.detectarPeriodo(seg, sig, rango)) }, file.name.replace(/\.zip$/i, ''));
     } catch (e) {
       console.error('Perfil: comparar ZIP', e);
       aviso('No se pudo leer ese ZIP. Comprueba que sea una descarga completa de Instagram.');

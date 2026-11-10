@@ -16,6 +16,8 @@ I18n.registrar('en', {
   "Los seguidos se tomaron de «{nombre}».": "Following was taken from “{nombre}”.",
   "{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.": "{n} followers/following file(s) could not be read, so data is missing.",
   "Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.": "Only one of the two lists (followers or following) was found: the comparison will not be reliable.",
+  "No se pudo copiar. Selecciona la lista y cópiala a mano.": "Could not copy. Select the list and copy it manually.",
+  "No se pudo guardar en este dispositivo.": "Could not save on this device.",
   "Posible cambio de nombre: @{nuevo}": "Possible username change: @{nuevo}",
   "Pista a partir de tus listas, sin comprobar en Instagram: abre el perfil para confirmarlo.": "A hint from your lists, not checked on Instagram: open the profile to confirm.",
   "el último mes": "the last month",

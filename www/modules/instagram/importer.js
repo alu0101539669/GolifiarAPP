@@ -193,28 +193,8 @@
                     });
                     quitadas = antes - zipFollowingArray.length;
                 }
-                // ¿Pediste solo un periodo (último mes, año...)? «Seguidores» solo trae ese periodo: quien ya te seguía antes
-                // no aparece. Se avisa y se analiza solo lo comprobable: los seguidos anteriores al periodo se apartan.
-                zipRangoAviso = ''; zipRangoDesde = 0; zipSinVerificar = new Set();
-                if (elegida && zipFollowersArray.length && zipFollowingArray.length) {
-                    const min = arr => arr.reduce((m, u) => (u.timestamp > 0 && (!m || u.timestamp < m)) ? u.timestamp : m, 0);
-                    const segMin = min(zipFollowersArray), sigMin = min(zipFollowingArray), r = elegida.rango, DIA = 86400;
-                    const porRango = r && (r.hasta - r.desde) < 2 * 365 * DIA;
-                    const porDatos = !porRango && segMin && sigMin && sigMin < segMin - 365 * DIA;
-                    const desde = porRango ? r.desde : (porDatos ? segMin : 0);
-                    if (desde) {
-                        zipRangoDesde = desde;
-                        const segSet = new Set(zipFollowersArray.map(u => u.username));
-                        zipFollowingArray.forEach(u => { if (u.timestamp > 0 && u.timestamp < desde && !segSet.has(u.username)) zipSinVerificar.add(u.username); });
-                        const dias = porRango ? Math.round((r.hasta - r.desde) / DIA) : 0;
-                        const periodo = !porRango ? '' : dias <= 35 ? t('el último mes') : dias <= 100 ? t('los últimos 3 meses') : dias <= 190 ? t('los últimos 6 meses') : dias <= 380 ? t('el último año') : t('un periodo limitado');
-                        zipRangoAviso = (porRango
-                            ? t('Has solicitado tus datos de {periodo} (del {desde} al {hasta}).', { periodo, desde: I18n.fecha(r.desde), hasta: I18n.fecha(r.hasta) })
-                            : t('Tu lista de seguidores empieza el {seg}, mientras que tus seguidos llegan hasta el {sig}: parece que pediste solo un periodo.', { seg: I18n.fecha(segMin), sig: I18n.fecha(sigMin) }))
-                            + ' ' + t('Para tener la cuenta completa, pídela de nuevo eligiendo «Desde el principio» (todo el tiempo).')
-                            + ' ' + t('Mientras tanto se analiza solo ese periodo: {n} cuenta(s) que sigues desde antes del {desde} no se pueden comprobar y no cuentan como «no te siguen».', { n: zipSinVerificar.size, desde: I18n.fecha(desde) });
-                    }
-                }
+                zipRango = elegida ? elegida.rango : null;
+                calcularPeriodo(zipFollowersArray, zipFollowingArray, zipRango);
                 zipAviso = [zipRangoAviso, avisoListas, avisoRelleno, fallosLista ? t('{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.', { n: fallosLista }) : '', (zipFollowersArray.length && !zipFollowingArray.length) || (!zipFollowersArray.length && zipFollowingArray.length) ? t('Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.') : '', quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
 
                 setTimeout(() => {
@@ -403,8 +383,9 @@
         }
 
         // Lee un fichero suelto (JSON o HTML) y devuelve la lista de usuarios
+        let rangoManual = null;
         async function leerUsuariosArchivo(file) {
-            if (/\.html?$/i.test(file.name)) return extraerUsuariosHtml(await file.text());
+            if (/\.html?$/i.test(file.name)) { const h = await file.text(); rangoManual = rangoManual || rangoHtml(h); return extraerUsuariosHtml(h); }
             return extraerUsuarios(JSON.parse(await file.text()));
         }
 
@@ -449,6 +430,41 @@
                 }
             });
             return Array.from(map.entries()).map(([username, timestamp]) => ({ username, timestamp }));
+        }
+
+        // ¿La descarga cubre solo un periodo? Por la cabecera (HTML) o, sin ella, porque los seguidos llegan mucho más atrás
+        // que los seguidores. Devuelve el inicio del periodo (en segundos) o null si parece completa.
+        function detectarPeriodo(seg, sig, rango) {
+            if (!seg.length || !sig.length) return null;
+            const min = arr => arr.reduce((m, u) => (u.timestamp > 0 && (!m || u.timestamp < m)) ? u.timestamp : m, 0);
+            const segMin = min(seg), sigMin = min(sig), AÑO = 365 * 86400;
+            const porRango = !!(rango && (rango.hasta - rango.desde) < 2 * AÑO);
+            const porDatos = !porRango && segMin && sigMin && sigMin < segMin - AÑO;
+            if (!porRango && !porDatos) return null;
+            return { desde: porRango ? rango.desde : segMin, porRango, segMin, sigMin };
+        }
+
+        function calcularPeriodo(segArr, sigArr, rango) {
+        // ¿Pediste solo un periodo (último mes, año...)? «Seguidores» solo trae ese periodo: quien ya te seguía antes
+        // no aparece. Se avisa y se analiza solo lo comprobable: los seguidos anteriores al periodo se apartan.
+        zipRangoAviso = ''; zipRangoDesde = 0; zipSinVerificar = new Set();
+        if (segArr.length && sigArr.length) {
+            const det = detectarPeriodo(segArr, sigArr, rango);
+            const { segMin, sigMin, porRango } = det || {}, r = rango, DIA = 86400;
+            const desde = det ? det.desde : 0;
+            if (desde) {
+                zipRangoDesde = desde;
+                const segSet = new Set(segArr.map(u => u.username));
+                sigArr.forEach(u => { if (u.timestamp > 0 && u.timestamp < desde && !segSet.has(u.username)) zipSinVerificar.add(u.username); });
+                const dias = porRango ? Math.round((r.hasta - r.desde) / DIA) : 0;
+                const periodo = !porRango ? '' : dias <= 35 ? t('el último mes') : dias <= 100 ? t('los últimos 3 meses') : dias <= 190 ? t('los últimos 6 meses') : dias <= 380 ? t('el último año') : t('un periodo limitado');
+                zipRangoAviso = (porRango
+                    ? t('Has solicitado tus datos de {periodo} (del {desde} al {hasta}).', { periodo, desde: I18n.fecha(r.desde), hasta: I18n.fecha(r.hasta) })
+                    : t('Tu lista de seguidores empieza el {seg}, mientras que tus seguidos llegan hasta el {sig}: parece que pediste solo un periodo.', { seg: I18n.fecha(segMin), sig: I18n.fecha(sigMin) }))
+                    + ' ' + t('Para tener la cuenta completa, pídela de nuevo eligiendo «Desde el principio» (todo el tiempo).')
+                    + ' ' + t('Mientras tanto se analiza solo ese periodo: {n} cuenta(s) que sigues desde antes del {desde} no se pueden comprobar y no cuentan como «no te siguen».', { n: zipSinVerificar.size, desde: I18n.fecha(desde) });
+            }
+        }
         }
 
         // Distancia de edición limitada a `max`: devuelve max+1 si se supera (banda estrecha, rápida).
@@ -530,6 +546,7 @@
             try {
                 let followersObjs = [];
                 let followingObjs = [];
+                rangoManual = null;
 
                 if (usarModoZip) {
                     const hayExtras = zipPerfil && window.Perfil.secciones(zipPerfil).length > 0;
@@ -556,6 +573,7 @@
                     }
                     followersObjs = unirUsuarios(followersObjs);
                 }
+                calcularPeriodo(followersObjs, followingObjs, usarModoZip ? zipRango : rangoManual);
                 
                 const followersMap = new Map(followersObjs.map(o => [o.username, o.timestamp]));
                 const followingMap = new Map(followingObjs.map(o => [o.username, o.timestamp]));
@@ -568,11 +586,12 @@
 
                 const buildObj = (arr, map) => arr.map(u => ({ username: u, timestamp: map.get(u) || 0 }));
 
-                const apartar = usarModoZip ? zipSinVerificar : new Set();
+                const apartar = zipSinVerificar;
                 usuariosSinRetornoGlobal = buildObj(followingArray.filter(user => !followersSet.has(user) && !apartar.has(user)), followingMap);
                 usuariosFansGlobal = buildObj(followersArray.filter(user => !followingSet.has(user)), followersMap);
                 usuariosMutuosGlobal = buildObj(followingArray.filter(user => followersSet.has(user)), followingMap);
 
+                ultimosSeguidores = followersObjs; ultimosSeguidos = followingObjs;
                 pistasNombre = calcularPistasNombre(usuariosSinRetornoGlobal, usuariosFansGlobal);
                 let reciprocityRate = 100;
                 const comprobables = followingArray.length - apartar.size;
@@ -594,7 +613,7 @@
                 const resultsStatus = document.getElementById('resultsStatus');
                 ultimoTotalRegistros = followersArray.length + followingArray.length;
                 const rangoEl = document.getElementById('rangoAviso');
-                if (rangoEl) { rangoEl.textContent = usarModoZip ? zipRangoAviso : ''; rangoEl.classList.toggle('hidden', !(usarModoZip && zipRangoAviso)); }
+                if (rangoEl) { rangoEl.textContent = zipRangoAviso; rangoEl.classList.toggle('hidden', !zipRangoAviso); }
                 if (resultsStatus) resultsStatus.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros }) + ' ' + t('Estos resultados reflejan la fecha de tu exportación, no el estado actual de Instagram.');
                 if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : window.Perfil.nuevo(), followersObjs, followingObjs);
                 requestAnimationFrame(() => resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));

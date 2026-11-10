@@ -130,7 +130,7 @@
         }
 
         function listaFiltrada(conOcultas) {
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const query = document.getElementById('searchInput').value.toLowerCase().trim().replace(/^@/, '');
             const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
             const type = document.getElementById('typeFilter').value;
             const age = document.getElementById('ageFilter').value;
@@ -181,11 +181,17 @@
                 return;
             }
             const text = lista.map(u => `@${u.username}`).join('\n');
-            navigator.clipboard.writeText(text).then(() => {
-                alert(t('Lista filtrada de perfiles copiada al portapapeles.'));
-            }).catch(err => {
-                console.error('Error al copiar:', err);
-            });
+            const respaldo = () => {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;opacity:0';
+                document.body.appendChild(ta); ta.select();
+                let ok = false; try { ok = document.execCommand('copy'); } catch (e) { /* sin portapapeles */ }
+                document.body.removeChild(ta);
+                alert(ok ? t('Lista filtrada de perfiles copiada al portapapeles.') : t('No se pudo copiar. Selecciona la lista y cópiala a mano.'));
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => alert(t('Lista filtrada de perfiles copiada al portapapeles.'))).catch(respaldo);
+            } else respaldo();
         }
 
         function exportarCSV() {
@@ -200,7 +206,7 @@
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `golifiar_${categoriaActual}_2026.csv`);
+            link.setAttribute("download", `golifiar_${categoriaActual}_${new Date().toISOString().slice(0, 10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -219,8 +225,12 @@
             const data = {
                 generatedAt: new Date().toISOString(),
                 category: categoriaActual,
-                followers: usuariosFansGlobal,
-                following: usuariosMutuosGlobal.concat(usuariosSinRetornoGlobal)
+                followers: ultimosSeguidores,
+                following: ultimosSeguidos,
+                noTeSiguen: usuariosSinRetornoGlobal,
+                fans: usuariosFansGlobal,
+                mutuos: usuariosMutuosGlobal,
+                sinVerificar: [...zipSinVerificar]
             };
             descargarArchivo(`golifiar-auditoria-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(data, null, 2), 'application/json');
         }
@@ -231,12 +241,14 @@
             const link = document.createElement('a');
             link.href = url;
             link.download = name;
+            document.body.appendChild(link);
             link.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
         }
 
         function premiumActivo() {
-            return localStorage.getItem('golifiar-premium-demo') === 'true';
+            try { return localStorage.getItem('golifiar-premium-demo') === 'true'; } catch (e) { return false; }
         }
 
         function activarPremiumDemo() {
@@ -261,9 +273,13 @@
             filtrarResultados();
         }
 
+        function leerHistorialLocal() {
+            try { const h = JSON.parse(localStorage.getItem('golifiar-history') || '[]'); return Array.isArray(h) ? h : []; } catch (e) { return []; }
+        }
+
         function guardarAnalisis() {
             if (!requerirPremium()) return;
-            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
+            const history = leerHistorialLocal();
             history.unshift({
                 id: Date.now(),
                 date: new Date().toISOString(),
@@ -272,7 +288,7 @@
                 discrepancy: document.getElementById('valDiscrepancy').textContent,
                 reciprocity: document.getElementById('valReciprocity').textContent
             });
-            localStorage.setItem('golifiar-history', JSON.stringify(history.slice(0, 10)));
+            try { localStorage.setItem('golifiar-history', JSON.stringify(history.slice(0, 10))); } catch (e) { mostrarToast(t('No se pudo guardar en este dispositivo.')); return; }
             document.getElementById('historyPanel').classList.remove('hidden');
             cargarHistorial();
             mostrarToast(t('Análisis guardado únicamente en este dispositivo.'));
@@ -281,7 +297,7 @@
         function cargarHistorial() {
             const list = document.getElementById('historyList');
             if (!list) return;
-            const history = JSON.parse(localStorage.getItem('golifiar-history') || '[]');
+            const history = leerHistorialLocal();
             list.innerHTML = history.length ? history.map(item => `
                 <div class="history-item">
                     <span>${new Date(item.date).toLocaleString(I18n.locale)}</span>
@@ -306,31 +322,7 @@
 
         function compartirResultados() {
             trigHaptic(40);
-            const query = document.getElementById('searchInput').value.toLowerCase().trim();
-            const letter = document.getElementById('letterFilter').value.toLowerCase().trim();
-            const type = document.getElementById('typeFilter').value;
-            const age = document.getElementById('ageFilter').value;
-            const ahora = Date.now() / 1000;
-
-            const lista = obtenerListaActual().filter(obj => {
-                const user = obj.username;
-                const matchQuery = user.includes(query);
-                const matchLetter = letter === "" || user.startsWith(letter);
-                let matchType = true;
-                const hasNumbers = /\d/.test(user);
-                if (type === 'sin_numeros') matchType = !hasNumbers;
-                if (type === 'con_numeros') matchType = hasNumbers;
-                if (type === 'largos') matchType = user.length > 15;
-                if (type === 'cortos') matchType = user.length <= 15;
-
-                let matchAge = true;
-                if (obj.timestamp > 0) {
-                    const diffMonths = (ahora - obj.timestamp) / (60 * 60 * 24 * 30);
-                    if (age === 'recientes') matchAge = diffMonths <= 6;
-                    if (age === 'antiguas') matchAge = diffMonths > 12;
-                }
-                return matchQuery && matchLetter && matchType && matchAge;
-            });
+            const lista = listaFiltrada().lista;
 
             if (lista.length === 0) {
                 alert(t('No hay registros disponibles para compartir.'));

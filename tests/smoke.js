@@ -27,6 +27,7 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   assert.strictEqual(await pg.locator('#valFollowers').innerText(), '25', 'seguidores');
   assert.strictEqual(await pg.locator('#valFollowing').innerText(), '28', 'seguidos');
   assert.strictEqual(await pg.locator('#profileTabs.hidden').count(), 0, 'las pestañas del perfil deben verse');
+  assert.deepStrictEqual(await pg.evaluate(() => [ultimosSeguidores.length, ultimosSeguidos.length]), [25, 28], 'la exportación JSON incluye todos los seguidores y seguidos');
 
   // 2b) Regresión: sin fecha o con fecha igual NO se descarta a quien sí sigues
   await pg.setInputFiles('#zipFileInput', fx('dejados-igual-fecha.zip'));
