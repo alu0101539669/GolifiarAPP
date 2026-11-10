@@ -451,6 +451,42 @@
             return Array.from(map.entries()).map(([username, timestamp]) => ({ username, timestamp }));
         }
 
+        // Distancia de edición limitada a `max`: devuelve max+1 si se supera (banda estrecha, rápida).
+        function distanciaCorta(a, b, max) {
+            if (Math.abs(a.length - b.length) > max) return max + 1;
+            let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+            for (let i = 1; i <= a.length; i++) {
+                const cur = [i]; let min = i;
+                for (let j = 1; j <= b.length; j++) {
+                    cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+                    if (cur[j] < min) min = cur[j];
+                }
+                if (min > max) return max + 1;
+                prev = cur;
+            }
+            return prev[b.length];
+        }
+
+        // Pistas internas (sin red): una cuenta que sigues y «no te sigue» con un nombre casi igual al de alguien que
+        // te sigue y no sigues puede ser la misma persona tras cambiar de @usuario. Es solo una sugerencia.
+        function calcularPistasNombre(sinRetorno, fans) {
+            const pistas = new Map();
+            if (!sinRetorno.length || !fans.length || sinRetorno.length > 3000 || fans.length > 6000) return pistas;
+            sinRetorno.forEach(({ username: u }) => {
+                if (u.length < 5) return;
+                const max = Math.min(3, Math.floor(u.length / 5));
+                let mejor = null, empate = false;
+                for (const { username: f } of fans) {
+                    if (f === u || f.length < 5 || (f[0] !== u[0] && f[f.length - 1] !== u[u.length - 1])) continue;
+                    const d = distanciaCorta(u, f, max);
+                    if (d > max) continue;
+                    if (!mejor || d < mejor.d) { mejor = { f, d }; empate = false; } else if (d === mejor.d) empate = true;
+                }
+                if (mejor && !empate) pistas.set(u, mejor.f);
+            });
+            return pistas;
+        }
+
         function animarContador(id, finalValue, isPercentage = false) {
             const el = document.getElementById(id);
             if (!el) return;
@@ -537,6 +573,7 @@
                 usuariosFansGlobal = buildObj(followersArray.filter(user => !followingSet.has(user)), followersMap);
                 usuariosMutuosGlobal = buildObj(followingArray.filter(user => followersSet.has(user)), followingMap);
 
+                pistasNombre = calcularPistasNombre(usuariosSinRetornoGlobal, usuariosFansGlobal);
                 let reciprocityRate = 100;
                 const comprobables = followingArray.length - apartar.size;
                 if (comprobables > 0) {

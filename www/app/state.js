@@ -10,6 +10,7 @@
         let zipAviso = '';
         let zipRangoAviso = '';
         let zipRangoDesde = 0;
+        let pistasNombre = new Map();
         let zipSinVerificar = new Set();
         let zipPerfil = null;
 

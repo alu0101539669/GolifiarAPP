@@ -54,6 +54,10 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   await pg.waitForTimeout(1200);
   assert.strictEqual(await pg.locator('#rangoAviso.hidden').count(), 1, 'sin recorte no hay aviso');
 
+  // 2e) Pistas de cambio de nombre (solo sugerencia, sin red)
+  const pistas = await pg.evaluate(() => [...calcularPistasNombre([{ username: 'jimena_as' }, { username: 'zzzzzz' }, { username: 'carlos' }], [{ username: 'jimenna_as' }, { username: 'carlos' }, { username: 'carlosx_' }]).entries()]);
+  assert.deepStrictEqual(pistas, [['jimena_as', 'jimenna_as']], 'solo sugiere nombres casi idénticos y únicos');
+
   // 2) Cuentas dejadas de seguir no cuentan como seguidas; solo se enlaza si el nombre es único
   await pg.setInputFiles('#zipFileInput', fx('dejados-y-mensajes.zip'));
   await pg.waitForTimeout(1500);

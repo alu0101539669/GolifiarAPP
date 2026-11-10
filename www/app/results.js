@@ -94,6 +94,7 @@
                     <div class="user-card${dudosa ? ' no-disponible' : ''}">
                     ${enlace}
                     <div class="user-actions">
+                        ${(!invalido && categoriaActual === 'noteSiguen' && pistasNombre.has(user)) ? `<a class="user-flag user-flag-pista" href="https://www.instagram.com/${encodeURIComponent(pistasNombre.get(user))}/" target="_blank" rel="noopener noreferrer" title="${escHtml(t('Pista a partir de tus listas, sin comprobar en Instagram: abre el perfil para confirmarlo.'))}">${escHtml(t('Posible cambio de nombre: @{nuevo}', { nuevo: pistasNombre.get(user) }))}</a>` : ''}
                         ${invalido ? `<span class="user-flag">${t('Nombre no válido')}</span>` : (marcado ? `<span class="user-flag">${t('No disponible')}</span>` : '')}
                         ${invalido ? '' : `<button class="user-mark" type="button" data-user="${escHtml(user)}" onclick="marcarNoDisponible(this.dataset.user)" title="${t('Si el perfil da error al abrirlo, márcalo para ocultarlo')}">${marcado ? t('Mostrar') : t('No existe')}</button>`}
                         <span class="${badgeClass}">${metaInfo}</span>

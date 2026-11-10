@@ -1331,6 +1331,7 @@
         .chk { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 650; color: var(--text-secondary); cursor: pointer; min-height: 40px; }
         .chk input { width: 16px; height: 16px; accent-color: var(--accent-blue); }
         .user-flag { font-size: 0.72rem; font-weight: 700; color: var(--accent-rose); }
+        .user-flag-pista { color: var(--accent-blue); text-decoration: underline; }
         .user-mark { background: none; border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); font: inherit; font-size: 0.72rem; font-weight: 650; padding: 0.25rem 0.5rem; cursor: pointer; white-space: nowrap; }
         .user-mark:hover { color: var(--accent-rose); border-color: var(--accent-rose); }
         .user-card.no-disponible { opacity: 0.6; }
