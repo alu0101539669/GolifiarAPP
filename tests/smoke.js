@@ -40,6 +40,20 @@ const visibles = pg => pg.evaluate(() => [...document.querySelectorAll('.view-co
   await pg.waitForTimeout(1500);
   assert.deepStrictEqual(await pg.evaluate(() => [usuariosMutuosGlobal.length, usuariosSinRetornoGlobal.length, usuariosFansGlobal.length]), [2, 1, 1], 'ZIP partido: 2 mutuos, 1 no te sigue, 1 fan');
 
+  // 2d) Export recortado (HTML con intervalo de 1 año): avisa de que faltan seguidores anteriores
+  await pg.setInputFiles('#zipFileInput', fx('export-recortado.zip'));
+  await pg.waitForTimeout(1500);
+  await pg.evaluate(() => ejecutarAnalisis());
+  await pg.waitForTimeout(1500);
+  assert.ok(/Desde el principio/.test(await pg.locator('#rangoAviso').innerText()), 'debe avisar del intervalo recortado');
+  assert.deepStrictEqual(await pg.evaluate(() => zipPerfil.rel.dejados.map(o => o.username + ':' + (o.timestamp > 0)).sort()), ['antigua:true', 'otra:true'], 'HTML en tablas: usuario y fecha leídos aunque el texto vaya pegado');
+  assert.deepStrictEqual(await pg.evaluate(() => zipFollowingArray.map(u => u.username).sort()), ['amiga', 'nuevo'], 'antigua se descarta: la dejaste de seguir después');
+  await pg.setInputFiles('#zipFileInput', fx('completo.zip'));
+  await pg.waitForTimeout(1500);
+  await pg.evaluate(() => ejecutarAnalisis());
+  await pg.waitForTimeout(1200);
+  assert.strictEqual(await pg.locator('#rangoAviso.hidden').count(), 1, 'sin recorte no hay aviso');
+
   // 2) Cuentas dejadas de seguir no cuentan como seguidas; solo se enlaza si el nombre es único
   await pg.setInputFiles('#zipFileInput', fx('dejados-y-mensajes.zip'));
   await pg.waitForTimeout(1500);

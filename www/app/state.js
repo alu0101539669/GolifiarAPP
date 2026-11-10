@@ -8,6 +8,7 @@
         let zipFollowersArray = [];
         let zipFollowingArray = [];
         let zipAviso = '';
+        let zipRangoAviso = '';
         let zipPerfil = null;
 
         function ajustarAltoCabecera() {

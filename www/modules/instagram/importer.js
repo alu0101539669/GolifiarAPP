@@ -126,7 +126,9 @@
                         try {
                             if (esHtml) {
                                 if (/^followers(_\d+)?\.html?$/.test(fileName)) {
-                                    lista.seg = lista.seg.concat(extraerUsuariosHtml(await zipEntry.texto()));
+                                    const htmlSeg = await zipEntry.texto();
+                                    lista.seg = lista.seg.concat(extraerUsuariosHtml(htmlSeg));
+                                    lista.rango = lista.rango || rangoHtml(htmlSeg);
                                     nHtml++;
                                 } else if (/^following\.html?$/.test(fileName)) {
                                     lista.sig = lista.sig.concat(extraerUsuariosHtml(await zipEntry.texto()));
@@ -177,6 +179,17 @@
                     zipFollowingArray = unirUsuarios(sigFuente);
                     if (conListas.length > 1) avisoListas = t('Había {n} ZIP con listas; se usó «{nombre}» (el más reciente) para seguidores y seguidos.', { n: conListas.length, nombre: elegida.nombre });
                 }
+                // ¿El export cubre solo una parte del historial? Entonces «seguidores» puede estar recortado y
+                // quien ya te seguía antes aparecería como «no te sigue».
+                zipRangoAviso = '';
+                if (elegida && zipFollowersArray.length && zipFollowingArray.length) {
+                    const min = a => a.reduce((m, u) => (u.timestamp > 0 && (!m || u.timestamp < m)) ? u.timestamp : m, 0);
+                    const segMin = min(zipFollowersArray), sigMin = min(zipFollowingArray), r = elegida.rango, AÑO = 365 * 86400;
+                    const porRango = r && (r.hasta - r.desde) < 2 * AÑO;
+                    const porDatos = segMin && sigMin && sigMin < segMin - AÑO;
+                    if (porRango) zipRangoAviso = t('Tu descarga solo incluye datos desde el {desde} hasta el {hasta}. Los seguidores anteriores a esa fecha no aparecen, así que muchas cuentas que sí te siguen saldrán como «no te siguen». Vuelve a pedir la descarga eligiendo «Desde el principio».', { desde: I18n.fecha(r.desde), hasta: I18n.fecha(r.hasta) });
+                    else if (porDatos) zipRangoAviso = t('Tus seguidos llegan hasta el {sig}, pero tu lista de seguidores empieza el {seg}: es probable que la descarga esté recortada y falten seguidores. Vuelve a pedirla eligiendo «Desde el principio».', { sig: I18n.fecha(sigMin), seg: I18n.fecha(segMin) });
+                }
                 // Cuentas que dejaste de seguir después de seguirlas: no deben aparecer como seguidas.
                 let quitadas = 0;
                 if (zipPerfil && zipPerfil.rel.dejados.length && zipFollowingArray.length) {
@@ -191,7 +204,7 @@
                     });
                     quitadas = antes - zipFollowingArray.length;
                 }
-                zipAviso = [avisoListas, avisoRelleno, fallosLista ? t('{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.', { n: fallosLista }) : '', (zipFollowersArray.length && !zipFollowingArray.length) || (!zipFollowersArray.length && zipFollowingArray.length) ? t('Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.') : '', quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
+                zipAviso = [zipRangoAviso, avisoListas, avisoRelleno, fallosLista ? t('{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.', { n: fallosLista }) : '', (zipFollowersArray.length && !zipFollowingArray.length) || (!zipFollowersArray.length && zipFollowingArray.length) ? t('Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.') : '', quitadas ? t('Se descartaron {n} cuenta(s) de «seguidos» porque dejaste de seguirlas después de seguirlas.', { n: quitadas }) : ''].filter(Boolean).join(' ');
 
                 setTimeout(() => {
                     progressContainer.classList.remove('active');
@@ -298,7 +311,7 @@
         function parseFechaHtml(txt) {
             if (!txt) return 0;
             let m, y, mo, d, h = 0, mi = 0, pm = '';
-            if ((m = txt.match(/([A-Za-zÀ-ÿ]{3,10})\.?\s+(\d{1,2}),?\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*([ap])\.?\s?m\.?)?/i)) && MESES[m[1].slice(0, 3).toLowerCase()] !== undefined) {
+            if ((m = txt.match(/(?:^|[^A-Za-zÀ-ÿ])([A-Za-zÀ-ÿ]{3,10})\.?\s+(\d{1,2}),?\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2})\s*([ap])\.?\s?m\.?)?/i)) && MESES[m[1].slice(0, 3).toLowerCase()] !== undefined) {
                 mo = MESES[m[1].slice(0, 3).toLowerCase()]; d = +m[2]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0); pm = (m[6] || '').toLowerCase();
             } else if ((m = txt.match(/(\d{1,2})\s+de\s+([A-Za-zÀ-ÿ]{3,10})\.?\s+de\s+(\d{4})(?:[,\s]+(\d{1,2}):(\d{2}))?/i)) && MESES[m[2].slice(0, 3).toLowerCase()] !== undefined) {
                 mo = MESES[m[2].slice(0, 3).toLowerCase()]; d = +m[1]; y = +m[3]; h = +(m[4] || 0); mi = +(m[5] || 0);
@@ -321,6 +334,16 @@
             } catch (e) { return ''; }
         }
 
+        // «Contiene los datos que has solicitado desde X hasta Y»: las dos últimas fechas <time> del encabezado (en segundos).
+        function rangoHtml(html) {
+            const aside = html.match(/<aside[^>]*contentinfo[^>]*>[\s\S]*?<\/aside>/i);
+            const f = aside ? [...aside[0].matchAll(/datetime="([^"]+)"/g)].map(m => Math.floor(Date.parse(m[1]) / 1000)).filter(Number.isFinite) : [];
+            return f.length >= 3 ? { desde: f[f.length - 2], hasta: f[f.length - 1] } : null;
+        }
+
+        // textContent pega los textos de celdas contiguas («usuariooct. 15»); se unen con espacios para poder leer la fecha.
+        const textoSep = el => { const r = []; const w = el.ownerDocument.createTreeWalker(el, 4); let n; while ((n = w.nextNode())) r.push(n.nodeValue); return r.join(' '); };
+
         function extraerUsuariosHtml(html) {
             const doc = new DOMParser().parseFromString(html, 'text/html');
             const sel = 'a[href*="instagram.com"]';
@@ -334,17 +357,34 @@
                 for (let i = 0; i < 4 && !ts; i++) {
                     nodo = nodo.parentElement;
                     if (!nodo || nodo.querySelectorAll(sel).length > 1) break;
-                    ts = parseFechaHtml(nodo.textContent);
+                    ts = parseFechaHtml(textoSep(nodo));
                 }
                 anotar(u, ts);
             });
 
             if (mapa.size === 0) {
+                // Variante con tablas (solicitudes, mejores amigos, dejados de seguir...): sin enlaces, el usuario va
+                // en la celda que sigue a la etiqueta «Nombre de usuario» / «Username».
+                const ETIQ = /^(nombre de usuario|username|nom d.utilisateur|benutzername|nome utente|nome de usu[aá]rio)$/i;
+                const celdas = [...doc.querySelectorAll('td')].filter(td => ETIQ.test(td.textContent.trim()) && td.nextElementSibling);
+                celdas.forEach(td => {
+                    const u = normalizarUsuarioExportado(td.nextElementSibling.textContent);
+                    if (!u) return;
+                    let ts = 0, nodo = td;
+                    for (let i = 0; i < 8 && !ts; i++) {
+                        nodo = nodo.parentElement;
+                        if (!nodo || [...nodo.querySelectorAll('td')].filter(c => ETIQ.test(c.textContent.trim())).length > 1) break;
+                        ts = parseFechaHtml(textoSep(nodo));
+                    }
+                    anotar(u, ts);
+                });
+            }
+            if (mapa.size === 0) {
                 // Variante antigua: el nombre aparece solo como título de cada fila
                 doc.querySelectorAll('h2').forEach(h => {
                     const t = h.textContent.trim().toLowerCase();
                     if (/^[a-z0-9._]{1,30}$/.test(t) && !['followers', 'following', 'seguidores', 'seguidos', 'siguiendo'].includes(t)) {
-                        anotar(t, parseFechaHtml(h.parentElement ? h.parentElement.textContent : ''));
+                        anotar(t, parseFechaHtml(h.parentElement ? textoSep(h.parentElement) : ''));
                     }
                 });
             }
@@ -504,6 +544,8 @@
                 renderizarResultadosActuales();
                 const resultsStatus = document.getElementById('resultsStatus');
                 ultimoTotalRegistros = followersArray.length + followingArray.length;
+                const rangoEl = document.getElementById('rangoAviso');
+                if (rangoEl) { rangoEl.textContent = usarModoZip ? zipRangoAviso : ''; rangoEl.classList.toggle('hidden', !(usarModoZip && zipRangoAviso)); }
                 if (resultsStatus) resultsStatus.textContent = t('Análisis completado: {n} registros procesados.', { n: ultimoTotalRegistros }) + ' ' + t('Estos resultados reflejan la fecha de tu exportación, no el estado actual de Instagram.');
                 if (window.Perfil) window.Perfil.render(usarModoZip ? zipPerfil : window.Perfil.nuevo(), followersObjs, followingObjs);
                 requestAnimationFrame(() => resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }));

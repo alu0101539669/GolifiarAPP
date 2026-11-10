@@ -39,3 +39,4 @@ Una entrada por sesión: fecha, qué se hizo, qué queda, decisiones y por qué.
 - Hecho: el filtro de «dejados de seguir» solo descarta una cuenta si ambas fechas existen y el unfollow es estrictamente posterior (antes `>=`, y sin fecha = descartada). Test de regresión en smoke.js. SW v37.
 - Pendiente: confirmar con el ZIP real del usuario.
 - 2026-11-08 (2): ZIP partido: si el ZIP elegido no trae una de las listas se toma del más reciente que la tenga; avisos si falla la lectura o falta una lista. Test en smoke.js. SW v38.
+- 2026-11-10: Causa real del fallo con los ZIP de prueba (HTML): el export traía seguidores solo de los últimos 12 meses (cabecera «desde 8 nov 2025») mientras seguidos llegaba a 2015 -> avisamos (#rangoAviso). Además: HTML en tablas (dejados, solicitudes, mejores amigos) no se leía (sin enlaces) y las fechas pegadas daban timestamp 0. SW v39.

@@ -16,6 +16,8 @@ I18n.registrar('en', {
   "Los seguidos se tomaron de «{nombre}».": "Following was taken from “{nombre}”.",
   "{n} archivo(s) de seguidores/seguidos no se pudieron leer y faltan datos.": "{n} followers/following file(s) could not be read, so data is missing.",
   "Solo hay una de las dos listas (seguidores o seguidos): la comparación no será fiable.": "Only one of the two lists (followers or following) was found: the comparison will not be reliable.",
+  "Tu descarga solo incluye datos desde el {desde} hasta el {hasta}. Los seguidores anteriores a esa fecha no aparecen, así que muchas cuentas que sí te siguen saldrán como «no te siguen». Vuelve a pedir la descarga eligiendo «Desde el principio».": "Your download only includes data from {desde} to {hasta}. Followers from before that date are missing, so many accounts that do follow you will show as “not following you”. Request the download again choosing “From the beginning”.",
+  "Tus seguidos llegan hasta el {sig}, pero tu lista de seguidores empieza el {seg}: es probable que la descarga esté recortada y falten seguidores. Vuelve a pedirla eligiendo «Desde el principio».": "Your following list goes back to {sig}, but your followers list starts on {seg}: the download is probably truncated and followers are missing. Request it again choosing “From the beginning”.",
   "Procesado: {a} seguidores y {b} seguidos": "Processed: {a} followers and {b} following",
   " (formato HTML)": " (HTML format)",
   " · también: {lista}": " · also: {lista}",
