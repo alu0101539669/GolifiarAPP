@@ -46,6 +46,14 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
   assert.strictEqual(internacional.horaPico, 0);
   assert.strictEqual(internacional.diasActivos, 2);
   assert.ok(!JSON.stringify(internacional).includes('Noche'));
+  const espanol = await page.evaluate(() => GolifiarWhatsApp.analizar(
+    '[05/01/2026, 10:30:12 p. m.] Ana: hola\n[06/01/2026, 12:05 a.\u00a0m.] Luis: hey\n05/01/2026, 10:04 - Eva cambió el asunto a “Reunión: viernes”\n[07/01/2026, 9:00] Ana: otra',
+    'es.txt'
+  ));
+  assert.strictEqual(espanol.mensajes, 3, 'lee «p. m.» y «a. m.» y no cuenta avisos del sistema');
+  assert.strictEqual(espanol.diasActivos, 3);
+  const ambiguo = await page.evaluate(() => GolifiarWhatsApp.analizar('3/4/26, 10:00 - Ana: a\n13/4/26, 10:00 - Ana: b', 'a.txt'));
+  assert.strictEqual(ambiguo.diasActivos, 2, 'un 13 fija el orden día/mes para todo el archivo');
   await browser.close();
   console.log('OK: WhatsApp');
 })().catch(error => {

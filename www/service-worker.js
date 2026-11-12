@@ -1,4 +1,4 @@
-const CACHE_NAME = 'golifiar-v44';
+const CACHE_NAME = 'golifiar-v45';
 const CACHE_COMPARTIDO = 'golifiar-compartido';
 const APP_SHELL = [
   './',
@@ -10,6 +10,8 @@ const APP_SHELL = [
   './app/results.js',
   './modules/instagram/importer.js',
   './modules/whatsapp/lector.js',
+  './modules/tiktok/lector.js',
+  './modules/tiktok/app.js',
   './modules/whatsapp/app.js',
   './modules/experiencias/engine.js',
   './modules/experiencias/worker.js',

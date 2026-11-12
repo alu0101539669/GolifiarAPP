@@ -1326,8 +1326,8 @@
         :focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
         #resultsSection { scroll-margin-top: calc(var(--header-h) + 8px); }
         .profile-tabs { top: calc(var(--header-h) + 6px); box-shadow: 0 6px 16px rgba(var(--shadow-ink), 0.06); }
-        .cat-tab.sin-datos { opacity: 0.55; }
-        .cat-tab.sin-datos::after { content: " ·"; opacity: 0.6; }
+        .cat-tab.sin-datos { font-style: italic; border-style: dashed; }
+        .cat-tab.sin-datos::after { content: " ·"; }
         .chk { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 650; color: var(--text-secondary); cursor: pointer; min-height: 40px; }
         .chk input { width: 16px; height: 16px; accent-color: var(--accent-blue); }
         .user-flag { font-size: 0.72rem; font-weight: 700; color: var(--accent-rose); }

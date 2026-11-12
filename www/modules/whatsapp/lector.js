@@ -2,15 +2,24 @@
   'use strict';
 
   const FORMATOS = [
-    /^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap])?\.?m?\.?\]\s*([^:]+):\s*/i,
-    /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?\s*([ap])?\.?m?\.?\s*-\s*([^:]+):\s*/i
+    /^\[(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*([ap])\.?\s*m\.?)?\]\s*([^:]+):\s*/i,
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2,4}),\s*(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*([ap])\.?\s*m\.?)?\s*-\s*([^:]+):\s*/i
   ];
 
-  function fecha(partes) {
+  // Orden de día y mes: lo decide el archivo entero (un «13» solo cabe como día); si es ambiguo, el idioma del dispositivo.
+  function ordenFechas(coincidencias) {
+    for (const c of coincidencias) {
+      if (Number(c[1]) > 12) return 'dmy';
+      if (Number(c[2]) > 12) return 'mdy';
+    }
+    return /^en-us/i.test((typeof navigator !== 'undefined' && navigator.language) || '') ? 'mdy' : 'dmy';
+  }
+
+  function fecha(partes, orden) {
     let [, dia, mes, anio, hora, minuto, ampm] = partes;
     dia = Number(dia);
     mes = Number(mes);
-    if (mes > 12 && dia <= 12) [dia, mes] = [mes, dia];
+    if (orden === 'mdy') [dia, mes] = [mes, dia];
     anio = Number(anio);
     if (anio < 100) anio += 2000;
     hora = Number(hora);
@@ -33,18 +42,19 @@
     let formato = '';
     const lineas = String(texto || '').replace(/^\uFEFF/, '').split(/\r?\n/);
 
+    const hallazgos = [];
     for (const linea of lineas) {
-      let encontrada = null;
-      let indice = -1;
       for (let i = 0; i < FORMATOS.length; i++) {
         const coincidencia = linea.match(FORMATOS[i]);
-        if (coincidencia) { encontrada = coincidencia; indice = i; break; }
+        if (coincidencia) { hallazgos.push({ c: coincidencia, i }); break; }
       }
-      if (!encontrada) continue;
-      const inicio = indice === 0 ? 7 : 7;
-      const momento = fecha(encontrada);
-      const participante = encontrada[inicio].replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim();
-      if (!momento || !participante) continue;
+    }
+    const orden = ordenFechas(hallazgos.map(h => h.c));
+    for (const { c: encontrada, i: indice } of hallazgos) {
+      const momento = fecha(encontrada, orden);
+      const participante = encontrada[7].replace(/[\u200e\u200f\u202a-\u202e]/g, '').trim();
+      // Avisos del sistema con dos puntos («cambió el asunto a “A: B”») no son mensajes de una persona.
+      if (!momento || !participante || participante.length > 40 || /[“”"]/.test(participante)) continue;
       formato = indice === 0 ? 'corchetes' : 'guiones';
       mensajes++;
       participantes.set(participante, (participantes.get(participante) || 0) + 1);

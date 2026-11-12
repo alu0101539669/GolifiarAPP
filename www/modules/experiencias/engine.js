@@ -113,7 +113,8 @@
     return c || fixed.trim() || 'Desconocido';
   }
   function parseInstagramThread(json, chatName) {
-    const obj = typeof json === 'string' ? JSON.parse(json) : json;
+    const parsed = typeof json === 'string' ? JSON.parse(json) : json;
+    const obj = parsed && typeof parsed === 'object' ? parsed : {};
     const messages = Array.isArray(obj && obj.messages) ? obj.messages : [];
     return normalizeMessages(messages.map(m => ({
       timestamp: m.timestamp_ms ?? m.timestamp,
@@ -445,7 +446,7 @@
   }
   // Solo devuelve fecha y autor de la primera aparición, nunca el texto.
   function firstMoments(messages, terms) {
-    const list = (terms || ['te quiero', 'perdon', 'gracias', 'jajaja', 'te amo', 'vamos a quedar']).map(norm).filter(Boolean);
+    const list = (Array.isArray(terms) ? terms : ['te quiero', 'perdon', 'gracias', 'jajaja', 'te amo', 'vamos a quedar']).map(norm).filter(Boolean);
     const ms = normalizeMessages(messages);
     return list.map(term => { const m = ms.find(x => norm(x.text).includes(term)); return m ? { term, timestamp: m.timestamp, sender: m.sender } : { term, timestamp: null, sender: null }; });
   }

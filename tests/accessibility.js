@@ -20,7 +20,14 @@ const web = 'file://' + path.resolve(__dirname, '../www/index.html');
 
   const vistas = ['#viewInicio', '#viewAuditoria', '#viewWhatsapp', '#viewExperiencias', '#viewComoUsar'];
   for (const vista of vistas) {
-    if (vista === '#viewAuditoria') await page.evaluate(() => cambiarVista('auditoria'));
+    if (vista === '#viewAuditoria') {
+      await page.evaluate(() => cambiarVista('auditoria'));
+      // Con resultados cargados (incluye pestañas sin datos y listas de usuarios)
+      await page.setInputFiles('#zipFileInput', path.resolve(__dirname, 'fixtures/completo.zip'));
+      await page.waitForTimeout(1500);
+      await page.evaluate(() => ejecutarAnalisis());
+      await page.waitForTimeout(1200);
+    }
     if (vista === '#viewWhatsapp') {
       await page.evaluate(() => cambiarVista('whatsapp'));
       await page.setInputFiles('#whatsappFile', {
